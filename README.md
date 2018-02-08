@@ -1,1 +1,63 @@
 # BitCrack
+
+A set of tools for brute-forcing Bitcoin private keys. Currently the project requires a CUDA GPU.
+
+
+## Dependencies
+
+Visual Studio 2015
+
+CUDA Toolkit
+
+
+
+## Using the tools
+
+### Usage
+```
+KeyFinder.exe [OPTIONS] TARGET
+
+Where TARGET is a Bitcoin address
+
+Options:
+
+-d, --device            The device to use
+-b, --blocks            Number of blocks
+-t, --threads           Threads per block
+-p, --per-thread        Keys per thread
+-s, --start             Staring key, in hex
+-r, --range             Number of keys to search
+```
+
+### Examples
+
+
+The simplest usage, the keyspace will being at 0, and the CUDA parameters will be chosen automatically
+```
+KeyFinder.exe 1FshYsUh3mqgsG29XpZ23eLjWV8Ur3VwH
+```
+
+To start the search at a specific private key, use the `-s` option
+
+```
+KeyFinder.exe -s 6BBF8CCF80F8E184D1D300EF2CE45F7260E56766519C977831678F0000000000 1FshYsUh3mqgsG29XpZ23eLjWV8Ur3VwH
+```
+
+
+Use the `-b,` `-t` and `-p` options to specify the number of blocks, threads per block, and keys per thread.
+```
+KeyFinder.exe b 32 -t 256 -p 16 1FshYsUh3mqgsG29XpZ23eLjWV8Ur3VwH
+```
+
+
+
+## Choosing the right CUDA parameters
+
+There are 3 parameters that affect performance: blocks, threads per block, and keys per thread.
+
+
+blocks: Should be a multiple of the number of compute units on the device. The default is 16 times the number of compute units.
+
+threads: This must be a multiple of 32. The default is 256.
+
+Keys per thread: The performance (keys per second) increases asymptotically with this value. The default is 16. Increasing this value will cause the kernel to run longer.
