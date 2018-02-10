@@ -80,21 +80,32 @@ namespace util {
 
 	unsigned int parseUInt32(std::string s)
 	{
-		int val = 0;
-
-		if(sscanf(s.c_str(), "%d", &val) != 1) {
-			throw std::string("Expected an integer");
-		}
-
-		return val;
+		return (unsigned int)parseUInt64(s);
 	}
 
 	unsigned long long parseUInt64(std::string s)
 	{
-		int val = 0;
+		unsigned long long val = 0;
+		bool isHex = false;
 
-		if(sscanf(s.c_str(), "%ll", &val) != 1) {
-			throw std::string("Expected an integer");
+		if(s[0] == '0' && s[1] == 'x') {
+			isHex = true;
+			s = s.substr(2);
+		}
+		
+		if(s[s.length() - 1] == 'h') {
+			isHex = true;
+			s = s.substr(0, s.length() - 1);
+		}
+
+		if(isHex) {
+			if(sscanf(s.c_str(), "%llx", &val) != 1) {
+				throw std::string("Expected an integer");
+			}
+		} else {
+			if(sscanf(s.c_str(), "%lld", &val) != 1) {
+				throw std::string("Expected an integer");
+			}
 		}
 
 		return val;
