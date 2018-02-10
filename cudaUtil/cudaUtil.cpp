@@ -20,6 +20,7 @@ cuda::CudaDeviceInfo cuda::getDeviceInfo(int device)
 		throw cuda::CudaException(err);
 	}
 
+	devInfo.id = device;
 	devInfo.major = properties.major;
 	devInfo.minor = properties.minor;
 	devInfo.mpCount = properties.multiProcessorCount;

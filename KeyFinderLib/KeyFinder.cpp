@@ -235,5 +235,9 @@ void KeyFinder::run()
 			_running = false;
 		}
 		_iterCount++;
+
+		if(_iterCount * pointsPerIteration >= _range) {
+			_running = false;
+		}
 	}
 }

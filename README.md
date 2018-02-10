@@ -46,9 +46,18 @@ KeyFinder.exe -s 6BBF8CCF80F8E184D1D300EF2CE45F7260E56766519C977831678F000000000
 
 Use the `-b,` `-t` and `-p` options to specify the number of blocks, threads per block, and keys per thread.
 ```
-KeyFinder.exe b 32 -t 256 -p 16 1FshYsUh3mqgsG29XpZ23eLjWV8Ur3VwH
+KeyFinder.exe -b 32 -t 256 -p 16 1FshYsUh3mqgsG29XpZ23eLjWV8Ur3VwH
 ```
 
+Use the `-r` or `--range` option to specify how many keys to search before stopping. For instance, to search up to 1 billion keys from the starting key:
+
+```
+KeyFinder.exe -s 6BBF8CCF80F8E184D1D300EF2CE45F7260E56766519C977831678F0000000000 -r 1000000000
+```
+
+Note:
+
+Integer values can be specified in decimal (e.g. `123`), or in hexadecimal using the `0x` prefix or `h` suffix (e.g. `0x1234` or `1234h`)
 
 
 ## Choosing the right CUDA parameters

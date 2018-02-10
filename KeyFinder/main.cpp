@@ -38,7 +38,9 @@ void usage()
 {
 	printf("[OPTIONS] TARGET\n");
 	printf("Where TARGET is an address\n\n");
-	printf("-l, --list              List devices\n");
+
+	printf("Integer arguments can be in decimal (e.g. 123) or hex (e.g. 0x7B or 7Bh)\n\n");
+
 	printf("-d, --device            The device to use\n");
 	printf("-b, --blocks            Number of blocks\n");
 	printf("-t, --threads           Threads per block\n");
