@@ -252,7 +252,7 @@ void DeviceContext::getKeyFinderResults(std::vector<struct KeyFinderResult> &res
 		minerResult.block = ptr->block;
 		minerResult.thread = ptr->thread;
 		minerResult.index = ptr->idx;
-
+		minerResult.compressed = ptr->compressed;
 		for(int i = 0; i < 5; i++) {
 			minerResult.hash[i] = ptr->digest[i];
 		}

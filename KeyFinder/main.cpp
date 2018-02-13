@@ -40,7 +40,9 @@ void usage()
 	printf("Where TARGET is an address\n\n");
 
 	printf("Integer arguments can be in decimal (e.g. 123) or hex (e.g. 0x7B or 7Bh)\n\n");
-
+	
+	printf("-c, --compressed        Compressed points\n");
+	printf("-u, --uncompressed      Uncompressed points\n");
 	printf("-d, --device            The device to use\n");
 	printf("-b, --blocks            Number of blocks\n");
 	printf("-t, --threads           Threads per block\n");
@@ -80,9 +82,14 @@ int main(int argc, char **argv)
 	int threads = 0;
 	int blocks = 0;
 	int pointsPerThread = 0;
+	int compression = KeyFinder::Compression::COMPRESSED;
+
+	bool optCompressed = false;
+	bool optUncompressed = false;
+
 	std::vector<std::string> targetList;
-	secp256k1::uint256 start;
-	unsigned long long range = (unsigned long long)2 << 32;
+	secp256k1::uint256 start(1);
+	unsigned long long range = 0;// (unsigned long long)2 << 32;
 
 	if(cuda::getDeviceCount == 0) {
 		printf("No CUDA devices available\n");
@@ -102,6 +109,8 @@ int main(int argc, char **argv)
 	parser.add("-s", "--start", true);
 	parser.add("-r", "--range", true);
 	parser.add("-d", "--device", true);
+	parser.add("-c", "--compressed", false);
+	parser.add("-u", "--uncompressed", false);
 
 	parser.parse(argc, argv);
 	std::vector<OptArg> args = parser.getArgs();
@@ -125,6 +134,10 @@ int main(int argc, char **argv)
 				pointsPerThread = util::parseUInt32(optArg.arg);
 			} else if(optArg.equals("-d", "--device")) {
 				device = util::parseUInt32(optArg.arg);
+			} else if(optArg.equals("-c", "--compressed")) {
+				optCompressed = true;
+			} else if(optArg.equals("-u", "--compressed")) {
+				optUncompressed = true;
 			}
 		} catch(std::string err) {
 			printf("Error %s: %s\n", opt.c_str(), err.c_str());
@@ -157,17 +170,39 @@ int main(int argc, char **argv)
 	if(pointsPerThread == 0) {
 		pointsPerThread = devParams.pointsPerThread;
 	}
-	 
+	
+	if(optCompressed && optUncompressed) {
+		compression = KeyFinder::Compression::BOTH;
+	} else if(optCompressed) {
+		compression = KeyFinder::Compression::COMPRESSED;
+	} else if(optUncompressed) {
+		compression = KeyFinder::Compression::UNCOMPRESSED;
+	}
+
 	targetList.push_back(ops[0]);
 
 	cuda::CudaDeviceInfo devInfo = cuda::getDeviceInfo(device);
 
 	printf("Device: %s\n", devInfo.name.c_str());
-
 	printf("Target: %s\n", targetList[0].c_str());
+
+	char *compStr;
+	switch(compression) {
+	case KeyFinder::Compression::BOTH:
+		compStr = "both";
+		break;
+	case KeyFinder::Compression::UNCOMPRESSED:
+		compStr = "off";
+		break;
+	case KeyFinder::Compression::COMPRESSED:
+		compStr = "on";
+	}
+
+	printf("Compression: %s\n", compStr);
+
 	printf("Starting at: %s\n", start.toString().c_str());
 
-	KeyFinder f(start, range, targetList, blocks, threads, pointsPerThread);
+	KeyFinder f(start, range, targetList, compression, blocks, threads, pointsPerThread);
 	
 	f.setResultCallback(resultCallback);
 	f.setStatusInterval(1800);

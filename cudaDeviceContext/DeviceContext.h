@@ -22,6 +22,7 @@ struct KeyFinderResult {
 	int thread;
 	int block;
 	int index;
+	bool compressed;
 
 	secp256k1::ecpoint p;
 	unsigned int hash[5];

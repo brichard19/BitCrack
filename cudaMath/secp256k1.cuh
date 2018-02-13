@@ -90,34 +90,6 @@ __device__ bool equal(const unsigned int *a, const unsigned int *b)
 	return eq;
 }
 
-//__device__ bool isLessThanOrEqual(const unsigned int *a, const unsigned int *b)
-//{
-//	for(int i = 0; i < 8; i++) {
-//		if(a[i] < b[i]) {
-//			return true;
-//		} else if(a[i] > b[i]) {
-//			return false;
-//		}
-//	}
-//
-//	return true;
-//}
-//
-//__device__ bool isLessThan(const unsigned int *a, const unsigned int *b)
-//{
-//	if(a[0] < b[0]) {
-//		return true;
-//	}
-//
-//	for(int i = 1; i < 8; i++) {
-//		if(a[i] < b[i]) {
-//			return true;
-//		}
-//	}
-//
-//	return false;
-//}
-
 /**
  * Reads an 8-word big integer from device memory
  */
@@ -135,17 +107,6 @@ __device__ void readInt(const unsigned int *ara, int idx, unsigned int x[8])
 		x[i] = ara[index];
 		index += totalThreads;
 	}
-
-	////////////////////////////////////////////////////////////////////////////
-	//int totalThreads = gridDim.x * blockDim.x;
-
-	//int threadId = blockDim.x * blockIdx.x + threadIdx.x;
-
-	//((int4 *)x)[0] = ((int4 *)ara)[idx * totalThreads + threadId];
-
-	//int offset = totalThreads * _POINTS_PER_THREAD;
-
-	//((int4 *)x)[1] = ((int4 *)ara)[offset + idx * totalThreads + threadId];
 }
 
 /**
@@ -165,17 +126,6 @@ __device__ void writeInt(unsigned int *ara, int idx, const unsigned int x[8])
 		ara[index] = x[i];
 		index += totalThreads;
 	}
-
-	/////////////////////////////////////////////////////////////////////////////////////////////
-	//int totalThreads = gridDim.x * blockDim.x;
-
-	//int threadId = blockDim.x * blockIdx.x + threadIdx.x;
-
-	//((int4 *)ara)[idx * totalThreads + threadId] = ((int4 *)x)[0];
-
-	//int offset = totalThreads * _POINTS_PER_THREAD;
-
-	//((int4 *)ara)[offset + idx * totalThreads + threadId] = ((int4 *)x)[1];
 }
 
 /**
@@ -284,17 +234,7 @@ __device__ void divBy2(unsigned int x[8])
 	x[0] = (x[0] >> 1);
 }
 
-__device__ void rightShift(unsigned int x[8], int count)
-{
-	x[7] = (x[7] >> count) | (x[6] << (32-count));
-	x[6] = (x[6] >> count) | (x[5] << (32 - count));
-	x[5] = (x[5] >> count) | (x[4] << (32 - count));
-	x[4] = (x[4] >> count) | (x[3] << (32 - count));
-	x[3] = (x[3] >> count) | (x[2] << (32 - count));
-	x[2] = (x[2] >> count) | (x[1] << (32 - count));
-	x[1] = (x[1] >> count) | (x[0] << (32 - count));
-	x[0] = (x[0] >> count);
-}
+
 
 __device__ void addModP(const unsigned int a[8], const unsigned int b[8], unsigned int c[8])
 {
@@ -612,340 +552,20 @@ __device__ void mulModP(const unsigned int a[8], const unsigned int b[8], unsign
 	addc(high[7], high[7], 0);
 
 
-	bool overflow = false;
-	if (high[7] != 0) {
-		overflow = true;
-	}
+	bool overflow = high[7] != 0;
 
-	// Very small chance that c > p
-	unsigned int sum = 0xffffffff;
-	for(int i = 0; i < 6; i++) {
-		sum &= c[i];
-	}
-
-	if(sum && ((c[6] > _P[6]) || (c[6] == _P[6] && c[7] >= _P[7]))) {
-		overflow = true;
-	}
-
-	if (overflow) {
-		sub_cc(c[7], c[7], _P[7]);
-		subc_cc(c[6], c[6], _P[6]);
-		subc_cc(c[5], c[5], _P[5]);
-		subc_cc(c[4], c[4], _P[4]);
-		subc_cc(c[3], c[3], _P[3]);
-		subc_cc(c[2], c[2], _P[2]);
-		subc_cc(c[1], c[1], _P[1]);
-		subc(c[0], c[0], _P[0]);
-	}
-}
-
-
-
-__device__ void mulModP_debug(const unsigned int a[8], const unsigned int b[8], unsigned int c[8])
-{
-	unsigned int high[8];
-
-	unsigned int t = a[7];
-
-	// a[7] * b (low)
-	for(int i = 7; i >= 0; i--) {
-		c[i] = t * b[i];
-		high[i] = 0;
-	}
-
-	// a[7] * b (high)
-	mad_hi_cc(c[6], t, b[7], c[6]);
-	madc_hi_cc(c[5], t, b[6], c[5]);
-	madc_hi_cc(c[4], t, b[5], c[4]);
-	madc_hi_cc(c[3], t, b[4], c[3]);
-	madc_hi_cc(c[2], t, b[3], c[2]);
-	madc_hi_cc(c[1], t, b[2], c[1]);
-	madc_hi_cc(c[0], t, b[1], c[0]);
-	madc_hi(high[7], t, b[0], high[7]);
-
-
-
-	// a[6] * b (low)
-	t = a[6];
-	mad_lo_cc(c[6], t, b[7], c[6]);
-	madc_lo_cc(c[5], t, b[6], c[5]);
-	madc_lo_cc(c[4], t, b[5], c[4]);
-	madc_lo_cc(c[3], t, b[4], c[3]);
-	madc_lo_cc(c[2], t, b[3], c[2]);
-	madc_lo_cc(c[1], t, b[2], c[1]);
-	madc_lo_cc(c[0], t, b[1], c[0]);
-	madc_lo_cc(high[7], t, b[0], high[7]);
-	addc(high[6], high[6], 0);
-
-	// a[6] * b (high)
-	mad_hi_cc(c[5], t, b[7], c[5]);
-	madc_hi_cc(c[4], t, b[6], c[4]);
-	madc_hi_cc(c[3], t, b[5], c[3]);
-	madc_hi_cc(c[2], t, b[4], c[2]);
-	madc_hi_cc(c[1], t, b[3], c[1]);
-	madc_hi_cc(c[0], t, b[2], c[0]);
-	madc_hi_cc(high[7], t, b[1], high[7]);
-	madc_hi(high[6], t, b[0], high[6]);
-
-
-
-	// a[5] * b (low)
-	t = a[5];
-	mad_lo_cc(c[5], t, b[7], c[5]);
-	madc_lo_cc(c[4], t, b[6], c[4]);
-	madc_lo_cc(c[3], t, b[5], c[3]);
-	madc_lo_cc(c[2], t, b[4], c[2]);
-	madc_lo_cc(c[1], t, b[3], c[1]);
-	madc_lo_cc(c[0], t, b[2], c[0]);
-	madc_lo_cc(high[7], t, b[1], high[7]);
-	madc_lo_cc(high[6], t, b[0], high[6]);
-	addc(high[5], high[5], 0);
-
-	// a[5] * b (high)
-	mad_hi_cc(c[4], t, b[7], c[4]);
-	madc_hi_cc(c[3], t, b[6], c[3]);
-	madc_hi_cc(c[2], t, b[5], c[2]);
-	madc_hi_cc(c[1], t, b[4], c[1]);
-	madc_hi_cc(c[0], t, b[3], c[0]);
-	madc_hi_cc(high[7], t, b[2], high[7]);
-	madc_hi_cc(high[6], t, b[1], high[6]);
-	madc_hi(high[5], t, b[0], high[5]);
-
-
-
-	// a[4] * b (low)
-	t = a[4];
-	mad_lo_cc(c[4], t, b[7], c[4]);
-	madc_lo_cc(c[3], t, b[6], c[3]);
-	madc_lo_cc(c[2], t, b[5], c[2]);
-	madc_lo_cc(c[1], t, b[4], c[1]);
-	madc_lo_cc(c[0], t, b[3], c[0]);
-	madc_lo_cc(high[7], t, b[2], high[7]);
-	madc_lo_cc(high[6], t, b[1], high[6]);
-	madc_lo_cc(high[5], t, b[0], high[5]);
-	addc(high[4], high[4], 0);
-
-	// a[4] * b (high)
-	mad_hi_cc(c[3], t, b[7], c[3]);
-	madc_hi_cc(c[2], t, b[6], c[2]);
-	madc_hi_cc(c[1], t, b[5], c[1]);
-	madc_hi_cc(c[0], t, b[4], c[0]);
-	madc_hi_cc(high[7], t, b[3], high[7]);
-	madc_hi_cc(high[6], t, b[2], high[6]);
-	madc_hi_cc(high[5], t, b[1], high[5]);
-	madc_hi(high[4], t, b[0], high[4]);
-
-
-
-	// a[3] * b (low)
-	t = a[3];
-	mad_lo_cc(c[3], t, b[7], c[3]);
-	madc_lo_cc(c[2], t, b[6], c[2]);
-	madc_lo_cc(c[1], t, b[5], c[1]);
-	madc_lo_cc(c[0], t, b[4], c[0]);
-	madc_lo_cc(high[7], t, b[3], high[7]);
-	madc_lo_cc(high[6], t, b[2], high[6]);
-	madc_lo_cc(high[5], t, b[1], high[5]);
-	madc_lo_cc(high[4], t, b[0], high[4]);
-	addc(high[3], high[3], 0);
-
-	// a[3] * b (high)
-	mad_hi_cc(c[2], t, b[7], c[2]);
-	madc_hi_cc(c[1], t, b[6], c[1]);
-	madc_hi_cc(c[0], t, b[5], c[0]);
-	madc_hi_cc(high[7], t, b[4], high[7]);
-	madc_hi_cc(high[6], t, b[3], high[6]);
-	madc_hi_cc(high[5], t, b[2], high[5]);
-	madc_hi_cc(high[4], t, b[1], high[4]);
-	madc_hi(high[3], t, b[0], high[3]);
-
-
-
-	// a[2] * b (low)
-	t = a[2];
-	mad_lo_cc(c[2], t, b[7], c[2]);
-	madc_lo_cc(c[1], t, b[6], c[1]);
-	madc_lo_cc(c[0], t, b[5], c[0]);
-	madc_lo_cc(high[7], t, b[4], high[7]);
-	madc_lo_cc(high[6], t, b[3], high[6]);
-	madc_lo_cc(high[5], t, b[2], high[5]);
-	madc_lo_cc(high[4], t, b[1], high[4]);
-	madc_lo_cc(high[3], t, b[0], high[3]);
-	addc(high[2], high[2], 0);
-
-	// a[2] * b (high)
-	mad_hi_cc(c[1], t, b[7], c[1]);
-	madc_hi_cc(c[0], t, b[6], c[0]);
-	madc_hi_cc(high[7], t, b[5], high[7]);
-	madc_hi_cc(high[6], t, b[4], high[6]);
-	madc_hi_cc(high[5], t, b[3], high[5]);
-	madc_hi_cc(high[4], t, b[2], high[4]);
-	madc_hi_cc(high[3], t, b[1], high[3]);
-	madc_hi(high[2], t, b[0], high[2]);
-
-
-
-	// a[1] * b (low)
-	t = a[1];
-	mad_lo_cc(c[1], t, b[7], c[1]);
-	madc_lo_cc(c[0], t, b[6], c[0]);
-	madc_lo_cc(high[7], t, b[5], high[7]);
-	madc_lo_cc(high[6], t, b[4], high[6]);
-	madc_lo_cc(high[5], t, b[3], high[5]);
-	madc_lo_cc(high[4], t, b[2], high[4]);
-	madc_lo_cc(high[3], t, b[1], high[3]);
-	madc_lo_cc(high[2], t, b[0], high[2]);
-	addc(high[1], high[1], 0);
-
-	// a[1] * b (high)
-	mad_hi_cc(c[0], t, b[7], c[0]);
-	madc_hi_cc(high[7], t, b[6], high[7]);
-	madc_hi_cc(high[6], t, b[5], high[6]);
-	madc_hi_cc(high[5], t, b[4], high[5]);
-	madc_hi_cc(high[4], t, b[3], high[4]);
-	madc_hi_cc(high[3], t, b[2], high[3]);
-	madc_hi_cc(high[2], t, b[1], high[2]);
-	madc_hi(high[1], t, b[0], high[1]);
-
-
-
-	// a[0] * b (low)
-	t = a[0];
-	mad_lo_cc(c[0], t, b[7], c[0]);
-	madc_lo_cc(high[7], t, b[6], high[7]);
-	madc_lo_cc(high[6], t, b[5], high[6]);
-	madc_lo_cc(high[5], t, b[4], high[5]);
-	madc_lo_cc(high[4], t, b[3], high[4]);
-	madc_lo_cc(high[3], t, b[2], high[3]);
-	madc_lo_cc(high[2], t, b[1], high[2]);
-	madc_lo_cc(high[1], t, b[0], high[1]);
-	addc(high[0], high[0], 0);
-
-	// a[0] * b (high)
-	mad_hi_cc(high[7], t, b[7], high[7]);
-	madc_hi_cc(high[6], t, b[6], high[6]);
-	madc_hi_cc(high[5], t, b[5], high[5]);
-	madc_hi_cc(high[4], t, b[4], high[4]);
-	madc_hi_cc(high[3], t, b[3], high[3]);
-	madc_hi_cc(high[2], t, b[2], high[2]);
-	madc_hi_cc(high[1], t, b[1], high[1]);
-	madc_hi(high[0], t, b[0], high[0]);
-
-
-	printf("modModP_debug: ");
-	printBigInt(high, 8);
-	printBigInt(c, 8);
-
-	// At this point we have 16 32-bit words representing a 512-bit value
-	// high[0 ... 7] and c[0 ... 7]
-	const unsigned int s = 977;
-
-	// Store high[6] and high[7] since they will be overwritten
-	unsigned int high7 = high[7];
-	unsigned int high6 = high[6];
-
-
-	// Take high 256 bits, multiply by 2^32, add to low 256 bits
-	// That is, take high[0 ... 7], shift it left 1 word and add it to c[0 ... 7]
-	add_cc(c[6], high[7], c[6]);
-	addc_cc(c[5], high[6], c[5]);
-	addc_cc(c[4], high[5], c[4]);
-	addc_cc(c[3], high[4], c[3]);
-	addc_cc(c[2], high[3], c[2]);
-	addc_cc(c[1], high[2], c[1]);
-	addc_cc(c[0], high[1], c[0]);
-	addc_cc(high[7], high[0], 0);
-	addc(high[6], 0, 0);
-
-
-	// Take high 256 bits, multiply by 977, add to low 256 bits
-	// That is, take high[0 ... 5], high6, high7, multiply by 977 and add to c[0 ... 7]
-	mad_lo_cc(c[7], high7, s, c[7]);
-	madc_lo_cc(c[6], high6, s, c[6]);
-	madc_lo_cc(c[5], high[5], s, c[5]);
-	madc_lo_cc(c[4], high[4], s, c[4]);
-	madc_lo_cc(c[3], high[3], s, c[3]);
-	madc_lo_cc(c[2], high[2], s, c[2]);
-	madc_lo_cc(c[1], high[1], s, c[1]);
-	madc_lo_cc(c[0], high[0], s, c[0]);
-	addc_cc(high[7], high[7], 0);
-	addc(high[6], high[6], 0);
-
-
-	mad_hi_cc(c[6], high7, s, c[6]);
-	madc_hi_cc(c[5], high6, s, c[5]);
-	madc_hi_cc(c[4], high[5], s, c[4]);
-	madc_hi_cc(c[3], high[4], s, c[3]);
-	madc_hi_cc(c[2], high[3], s, c[2]);
-	madc_hi_cc(c[1], high[2], s, c[1]);
-	madc_hi_cc(c[0], high[1], s, c[0]);
-	madc_hi_cc(high[7], high[0], s, high[7]);
-	addc(high[6], high[6], 0);
-
-
-	// Repeat the same steps, but this time we only need to handle high[6] and high[7]
-	high7 = high[7];
-	high6 = high[6];
-
-	// Take the high 64 bits, multiply by 2^32 and add to the low 256 bits
-	add_cc(c[6], high[7], c[6]);
-	addc_cc(c[5], high[6], c[5]);
-	addc_cc(c[4], c[4], 0);
-	addc_cc(c[3], c[3], 0);
-	addc_cc(c[2], c[2], 0);
-	addc_cc(c[1], c[1], 0);
-	addc_cc(c[0], c[0], 0);
-	addc(high[7], 0, 0);
-
-
-	// Take the high 64 bits, multiply by 977 and add to the low 256 bits
-	mad_lo_cc(c[7], high7, s, c[7]);
-	madc_lo_cc(c[6], high6, s, c[6]);
-	addc_cc(c[5], c[5], 0);
-	addc_cc(c[4], c[4], 0);
-	addc_cc(c[3], c[3], 0);
-	addc_cc(c[2], c[2], 0);
-	addc_cc(c[1], c[1], 0);
-	addc_cc(c[0], c[0], 0);
-	addc(high[7], high[7], 0);
-
-	mad_hi_cc(c[6], high7, s, c[6]);
-	madc_hi_cc(c[5], high6, s, c[5]);
-	addc_cc(c[4], c[4], 0);
-	addc_cc(c[3], c[3], 0);
-	addc_cc(c[2], c[2], 0);
-	addc_cc(c[1], c[1], 0);
-	addc_cc(c[0], c[0], 0);
-	addc(high[7], high[7], 0);
-
-
-	bool overflow = false;
-	if(high[7] != 0) {
-		overflow = true;
-	}
-
-	// Very small chance that c > p
-	unsigned int sum = 0xffffffff;
-	for(int i = 0; i < 6; i++) {
-		sum &= c[i];
-	}
-
-	if(sum && ((c[6] > _P[6]) || (c[6] == _P[6] && c[7] >= _P[7]))) {
-		overflow = true;
-	}
+	unsigned int borrow = sub(c, _P, c);
 
 	if(overflow) {
-		sub_cc(c[7], c[7], _P[7]);
-		subc_cc(c[6], c[6], _P[6]);
-		subc_cc(c[5], c[5], _P[5]);
-		subc_cc(c[4], c[4], _P[4]);
-		subc_cc(c[3], c[3], _P[3]);
-		subc_cc(c[2], c[2], _P[2]);
-		subc_cc(c[1], c[1], _P[1]);
-		subc(c[0], c[0], _P[0]);
+		if(!borrow) {
+			sub(c, _P, c);
+		}
+	} else {
+		if(borrow) {
+			add(c, _P, c);
+		}
 	}
 }
-
 
 
 /**
@@ -1068,149 +688,6 @@ __device__ void negModP(const unsigned int *value, unsigned int *negative)
 }
 
 
-
-/**
- * Binary modular inversion algorithm
- */
-
-//__device__ bool isOne(const unsigned int *x)
-//{
-//	if(x[7] != 1) {
-//		return false;
-//	}
-//
-//	for(int i = 0; i < 7; i++) {
-//		if(x[i] != 0) {
-//			return false;
-//		}
-//	}
-//
-//	return true;
-//}
-
-
-//__device__ bool isEven(const unsigned int *x)
-//{
-//	return ((x[7] & 1) == 0);
-//}
-//
-//__device__ void invModPBinary(unsigned int *value)
-//{
-//	unsigned int u[8];
-//	unsigned int v[8];
-//	unsigned int x1[8] = { 0, 0, 0, 0, 0, 0, 0, 1 };
-//	unsigned int x2[8] = { 0 };
-//
-//	// Signed part of the 256-bit words
-//	int x1Signed = 0;
-//	int x2Signed = 0;
-//
-//	for(int i = 0; i < 8; i++) {
-//		u[i] = value[i];
-//		v[i] = _P[i];
-//	}
-//
-//
-//	while(!isOne(u) && !isOne(v)) {
-//
-//		while(isEven(u)) {
-//
-//			divBy2(u);
-//
-//			if(isEven(x1)) {
-//				divBy2(x1);
-//
-//				// Shift right (signed bit is preserved)
-//				x1[0] |= ((unsigned int)x1Signed & 0x01) << 31;
-//
-//				x1Signed >>= 1;
-//			} else {
-//				int carry = add(x1, _P, x1);
-//
-//				divBy2(x1);
-//
-//				x1Signed += carry;
-//
-//				x1[0] |= ((unsigned int)x1Signed & 0x01) << 31;
-//
-//				x1Signed >>= 1;
-//			}
-//
-//		}
-//
-//		while(isEven(v)) {
-//
-//			divBy2(v);
-//
-//			if(isEven(x2)) { 
-//
-//				divBy2(x2);
-//
-//				x2[0] |= ((unsigned int)x2Signed & 0x01) << 31;
-//
-//				x2Signed >>= 1;
-//			} else {
-//				int carry = add(x2, _P, x2);
-//
-//				divBy2(x2);
-//
-//				x2Signed += carry;
-//
-//				x2[0] |= ((unsigned int)x2Signed & 0x01) << 31;
-//
-//				x2Signed >>= 1;
-//			}
-//		}
-//
-//		if(isLessThanOrEqual(v, u)) {
-//			sub(u, v, u);
-//
-//			// x1 = x1 - x2
-//			int borrow = sub(x1, x2, x1);
-//			x1Signed -= x2Signed;
-//			x1Signed -= borrow;
-//			//x1Signed = x1Signed - x2Signed - sub(x1, x2, x1);
-//		} else {
-//
-//			sub(v, u, v);
-//			int borrow = sub(x2, x1, x2);
-//			x2Signed -= x1Signed;
-//			x2Signed -= borrow;
-//			//x2Signed = x2Signed - x1Signed - sub(x2, x1, x2);
-//		}
-//
-//	}
-//
-//	if(isOne(u)) {
-//
-//		while(x1Signed < 0) {
-//			x1Signed += add(x1, _P, x1);
-//		}
-//
-//		while(x1Signed > 0) {
-//			x1Signed -= sub(x1, _P, x1);
-//		}
-//
-//		for(int i = 0; i < 8; i++) {
-//			value[i] = x1[i];
-//		}
-//
-//	} else {
-//
-//		while(x2Signed < 0) {
-//			x2Signed += add(x2, _P, x2);
-//		}
-//
-//		while(x2Signed > 0) {
-//			x2Signed -= sub(x2, _P, x2);
-//		}
-//
-//		for(int i = 0; i < 8; i++) {
-//			value[i] = x2[i];
-//		}
-//	}
-//}
-
 __device__ __forceinline__ void beginBatchAdd(const unsigned int *px, unsigned int *xPtr, unsigned int *chain, int i, unsigned int inverse[8])
 {
 	unsigned int x[8];
@@ -1267,31 +744,34 @@ __device__ void completeBatchAddWithDouble(const unsigned int *px, const unsigne
 {
 	unsigned int s[8];
 	unsigned int x[8];
+	unsigned int y[8];
 
 	readInt(xPtr, i, x);
+	readInt(yPtr, i, y);
 
 	if(i >= 1) {
 		unsigned int c[8];
 
 		readInt(chain, i - 1, c);
+
 		mulModP(inverse, c, s);
 
 		unsigned int diff[8];
-		subModP(px, x, diff);
+		if(equal(px, x)) {
+			addModP(py, py, diff);
+		} else {
+			subModP(px, x, diff);
+		}
+
 		mulModP(diff, inverse);
 	} else {
 		copyBigInt(inverse, s);
 	}
 
-	unsigned int rise[8];
-	unsigned int y[8];
-	readInt(yPtr, i, y);
 
 	if(equal(px, x)) {
 		// currently s = 1 / 2y
 
-		// s = 3x^2 / 2y
-		unsigned int t[8];
 		unsigned int x2[8];
 		unsigned int tx2[8];
 
@@ -1300,26 +780,27 @@ __device__ void completeBatchAddWithDouble(const unsigned int *px, const unsigne
 		addModP(x2, x2, tx2);
 		addModP(x2, tx2, tx2);
 
-		
-		// 3x^2 * 1/2y
-		mulModP(tx2, s, t);
+
+		// s = 3x^2 * 1/2y
+		mulModP(tx2, s);
 
 		// s^2
 		unsigned int s2[8];
-		mulModP(t, t, s2);
+		mulModP(s, s, s2);
 
-		// Rx = s^2 - 2xp
+		// Rx = s^2 - 2px
 		subModP(s2, x, newX);
 		subModP(newX, x, newX);
 
 		// Ry = s(px - rx) - py
 		unsigned int k[8];
 		subModP(px, newX, k);
-		mulModP(t, k, newY);
+		mulModP(s, k, newY);
 		subModP(newY, py, newY);
 
 	} else {
 
+		unsigned int rise[8];
 		subModP(py, y, rise);
 
 		mulModP(rise, s);
@@ -1327,6 +808,7 @@ __device__ void completeBatchAddWithDouble(const unsigned int *px, const unsigne
 		// Rx = s^2 - Gx - Qx
 		unsigned int s2[8];
 		mulModP(s, s, s2);
+
 		subModP(s2, px, newX);
 		subModP(newX, x, newX);
 
@@ -1380,46 +862,6 @@ __device__ void completeBatchAdd(const unsigned int *px, const unsigned int *py,
 	subModP(newY, py, newY);
 }
 
-__device__ void completeBatchAdd(unsigned int *xPtr, unsigned int *yPtr, int i, unsigned int *chain, unsigned int *inverse, unsigned int newX[8], unsigned int newY[8])
-{
-	unsigned int s[8];
-	unsigned int x[8];
-
-	readInt(xPtr, i, x);
-
-	if(i >= 1) {
-		unsigned int c[8];
-
-		readInt(chain, i - 1, c);
-		mulModP(inverse, c, s);
-
-		unsigned int diff[8];
-		subModP(_QX, x, diff);
-		mulModP(diff, inverse);
-	} else {
-		copyBigInt(inverse, s);
-	}
-
-	unsigned int y[8];
-	readInt(yPtr, i, y);
-
-	unsigned int rise[8];
-	subModP(_QY, y, rise);
-
-	mulModP(rise, s);
-
-	// Rx = s^2 - Gx - Qx
-	unsigned int s2[8];
-	mulModP(s, s, s2);
-	subModP(s2, _QX, newX);
-	subModP(newX, x, newX);
-
-	// Ry = s(px - rx) - py
-	unsigned int k[8];
-	subModP(_QX, newX, k);
-	mulModP(s, k, newY);
-	subModP(newY, _QY, newY);
-}
 
 __device__ __forceinline__ void doBatchInverse(unsigned int inverse[8])
 {

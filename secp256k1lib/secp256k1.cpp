@@ -183,8 +183,8 @@ uint256 uint256::div(int val) const
 	}
 
 	uint256 k(kWords);
-	// while t > divisor
-	while(t.cmp(uint256(val)) > 0) {
+	// while t >= divisor
+	while(t.cmp(uint256(val)) >= 0) {
 
 		// while t < k
 		while(t.cmp(k) < 0) {
@@ -631,13 +631,17 @@ bool secp256k1::isPointAtInfinity(const ecpoint &p)
 
 ecpoint secp256k1::doublePoint(const ecpoint &p)
 {
+	// 1 / 2y
 	uint256 yInv = invModP(addModP(p.y, p.y));
 
+	// s = 3x^2 / 2y
 	uint256 x3 = multiplyModP(p.x, p.x);
 	uint256 s = multiplyModP(addModP(addModP(x3, x3), x3), yInv);
 
+	//rx = s^2 - 2x
 	uint256 rx = subModP(subModP(multiplyModP(s, s), p.x), p.x);
 
+	//ry = s * (px - rx) - py
 	uint256 ry = subModP(multiplyModP(s, subModP(p.x, rx)), p.y);
 
 	ecpoint result;
