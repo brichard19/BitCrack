@@ -21,7 +21,7 @@ void KeyFinder::defaultStatusCallback(KeyFinderStatusInfo status)
 }
 
 
-KeyFinder::KeyFinder(const secp256k1::uint256 &start, unsigned long long range, std::vector<std::string> &targetHashes, int blocks, int threads, int pointsPerThread)
+KeyFinder::KeyFinder(const secp256k1::uint256 &start, unsigned long long range, std::vector<std::string> &targetHashes, int compression, int blocks, int threads, int pointsPerThread)
 {
 	_devCtx = NULL;
 	_total = 0;
@@ -30,6 +30,11 @@ KeyFinder::KeyFinder(const secp256k1::uint256 &start, unsigned long long range, 
 	_pointsPerThread = DEFAULT_POINTS_PER_THREAD;
 	_numThreads = DEFAULT_NUM_THREADS;
 	_numBlocks = DEFAULT_NUM_BLOCKS;
+
+	if(!(compression == Compression::COMPRESSED || compression == Compression::UNCOMPRESSED || compression == Compression::BOTH)) {
+		throw KeyFinderException("Invalid argument for compression");
+	}
+	_compression = compression;
 
 	if(threads != 0) {
 		_numThreads = threads;
@@ -126,6 +131,12 @@ void KeyFinder::generateStartingPoints()
 	}
 
 	secp256k1::generateKeyPairsBulk(secp256k1::G(), _exponents, _startingPoints);
+
+	for(int i = 0; i < _startingPoints.size(); i++) {
+		if(!secp256k1::pointExists(_startingPoints[i])) {
+			throw KeyFinderException("Point generation error");
+		}
+	}
 }
 
 
@@ -137,7 +148,7 @@ void KeyFinder::stop()
 /**
  Verified this private key produces this public key and hash
  */
-bool KeyFinder::verifyKey(const secp256k1::uint256 &privateKey, const secp256k1::ecpoint &publicKey, const unsigned int hash[5])
+bool KeyFinder::verifyKey(const secp256k1::uint256 &privateKey, const secp256k1::ecpoint &publicKey, const unsigned int hash[5], bool compressed)
 {
 	secp256k1::ecpoint g = secp256k1::G();
 
@@ -154,7 +165,12 @@ bool KeyFinder::verifyKey(const secp256k1::uint256 &privateKey, const secp256k1:
 	p.y.exportWords(yWords, 8, secp256k1::uint256::BigEndian);
 
 	unsigned int digest[5];
-	Hash::hashPublicKey(xWords, yWords, digest);
+	if(compressed) {
+		Hash::hashPublicKeyCompressed(xWords, yWords, digest);
+	} else {
+		Hash::hashPublicKey(xWords, yWords, digest);
+	}
+	
 
 	for(int i = 0; i < 5; i++) {
 		if(digest[i] != hash[i]) {
@@ -179,9 +195,9 @@ void KeyFinder::run()
 
 		KernelParams params = _devCtx->getKernelParams();
 		if(_iterCount < 2 && _startExponent.cmp(pointsPerIteration) <= 0) {
-			callKeyFinderKernel(params, true);
+			callKeyFinderKernel(params, true, _compression);
 		} else {
-			callKeyFinderKernel(params, false);
+			callKeyFinderKernel(params, false, _compression);
 		}
 
 		// Update status
@@ -212,15 +228,15 @@ void KeyFinder::run()
 			_devCtx->getKeyFinderResults(results);
 
 			for(int i = 0; i < results.size(); i++) {
-				unsigned int index = _devCtx->getIndex(results[0].block, results[0].thread, results[0].index);
+				unsigned int index = _devCtx->getIndex(results[i].block, results[i].thread, results[i].index);
 
 				secp256k1::uint256 exp = _exponents[index];
-				secp256k1::ecpoint publicKey = results[0].p;
+				secp256k1::ecpoint publicKey = results[i].p;
 
 				unsigned long long offset = (unsigned long long)_numBlocks * _numThreads * _pointsPerThread * _iterCount;
 				exp = secp256k1::addModN(exp, secp256k1::uint256(offset));
 
-				if(!verifyKey(exp, publicKey, results[0].hash)) {
+				if(!verifyKey(exp, publicKey, results[i].hash, results[0].compressed)) {
 					throw KeyFinderException("Invalid point");
 				}
 
@@ -236,7 +252,7 @@ void KeyFinder::run()
 		}
 		_iterCount++;
 
-		if(_iterCount * pointsPerIteration >= _range) {
+		if(_range > 0 && _iterCount * pointsPerIteration >= _range) {
 			_running = false;
 		}
 	}

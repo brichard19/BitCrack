@@ -30,7 +30,7 @@ public:
 
 };
 
-void callKeyFinderKernel(KernelParams &params, bool useDouble);
+void callKeyFinderKernel(KernelParams &params, bool useDouble, int compression);
 
 void waitForKernel();
 

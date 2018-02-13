@@ -1,12 +1,16 @@
 #include "cudabridge.h"
 
 
-__global__ void keyFinderKernel(int points, unsigned int flags, unsigned int *x, unsigned int *y, unsigned int *chain, unsigned int *numResults, void *results, bool useDouble);
+__global__ void keyFinderKernel(int points, unsigned int flags, unsigned int *x, unsigned int *y, unsigned int *chain, unsigned int *numResults, void *results, int compression);
+__global__ void keyFinderKernelWithDouble(int points, unsigned int flags, unsigned int *x, unsigned int *y, unsigned int *chain, unsigned int *numResults, void *results, int compression);
 
-
-void callKeyFinderKernel(KernelParams &params, bool useDouble)
+void callKeyFinderKernel(KernelParams &params, bool useDouble, int compression)
 {
-	keyFinderKernel<<<params.blocks, params.threads>>>(params.points, params.flags, params.x, params.y, params.chain, params.numResults, params.results, useDouble);
+	if(useDouble) {
+		keyFinderKernelWithDouble <<<params.blocks, params.threads >> >(params.points, params.flags, params.x, params.y, params.chain, params.numResults, params.results, compression);
+	} else {
+		keyFinderKernel <<<params.blocks, params.threads >> > (params.points, params.flags, params.x, params.y, params.chain, params.numResults, params.results, compression);
+	}
 	waitForKernel();
 }
 

@@ -45,8 +45,13 @@ class KeyFinder {
 
 private:
 
-	const int MODE_ADDRESS = 0;
-	const int MODE_PUBKEY = 1;
+	const int FORMAT_PUBKEY = 0x00000001;
+	//const int MODE_ADDRESS = 0x00000000;
+	//const int MODE_PUBKEY = 0x
+
+	unsigned int _compression;
+
+	unsigned int _flags;
 
 	std::vector<KeyFinderTarget> _targets;
 
@@ -88,12 +93,20 @@ private:
 
 	void generateStartingPoints();
 
-	bool verifyKey(const secp256k1::uint256 &privateKey, const secp256k1::ecpoint &publicKey, const unsigned int hash[5]);
+	bool verifyKey(const secp256k1::uint256 &privateKey, const secp256k1::ecpoint &publicKey, const unsigned int hash[5], bool compressed);
 
 
 public:
+	class Compression {
+	public:
+		enum {
+			COMPRESSED = 0,
+			UNCOMPRESSED = 1,
+			BOTH,
+		};
+	};
 
-	KeyFinder(const secp256k1::uint256 &start, unsigned long long range, std::vector<std::string> &targetHashes, int blocks = 0, int threads = 0, int pointsPerThread = 0);
+	KeyFinder(const secp256k1::uint256 &start, unsigned long long range, std::vector<std::string> &targetHashes, int compression, int blocks = 0, int threads = 0, int pointsPerThread = 0);
 	~KeyFinder();
 
 	void init();
