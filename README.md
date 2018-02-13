@@ -27,6 +27,8 @@ Options:
 -p, --per-thread        Keys per thread
 -s, --start             Staring key, in hex
 -r, --range             Number of keys to search
+-c, --compressed        Compressed keys (default)
+-u, --uncompressed      Uncompressed keys
 ```
 
 ### Examples
