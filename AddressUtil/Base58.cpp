@@ -115,20 +115,3 @@ void Base58::getMinMaxFromPrefix(const std::string &prefix, secp256k1::uint256 &
 	minValueOut = minValue;
 	maxValueOut = maxValue;
 }
-
-std::string hashToAddress(const unsigned int *hash)
-{
-	unsigned int checksum = crypto::checksum(hash);
-
-	unsigned int addressWords[8] = { 0 };
-
-	for(int i = 0; i < 5; i++) {
-		addressWords[i] = hash[4 - i];
-	}
-
-	addressWords[0] = checksum;
-
-	secp256k1::uint256 addressInt(addressWords);
-
-	return Base58::toBase58(addressInt);
-}

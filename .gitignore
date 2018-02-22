@@ -3,6 +3,12 @@
 ##
 ## Get latest from https://github.com/github/gitignore/blob/master/VisualStudio.gitignore
 
+# Linux build results
+*.o
+
+# CUDA build results
+*.cuo
+
 # User-specific files
 *.suo
 *.user

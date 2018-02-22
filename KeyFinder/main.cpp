@@ -5,7 +5,7 @@
 #include "util.h"
 #include "secp256k1.h"
 #include "CmdParse.h"
-#include "CudaUtil.h"
+#include "cudaUtil.h"
 
 
 /**
@@ -186,7 +186,7 @@ int main(int argc, char **argv)
 	printf("Device: %s\n", devInfo.name.c_str());
 	printf("Target: %s\n", targetList[0].c_str());
 
-	char *compStr;
+	const char *compStr;
 	switch(compression) {
 	case KeyFinder::Compression::BOTH:
 		compStr = "both";

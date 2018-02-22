@@ -1,8 +1,8 @@
 #ifndef _CUDA_UTIL_H
 #define _CUDA_UTIL_H
 
-#include<cuda.h>
-#include<cuda_runtime.h>
+#include <cuda.h>
+#include <cuda_runtime.h>
 
 #include <string>
 #include <vector>
