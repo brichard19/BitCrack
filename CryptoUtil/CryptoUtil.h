@@ -20,5 +20,6 @@ namespace crypto {
 	void sha256(unsigned int *msg, unsigned int *digest);
 
 	unsigned int checksum(const unsigned int *hash);
-}
+};
+
 #endif

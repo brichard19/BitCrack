@@ -1,3 +1,4 @@
+#include <string.h>
 #include "CryptoUtil.h"
 
 #ifdef _WIN32
@@ -16,6 +17,7 @@ static void secureRandom(unsigned char *buf, unsigned int count)
 	// Read from /dev/urandom
 }
 #endif
+
 
 crypto::Rng::Rng()
 {
