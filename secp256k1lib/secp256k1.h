@@ -110,6 +110,8 @@ namespace secp256k1 {
 
 		uint256 add(int val) const;
 
+		uint256 add(unsigned int val) const;
+
 		uint256 add(unsigned long long val) const;
 
 		uint256 sub(int val) const;

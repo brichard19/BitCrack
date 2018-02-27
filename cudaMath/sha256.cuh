@@ -74,14 +74,6 @@ __device__ __forceinline__ void round(unsigned int a, unsigned int b, unsigned i
 	h += s + MAJ(a, b, c) + (rotr(a, 2) ^ rotr(a, 13) ^ rotr(a, 22));
 }
 
-
-__device__ void print_state(unsigned int a, unsigned int b, unsigned int c, unsigned int d, unsigned int e, unsigned int f, unsigned int g, unsigned int h)
-{
-	printf("%.8x %.8x %.8x %.8x %.8x %.8x %.8x %.8x\n", a, b, c, d, e, f, g, h);
-}
-
-
-
 __device__ void sha256PublicKey(const unsigned int x[8], const unsigned int y[8], unsigned int digest[8])
 {
 	unsigned int a, b, c, d, e, f, g, h;
@@ -260,47 +252,44 @@ __device__ void sha256PublicKey(const unsigned int x[8], const unsigned int y[8]
 	tmp[6] = g;
 	tmp[7] = h;
 
-#pragma unroll
-	for(int i = 1; i < 15; i++) {
-		w[i] = 0;
-	}
-
 	w[0] = (y[7] << 24) | 0x00800000;
 	w[15] = 65 * 8;
 
 	round(a, b, c, d, e, f, g, h, w[0], _K[0]);
-	round(h, a, b, c, d, e, f, g, w[1], _K[1]);
-	round(g, h, a, b, c, d, e, f, w[2], _K[2]);
-	round(f, g, h, a, b, c, d, e, w[3], _K[3]);
-	round(e, f, g, h, a, b, c, d, w[4], _K[4]);
-	round(d, e, f, g, h, a, b, c, w[5], _K[5]);
-	round(c, d, e, f, g, h, a, b, w[6], _K[6]);
-	round(b, c, d, e, f, g, h, a, w[7], _K[7]);
-	round(a, b, c, d, e, f, g, h, w[8], _K[8]);
-	round(h, a, b, c, d, e, f, g, w[9], _K[9]);
-	round(g, h, a, b, c, d, e, f, w[10], _K[10]);
-	round(f, g, h, a, b, c, d, e, w[11], _K[11]);
-	round(e, f, g, h, a, b, c, d, w[12], _K[12]);
-	round(d, e, f, g, h, a, b, c, w[13], _K[13]);
-	round(c, d, e, f, g, h, a, b, w[14], _K[14]);
+	round(h, a, b, c, d, e, f, g, 0, _K[1]);
+	round(g, h, a, b, c, d, e, f, 0, _K[2]);
+	round(f, g, h, a, b, c, d, e, 0, _K[3]);
+	round(e, f, g, h, a, b, c, d, 0, _K[4]);
+	round(d, e, f, g, h, a, b, c, 0, _K[5]);
+	round(c, d, e, f, g, h, a, b, 0, _K[6]);
+	round(b, c, d, e, f, g, h, a, 0, _K[7]);
+	round(a, b, c, d, e, f, g, h, 0, _K[8]);
+	round(h, a, b, c, d, e, f, g, 0, _K[9]);
+	round(g, h, a, b, c, d, e, f, 0, _K[10]);
+	round(f, g, h, a, b, c, d, e, 0, _K[11]);
+	round(e, f, g, h, a, b, c, d, 0, _K[12]);
+	round(d, e, f, g, h, a, b, c, 0, _K[13]);
+	round(c, d, e, f, g, h, a, b, 0, _K[14]);
 	round(b, c, d, e, f, g, h, a, w[15], _K[15]);
 
-	w[0] = w[0] + s0(w[1]) + w[9] + s1(w[14]);
-	w[1] = w[1] + s0(w[2]) + w[10] + s1(w[15]);
-	w[2] = w[2] + s0(w[3]) + w[11] + s1(w[0]);
-	w[3] = w[3] + s0(w[4]) + w[12] + s1(w[1]);
-	w[4] = w[4] + s0(w[5]) + w[13] + s1(w[2]);
-	w[5] = w[5] + s0(w[6]) + w[14] + s1(w[3]);
-	w[6] = w[6] + s0(w[7]) + w[15] + s1(w[4]);
-	w[7] = w[7] + s0(w[8]) + w[0] + s1(w[5]);
-	w[8] = w[8] + s0(w[9]) + w[1] + s1(w[6]);
-	w[9] = w[9] + s0(w[10]) + w[2] + s1(w[7]);
-	w[10] = w[10] + s0(w[11]) + w[3] + s1(w[8]);
-	w[11] = w[11] + s0(w[12]) + w[4] + s1(w[9]);
-	w[12] = w[12] + s0(w[13]) + w[5] + s1(w[10]);
-	w[13] = w[13] + s0(w[14]) + w[6] + s1(w[11]);
-	w[14] = w[14] + s0(w[15]) + w[7] + s1(w[12]);
+	w[0] = w[0] + s0(0) + 0 + s1(0);
+	w[1] = 0 + s0(0) + 0 + s1(w[15]);
+	w[2] = 0 + s0(0) + 0 + s1(w[0]);
+	w[3] = 0 + s0(0) + 0 + s1(w[1]);
+	w[4] = 0 + s0(0) + 0 + s1(w[2]);
+	w[5] = 0 + s0(0) + 0 + s1(w[3]);
+	w[6] = 0 + s0(0) + w[15] + s1(w[4]);
+	w[7] = 0 + s0(0) + w[0] + s1(w[5]);
+	w[8] = 0 + s0(0) + w[1] + s1(w[6]);
+	w[9] = 0 + s0(0) + w[2] + s1(w[7]);
+	w[10] = 0 + s0(0) + w[3] + s1(w[8]);
+	w[11] = 0 + s0(0) + w[4] + s1(w[9]);
+	w[12] = 0 + s0(0) + w[5] + s1(w[10]);
+	w[13] = 0 + s0(0) + w[6] + s1(w[11]);
+	w[14] = 0 + s0(w[15]) + w[7] + s1(w[12]);
 	w[15] = w[15] + s0(w[0]) + w[8] + s1(w[13]);
+	
+
 
 	round(a, b, c, d, e, f, g, h, w[0], _K[16]);
 	round(h, a, b, c, d, e, f, g, w[1], _K[17]);
@@ -403,12 +392,7 @@ __device__ void sha256PublicKeyCompressed(const unsigned int x[8], const unsigne
 	unsigned int w[16];
 
 	// 0x03 || x  or  0x02 || x
-	//if(y[7] & 0x01) {
-	//	w[0] = (x[0] >> 8) | 0x03000000;
-	//} else {
-	//	w[0] = (x[0] >> 8) | 0x02000000;
-	//}
-	w[0] = 0x02000000 | ((y[7] & 1) << 24) | x[0] >> 8;
+	w[0] = 0x02000000 | ((y[7] & 1) << 24) | (x[0] >> 8);
 
 	w[1] = (x[1] >> 8) | (x[0] << 24);
 	w[2] = (x[2] >> 8) | (x[1] << 24);
@@ -418,12 +402,6 @@ __device__ void sha256PublicKeyCompressed(const unsigned int x[8], const unsigne
 	w[6] = (x[6] >> 8) | (x[5] << 24);
 	w[7] = (x[7] >> 8) | (x[6] << 24);
 	w[8] = (x[7] << 24) | 0x00800000;
-	w[9] = 0;
-	w[10] = 0;
-	w[11] = 0;
-	w[12] = 0;
-	w[13] = 0;
-	w[14] = 0;
 	w[15] = 33 * 8;
 
 	a = _IV[0];
@@ -444,29 +422,29 @@ __device__ void sha256PublicKeyCompressed(const unsigned int x[8], const unsigne
 	round(c, d, e, f, g, h, a, b, w[6], _K[6]);
 	round(b, c, d, e, f, g, h, a, w[7], _K[7]);
 	round(a, b, c, d, e, f, g, h, w[8], _K[8]);
-	round(h, a, b, c, d, e, f, g, w[9], _K[9]);
-	round(g, h, a, b, c, d, e, f, w[10], _K[10]);
-	round(f, g, h, a, b, c, d, e, w[11], _K[11]);
-	round(e, f, g, h, a, b, c, d, w[12], _K[12]);
-	round(d, e, f, g, h, a, b, c, w[13], _K[13]);
-	round(c, d, e, f, g, h, a, b, w[14], _K[14]);
+	round(h, a, b, c, d, e, f, g, 0, _K[9]);
+	round(g, h, a, b, c, d, e, f, 0, _K[10]);
+	round(f, g, h, a, b, c, d, e, 0, _K[11]);
+	round(e, f, g, h, a, b, c, d, 0, _K[12]);
+	round(d, e, f, g, h, a, b, c, 0, _K[13]);
+	round(c, d, e, f, g, h, a, b, 0, _K[14]);
 	round(b, c, d, e, f, g, h, a, w[15], _K[15]);
 
-	w[0] = w[0] + s0(w[1]) + w[9] + s1(w[14]);
-	w[1] = w[1] + s0(w[2]) + w[10] + s1(w[15]);
-	w[2] = w[2] + s0(w[3]) + w[11] + s1(w[0]);
-	w[3] = w[3] + s0(w[4]) + w[12] + s1(w[1]);
-	w[4] = w[4] + s0(w[5]) + w[13] + s1(w[2]);
-	w[5] = w[5] + s0(w[6]) + w[14] + s1(w[3]);
+	w[0] = w[0] + s0(w[1]) + 0 + s1(0);
+	w[1] = w[1] + s0(w[2]) + 0 + s1(w[15]);
+	w[2] = w[2] + s0(w[3]) + 0 + s1(w[0]);
+	w[3] = w[3] + s0(w[4]) + 0 + s1(w[1]);
+	w[4] = w[4] + s0(w[5]) + 0 + s1(w[2]);
+	w[5] = w[5] + s0(w[6]) + 0 + s1(w[3]);
 	w[6] = w[6] + s0(w[7]) + w[15] + s1(w[4]);
 	w[7] = w[7] + s0(w[8]) + w[0] + s1(w[5]);
-	w[8] = w[8] + s0(w[9]) + w[1] + s1(w[6]);
-	w[9] = w[9] + s0(w[10]) + w[2] + s1(w[7]);
-	w[10] = w[10] + s0(w[11]) + w[3] + s1(w[8]);
-	w[11] = w[11] + s0(w[12]) + w[4] + s1(w[9]);
-	w[12] = w[12] + s0(w[13]) + w[5] + s1(w[10]);
-	w[13] = w[13] + s0(w[14]) + w[6] + s1(w[11]);
-	w[14] = w[14] + s0(w[15]) + w[7] + s1(w[12]);
+	w[8] = w[8] + s0(0) + w[1] + s1(w[6]);
+	w[9] = 0 + s0(0) + w[2] + s1(w[7]);
+	w[10] = 0 + s0(0) + w[3] + s1(w[8]);
+	w[11] = 0 + s0(0) + w[4] + s1(w[9]);
+	w[12] = 0 + s0(0) + w[5] + s1(w[10]);
+	w[13] = 0 + s0(0) + w[6] + s1(w[11]);
+	w[14] = 0 + s0(w[15]) + w[7] + s1(w[12]);
 	w[15] = w[15] + s0(w[0]) + w[8] + s1(w[13]);
 
 	round(a, b, c, d, e, f, g, h, w[0], _K[16]);
@@ -554,8 +532,6 @@ __device__ void sha256PublicKeyCompressed(const unsigned int x[8], const unsigne
 	round(d, e, f, g, h, a, b, c, w[13], _K[61]);
 	round(c, d, e, f, g, h, a, b, w[14], _K[62]);
 	round(b, c, d, e, f, g, h, a, w[15], _K[63]);
-
-
 
 	a += _IV[0];
 	b += _IV[1];
