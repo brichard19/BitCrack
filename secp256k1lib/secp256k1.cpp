@@ -223,6 +223,15 @@ uint256 uint256::add(int val) const
 	return result;
 }
 
+uint256 uint256::add(unsigned int val) const
+{
+	uint256 result(val);
+
+	::add(this->v, result.v, result.v, 8);
+
+	return result;
+}
+
 uint256 uint256::add(unsigned long long val) const
 {
 	uint256 result(val);
@@ -766,7 +775,7 @@ void secp256k1::generateKeypairsBulk(unsigned int count, const ecpoint &basePoin
 
 void secp256k1::generateKeyPairsBulk(const ecpoint &basePoint, std::vector<uint256> &privKeys, std::vector<ecpoint> &pubKeysOut)
 {
-	int count = privKeys.size();
+	unsigned int count = privKeys.size();
 
 	//privKeysOut.clear();
 	pubKeysOut.clear();

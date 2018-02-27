@@ -32,9 +32,6 @@ __constant__ unsigned int _GY[8] = {
 	0x483ADA77, 0x26A3C465, 0x5DA4FBFC, 0x0E1108A8, 0xFD17B448, 0xA6855419, 0x9C47D08F, 0xFB10D4B8
 };
 
-__constant__ unsigned int _QX[8];
-
-__constant__ unsigned int _QY[8];
 
 /**
  * Group order
@@ -48,19 +45,10 @@ __constant__ unsigned int _BETA[8] = {
 };
 
 
-
 __constant__ unsigned int _LAMBDA[8] = {
 	0x5363AD4C, 0xC05C30E0, 0xA5261C02, 0x8812645A, 0x122E22EA, 0x20816678, 0xDF02967C, 0x1B23BD72
 };
 
-
-
-/**
- * P -2, used for modular inversion
- */
-__constant__ unsigned int _P_MINUS_2[8] = {
-	0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFE, 0xFFFFFC2D
-};
 
 __device__ __forceinline__ void copyBigInt(const unsigned int *src, unsigned int *dest)
 {
@@ -715,22 +703,6 @@ __device__ __forceinline__ void beginBatchAddWithDouble(const unsigned int *px, 
 		// x = Gx - x
 		subModP(px, x, x);
 	}
-
-	// Keep a chain of multiples of the diff, i.e. c[0] = diff0, c[1] = diff0 * diff1,
-	// c[2] = diff2 * diff1 * diff0, etc
-	mulModP(x, inverse);
-
-	writeInt(chain, i, inverse);
-}
-
-
-__device__ __forceinline__ void beginBatchAdd(unsigned int *xPtr, unsigned int *chain, int i, unsigned int inverse[8])
-{
-	unsigned int x[8];
-	readInt(xPtr, i, x);
-
-	// x = Gx - x
-	subModP(_QX, x, x);
 
 	// Keep a chain of multiples of the diff, i.e. c[0] = diff0, c[1] = diff0 * diff1,
 	// c[2] = diff2 * diff1 * diff0, etc

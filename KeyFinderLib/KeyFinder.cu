@@ -18,10 +18,31 @@ __constant__ unsigned int _TARGET_HASH[5];
 __constant__ unsigned int _INC_X[8];
 __constant__ unsigned int _INC_Y[8];
 
+static const unsigned int _RIPEMD160_IV_HOST[5] = {
+	0x67452301,
+	0xefcdab89,
+	0x98badcfe,
+	0x10325476,
+	0xc3d2e1f0
+};
+
+static unsigned int swp(unsigned int x)
+{
+	return (x << 24) | ((x << 8) & 0x00ff0000) | ((x >> 8) & 0x0000ff00) | (x >> 24);
+}
 
 cudaError_t setTargetHash(const unsigned int hash[5])
 {
-	return cudaMemcpyToSymbol(_TARGET_HASH, hash, sizeof(unsigned int) * 5);
+	unsigned int h[5];
+
+
+	// Subtract the RIPEmd160 IV from the hash and swp endian, to avoid performing
+	// the addition and endian swap at the end of the RIPEMD160 call
+	for(int i = 0; i < 5; i++) {
+		h[i] = swp(hash[i]) - _RIPEMD160_IV_HOST[(i + 1) % 5];
+	}
+
+	return cudaMemcpyToSymbol(_TARGET_HASH, h, sizeof(unsigned int) * 5);
 }
 
 cudaError_t setIncrementorPoint(const secp256k1::uint256 &x, const secp256k1::uint256 &y)
@@ -51,11 +72,7 @@ __device__ void hashPublicKey(const unsigned int *x, const unsigned int *y, unsi
 		hash[i] = endian(hash[i]);
 	}
 
-	ripemd160sha256(hash, hash);
-
-	for(int i = 0; i < 5; i++) {
-		digestOut[i] = endian(hash[i]);
-	}
+	ripemd160sha256NoFinal(hash, digestOut);
 }
 
 __device__ void hashPublicKeyCompressed(const unsigned int *x, const unsigned int *y, unsigned int *digestOut)
@@ -69,11 +86,7 @@ __device__ void hashPublicKeyCompressed(const unsigned int *x, const unsigned in
 		hash[i] = endian(hash[i]);
 	}
 
-	ripemd160sha256(hash, hash);
-
-	for(int i = 0; i < 5; i++) {
-		digestOut[i] = endian(hash[i]);
-	}
+	ripemd160sha256NoFinal(hash, digestOut);
 }
 
 __device__ void setHashFoundFlag(unsigned int *flagsAra, int idx, int value)
@@ -105,7 +118,7 @@ __device__ void setResultFound(unsigned int *numResultsPtr, void *results, int i
 	}
 
 	for(int i = 0; i < 5; i++) {
-		r.digest[i] = digest[i];
+		r.digest[i] = endian(digest[i] + _RIPEMD160_IV[(i + 1) % 5]);
 	}
 
 	struct KeyFinderDeviceResult *resultsPtr = (struct KeyFinderDeviceResult *)results;

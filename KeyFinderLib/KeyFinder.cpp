@@ -52,7 +52,7 @@ KeyFinder::KeyFinder(const secp256k1::uint256 &start, unsigned long long range, 
 		throw KeyFinderException("Requires at least 1 target");
 	}
 
-	for(int i = 0; i < targetHashes.size(); i++) {
+	for(unsigned int i = 0; i < targetHashes.size(); i++) {
 		KeyFinderTarget t;
 
 		if(!Address::verifyAddress(targetHashes[i])) {
@@ -126,13 +126,13 @@ void KeyFinder::generateStartingPoints()
 	// Generate key pairs for k, k+1, k+2 ... k + <total points in parallel - 1>
 	secp256k1::uint256 privKey = _startExponent;
 
-	for(int i = 0; i < totalPoints; i++) {
+	for(unsigned int i = 0; i < totalPoints; i++) {
 		_exponents.push_back(privKey.add(i));
 	}
 
 	secp256k1::generateKeyPairsBulk(secp256k1::G(), _exponents, _startingPoints);
 
-	for(int i = 0; i < _startingPoints.size(); i++) {
+	for(unsigned int i = 0; i < _startingPoints.size(); i++) {
 		if(!secp256k1::pointExists(_startingPoints[i])) {
 			throw KeyFinderException("Point generation error");
 		}
@@ -227,7 +227,7 @@ void KeyFinder::run()
 
 			_devCtx->getKeyFinderResults(results);
 
-			for(int i = 0; i < results.size(); i++) {
+			for(unsigned int i = 0; i < results.size(); i++) {
 				unsigned int index = _devCtx->getIndex(results[i].block, results[i].thread, results[i].index);
 
 				secp256k1::uint256 exp = _exponents[index];

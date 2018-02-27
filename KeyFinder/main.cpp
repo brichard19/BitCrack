@@ -115,7 +115,7 @@ int main(int argc, char **argv)
 	parser.parse(argc, argv);
 	std::vector<OptArg> args = parser.getArgs();
 
-	for(int i = 0; i < args.size(); i++) {
+	for(unsigned int i = 0; i < args.size(); i++) {
 		OptArg optArg = args[i];
 		std::string opt = args[i].option;
 
