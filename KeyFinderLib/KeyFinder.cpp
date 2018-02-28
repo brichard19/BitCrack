@@ -21,12 +21,12 @@ void KeyFinder::defaultStatusCallback(KeyFinderStatusInfo status)
 }
 
 
-KeyFinder::KeyFinder(const secp256k1::uint256 &start, unsigned long long range, std::vector<std::string> &targetHashes, int compression, int blocks, int threads, int pointsPerThread)
+KeyFinder::KeyFinder(int device, const secp256k1::uint256 &start, unsigned long long range, std::vector<std::string> &targetHashes, int compression, int blocks, int threads, int pointsPerThread)
 {
 	_devCtx = NULL;
 	_total = 0;
 	_statusInterval = 1000;
-	_device = 0;
+	_device = device;
 	_pointsPerThread = DEFAULT_POINTS_PER_THREAD;
 	_numThreads = DEFAULT_NUM_THREADS;
 	_numBlocks = DEFAULT_NUM_BLOCKS;
