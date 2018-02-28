@@ -23,7 +23,7 @@ static void secureRandom(unsigned char *buf, unsigned int count)
 		throw std::string("Fatal error: Cannot open /dev/urandom for reading");
 	}
 
-	if(fread(buf, count, 1, fp) != count) {
+	if(fread(buf, 1, count, fp) != count) {
 		throw std::string("Fatal error: Not enough entropy available in /dev/urandom");
 	}
 
