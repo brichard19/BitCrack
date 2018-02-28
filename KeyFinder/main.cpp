@@ -89,7 +89,7 @@ int main(int argc, char **argv)
 
 	std::vector<std::string> targetList;
 	secp256k1::uint256 start(1);
-	unsigned long long range = 0;// (unsigned long long)2 << 32;
+	unsigned long long range = 0;
 
 	if(cuda::getDeviceCount == 0) {
 		printf("No CUDA devices available\n");
@@ -181,7 +181,14 @@ int main(int argc, char **argv)
 
 	targetList.push_back(ops[0]);
 
-	cuda::CudaDeviceInfo devInfo = cuda::getDeviceInfo(device);
+	cuda::CudaDeviceInfo devInfo;
+	
+	try {
+		devInfo = cuda::getDeviceInfo(device);
+	} catch(cuda::CudaException &Ex) {
+		printf("Error initializing device: %s\n", Ex.msg.c_str());
+		return 1;
+	}
 
 	printf("Device: %s\n", devInfo.name.c_str());
 	printf("Target: %s\n", targetList[0].c_str());
@@ -202,7 +209,7 @@ int main(int argc, char **argv)
 
 	printf("Starting at: %s\n", start.toString().c_str());
 
-	KeyFinder f(start, range, targetList, compression, blocks, threads, pointsPerThread);
+	KeyFinder f(device, start, range, targetList, compression, blocks, threads, pointsPerThread);
 	
 	f.setResultCallback(resultCallback);
 	f.setStatusInterval(1800);

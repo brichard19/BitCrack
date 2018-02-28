@@ -106,7 +106,7 @@ public:
 		};
 	};
 
-	KeyFinder(const secp256k1::uint256 &start, unsigned long long range, std::vector<std::string> &targetHashes, int compression, int blocks = 0, int threads = 0, int pointsPerThread = 0);
+	KeyFinder(int device, const secp256k1::uint256 &start, unsigned long long range, std::vector<std::string> &targetHashes, int compression, int blocks = 0, int threads = 0, int pointsPerThread = 0);
 	~KeyFinder();
 
 	void init();
