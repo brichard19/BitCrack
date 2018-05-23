@@ -71,4 +71,15 @@ blocks: Should be a multiple of the number of compute units on the device. The d
 
 threads: This must be a multiple of 32. The default is 256.
 
-Keys per thread: The performance (keys per second) increases asymptotically with this value. The default is 16. Increasing this value will cause the kernel to run longer.
+Keys per thread: The performance (keys per second) increases asymptotically with this value. The default is 16. Increasing this value will cause the kernel to run longer, but more keys will be processed.
+
+
+## Supporting this project
+
+If you find this project useful and would like to support it, consider making a donation. Your support is greatly appreciated!
+
+**BTC**: `1LqJ9cHPKxPXDRia4tteTJdLXnisnfHsof`
+
+**LTC**: `LfwqkJY7YDYQWqgR26cg2T1F38YyojD67J`
+
+**ETH**: `0xd28082CD48E1B279425346E8f6C651C45A9023c5`
