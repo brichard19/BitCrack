@@ -27,9 +27,9 @@ Callback to display progress
 void statusCallback(KeyFinderStatusInfo info)
 {
 	if(info.speed < 0.01) {
-		printf("\r< 0.01 MKey/s (%s total)", util::formatThousands(info.total).c_str());
+		printf("\r< 0.01 MKey/s (%s total) [%s]", util::formatThousands(info.total).c_str(), util::formatSeconds(info.totalTime/1000).c_str());
 	} else {
-		printf("\r%.2f MKey/s (%s total)", info.speed, util::formatThousands(info.total).c_str());
+		printf("\r%.2f MKey/s (%s total) [%s]", info.speed, util::formatThousands(info.total).c_str(), util::formatSeconds(info.totalTime/1000).c_str());
 	}
 }
 
