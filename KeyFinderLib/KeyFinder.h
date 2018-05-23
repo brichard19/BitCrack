@@ -19,7 +19,7 @@ typedef struct {
 	int device;
 	double speed;
 	unsigned long long total;
-	unsigned int totalTime;
+	unsigned long long totalTime;
 }KeyFinderStatusInfo;
 
 

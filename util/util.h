@@ -19,12 +19,12 @@ public:
 unsigned int getSystemTime();
 void sleep(int seconds);
 std::string formatThousands(unsigned long long x);
+std::string formatSeconds(unsigned int seconds);
 
 unsigned int parseUInt32(std::string s);
 unsigned long long parseUInt64(std::string s);
 bool isHex(const std::string &s);
 
-void secureRandom(unsigned char *buf, unsigned int count);
 }
 
 #endif

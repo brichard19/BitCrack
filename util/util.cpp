@@ -125,4 +125,23 @@ namespace util {
 
 		return true;
 	}
+
+	std::string formatSeconds(unsigned int seconds)
+	{
+		char s[128] = { 0 };
+
+		unsigned int days = seconds / 86400;
+		unsigned int hours = (seconds % 86400) / 3600;
+		unsigned int minutes = (seconds % 3600) / 60;
+		unsigned int sec = seconds % 60;
+
+		if(days > 0) {
+			sprintf(s, "%d:%02d:%02d:%02d", days, hours, minutes, sec);
+		} else {
+			sprintf(s, "%02d:%02d:%02d", hours, minutes, sec);
+		}
+		
+
+		return std::string(s);
+	}
 }
