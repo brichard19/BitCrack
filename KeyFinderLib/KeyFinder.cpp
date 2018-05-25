@@ -48,10 +48,15 @@ KeyFinder::KeyFinder(int device, const secp256k1::uint256 &start, unsigned long 
 		_pointsPerThread = pointsPerThread;
 	}
 
+	if(start.cmp(secp256k1::N) >= 0) {
+		throw KeyFinderException("Starting key is out of range");
+	}
+
 	if(targetHashes.size() == 0) {
 		throw KeyFinderException("Requires at least 1 target");
 	}
 
+	// Convert each address from base58 encoded form to a 160-bit integer
 	for(unsigned int i = 0; i < targetHashes.size(); i++) {
 		KeyFinderTarget t;
 

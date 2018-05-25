@@ -27,9 +27,9 @@ Callback to display progress
 void statusCallback(KeyFinderStatusInfo info)
 {
 	if(info.speed < 0.01) {
-		printf("\r< 0.01 MKey/s (%s total) [%s]", util::formatThousands(info.total).c_str(), util::formatSeconds(info.totalTime/1000).c_str());
+		printf("\r< 0.01 MKey/s (%s total) [%s]", util::formatThousands(info.total).c_str(), util::formatSeconds((unsigned int)(info.totalTime/1000)).c_str());
 	} else {
-		printf("\r%.2f MKey/s (%s total) [%s]", info.speed, util::formatThousands(info.total).c_str(), util::formatSeconds(info.totalTime/1000).c_str());
+		printf("\r%.2f MKey/s (%s total) [%s]", info.speed, util::formatThousands(info.total).c_str(), util::formatSeconds((unsigned int)(info.totalTime/1000)).c_str());
 	}
 }
 
@@ -128,6 +128,9 @@ int main(int argc, char **argv)
 				pointsPerThread = util::parseUInt32(optArg.arg);
 			} else if(optArg.equals("-s", "--start")) {
 				start = secp256k1::uint256(optArg.arg);
+				if(start.cmp(secp256k1::N) >= 0) {
+					throw std::string("argument is out of range");
+				}
 			} else if(optArg.equals("-r", "--range")) {
 				range = util::parseUInt64(optArg.arg);
 			} else if(optArg.equals("-p", "--per-thread")) {
@@ -136,7 +139,7 @@ int main(int argc, char **argv)
 				device = util::parseUInt32(optArg.arg);
 			} else if(optArg.equals("-c", "--compressed")) {
 				optCompressed = true;
-			} else if(optArg.equals("-u", "--compressed")) {
+			} else if(optArg.equals("-u", "--uncompressed")) {
 				optUncompressed = true;
 			}
 		} catch(std::string err) {
@@ -209,14 +212,22 @@ int main(int argc, char **argv)
 
 	printf("Starting at: %s\n", start.toString().c_str());
 
-	KeyFinder f(device, start, range, targetList, compression, blocks, threads, pointsPerThread);
-	
-	f.setResultCallback(resultCallback);
-	f.setStatusInterval(1800);
-	f.setStatusCallback(statusCallback);
+	try {
+		KeyFinder f(device, start, range, targetList, compression, blocks, threads, pointsPerThread);
 
-	printf("Initializing...\n");
-	f.init();
-	printf("Running\n");
-	f.run();
+		f.setResultCallback(resultCallback);
+		f.setStatusInterval(1800);
+		f.setStatusCallback(statusCallback);
+
+		printf("Initializing...\n");
+		f.init();
+		printf("Running\n");
+		f.run();
+	} catch(KeyFinderException ex) {
+		printf("Error: %s\n", ex.msg.c_str());
+
+		return 1;
+	}
+
+	return 0;
 }

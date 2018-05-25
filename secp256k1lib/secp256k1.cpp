@@ -750,7 +750,7 @@ static void bulkInversionModP(std::vector<uint256> &in)
 
 	uint256 inverse = secp256k1::invModP(total);
 
-	for(int i = in.size() - 1; i >= 0; i--) {
+	for(int i = (int)in.size() - 1; i >= 0; i--) {
 
 		if(i > 0) {
 			uint256 newValue = secp256k1::multiplyModP(products[i - 1], inverse);
@@ -775,7 +775,7 @@ void secp256k1::generateKeypairsBulk(unsigned int count, const ecpoint &basePoin
 
 void secp256k1::generateKeyPairsBulk(const ecpoint &basePoint, std::vector<uint256> &privKeys, std::vector<ecpoint> &pubKeysOut)
 {
-	unsigned int count = privKeys.size();
+	unsigned int count = (unsigned int)privKeys.size();
 
 	//privKeysOut.clear();
 	pubKeysOut.clear();

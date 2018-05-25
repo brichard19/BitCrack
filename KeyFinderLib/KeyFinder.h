@@ -46,8 +46,6 @@ class KeyFinder {
 private:
 
 	static const int FORMAT_PUBKEY = 0x00000001;
-	//const int MODE_ADDRESS = 0x00000000;
-	//const int MODE_PUBKEY = 0x
 
 	unsigned int _compression;
 
