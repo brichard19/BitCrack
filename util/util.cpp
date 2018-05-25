@@ -54,7 +54,7 @@ namespace util {
 
 		std::string s(buf);
 
-		int len = s.length();
+		int len = (int)s.length();
 
 		int numCommas = (len - 1) / 3;
 

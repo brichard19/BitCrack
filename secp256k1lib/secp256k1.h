@@ -25,14 +25,22 @@ namespace secp256k1 {
 		{
 			std::string t = s;
 
-			// Ensure the value is 64 hex digits
+			// Verify only valid hex characters
+			for(int i = 0; i < (int)t.length(); i++) {
+				if(!((t[i] >= 'a' && t[i] <= 'f') || (t[i] >= 'A' && t[i] <= 'F') || (t[i] >= '0' && t[i] <= '9'))) {
+					throw std::string("Incorrect hex formatting");
+				}
+			}
+
+			// Ensure the value is 64 hex digits. If it is longer, take the least-significant 64 hex digits.
+			// If shorter, pad with 0's.
 			if(t.length() > 64) {
 				t = t.substr(t.length() - 64);
 			} else if(t.length() < 64) {
 				t = std::string(64 - t.length(), '0') + t;
 			}
 
-			int len = t.length();
+			int len = (int)t.length();
 
 			memset(this->v, 0, sizeof(unsigned int) * 8);
 
