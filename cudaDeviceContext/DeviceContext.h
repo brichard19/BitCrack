@@ -5,18 +5,7 @@
 #include <cuda_runtime.h>
 #include <vector>
 #include "secp256k1.h"
-
-
-struct AddressMinerResult {
-
-	int thread;
-	int block;
-	int index;
-	int autoType;
-	bool compressed;
-
-	secp256k1::ecpoint p;
-};
+#include "DeviceContextShared.h"
 
 struct KeyFinderResult {
 	int thread;
@@ -27,7 +16,6 @@ struct KeyFinderResult {
 	secp256k1::ecpoint p;
 	unsigned int hash[5];
 };
-
 
 typedef struct {
 	int blocks;
@@ -42,6 +30,13 @@ typedef struct {
 	unsigned int *numResults;
 	unsigned int flags;
 }KernelParams;
+
+namespace PointCompressionType {
+	enum Value {
+		COMPRESSED = 1,
+		UNCOMPRESSED = 2
+	};
+}
 
 class DeviceContextException {
 
@@ -97,8 +92,6 @@ public:
 	void cleanup();
 
 	bool resultFound();
-
-	void getAddressMinerResults(std::vector<struct AddressMinerResult> &results);
 
 	void getKeyFinderResults(std::vector<struct KeyFinderResult> &results);
 

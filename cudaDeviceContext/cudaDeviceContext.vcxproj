@@ -22,8 +22,8 @@
     <ClCompile Include="DeviceContext.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="AddressMinerShared.h" />
     <ClInclude Include="DeviceContext.h" />
+    <ClInclude Include="DeviceContextShared.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{129C2B98-BABF-4E50-B7D7-E885774DF4A9}</ProjectGuid>

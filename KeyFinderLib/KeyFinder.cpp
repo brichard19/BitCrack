@@ -248,6 +248,7 @@ void KeyFinder::run()
 				KeyFinderResultInfo info;
 				info.privateKey = exp;
 				info.publicKey = publicKey;
+				info.compressed = results[i].compressed;
 
 				_resultCallback(info);
 			}

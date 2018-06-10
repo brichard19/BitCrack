@@ -10,12 +10,13 @@ class DeviceContext;
 typedef struct {
 	secp256k1::ecpoint publicKey;
 	secp256k1::uint256 privateKey;
-
+	bool compressed;
 }KeyFinderResultInfo;
 
 
 
 typedef struct {
+	bool compressed;
 	int device;
 	double speed;
 	unsigned long long total;
@@ -100,7 +101,7 @@ public:
 		enum {
 			COMPRESSED = 0,
 			UNCOMPRESSED = 1,
-			BOTH,
+			BOTH = 2,
 		};
 	};
 

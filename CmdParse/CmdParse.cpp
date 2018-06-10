@@ -46,7 +46,7 @@ void CmdParse::add(const std::string shortForm, const std::string longForm, bool
 
 bool CmdParse::get(const std::string opt, ArgType &t)
 {
-	for(int i = 0; i < _argType.size(); i++) {
+	for(unsigned int i = 0; i < _argType.size(); i++) {
 		if(_argType[i].shortForm == opt || _argType[i].longForm == opt) {
 			t = _argType[i];
 			return true;

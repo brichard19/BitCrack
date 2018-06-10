@@ -10,9 +10,8 @@
 #include "sha256.cuh"
 #include "ripemd160.cuh"
 
-#include "AddressMinerShared.h"
 #include "secp256k1.h"
-
+#include "DeviceContextShared.h"
 
 __constant__ unsigned int _TARGET_HASH[5];
 __constant__ unsigned int _INC_X[8];
@@ -195,6 +194,7 @@ __device__ void doIterationWithDouble(unsigned int *xPtr, unsigned int *yPtr, un
 		readInt(xPtr, i, x);
 		readInt(yPtr, i, y);
 
+		// uncompressed
 		if(compression == 1 || compression == 2) {
 			hashPublicKey(x, y, digest);
 
@@ -203,6 +203,7 @@ __device__ void doIterationWithDouble(unsigned int *xPtr, unsigned int *yPtr, un
 			}
 		}
 
+		// compressed
 		if(compression == 0 || compression == 2) {
 			hashPublicKeyCompressed(x, y, digest);
 

@@ -22,7 +22,7 @@ int main(int argc, char **argv)
 
 	std::vector<OptArg> args = parser.getArgs();
 
-	for(int i = 0; i < args.size(); i++) {
+	for(unsigned int i = 0; i < args.size(); i++) {
 		OptArg arg = args[i];
 		
 		if(arg.equals("-c", "--compressed")) {

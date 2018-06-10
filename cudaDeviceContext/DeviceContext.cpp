@@ -1,6 +1,5 @@
 #include<stdio.h>
 
-#include "AddressMinerShared.h"
 #include "DeviceContext.h"
 
 
@@ -81,11 +80,6 @@ void DeviceContext::init(int device, int threads, int blocks, int pointsPerThrea
 	if(err) {
 		goto end;
 	}
-
-	//err = cudaDeviceSetCacheConfig(cudaFuncCachePreferL1);
-	//if(err) {
-	//	goto end;
-	//}
 
 end:
 	if(err) {
@@ -212,31 +206,6 @@ KernelParams DeviceContext::getKernelParams()
 	params.flags = PointCompressionType::UNCOMPRESSED | PointCompressionType::COMPRESSED;
 
 	return params;
-}
-
-void DeviceContext::getAddressMinerResults(std::vector<struct AddressMinerResult> &results)
-{
-	results.clear();
-
-	int numResults = *_numResultsHost;
-
-	for(int i = 0; i < numResults; i++) {
-		struct AddressMinerDeviceResult *ptr = &((struct AddressMinerDeviceResult *)_resultsHost)[i];
-
-		AddressMinerResult minerResult;
-		minerResult.autoType = ptr->automorphism;
-		minerResult.compressed = (ptr->compressed != 0);
-		minerResult.block = ptr->block;
-		minerResult.thread = ptr->thread;
-		minerResult.index = ptr->idx;
-
-		minerResult.p = secp256k1::ecpoint(secp256k1::uint256(ptr->x, secp256k1::uint256::BigEndian), secp256k1::uint256(ptr->y, secp256k1::uint256::BigEndian));
-
-		results.push_back(minerResult);
-	}
-
-	// Clear results
-	*_numResultsHost = 0;
 }
 
 void DeviceContext::getKeyFinderResults(std::vector<struct KeyFinderResult> &results)

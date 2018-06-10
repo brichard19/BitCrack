@@ -15,8 +15,13 @@ void resultCallback(KeyFinderResultInfo info)
 {
 	printf("\n");
 	printf("Private key: %s\n", info.privateKey.toString(16).c_str());
-	printf("Public key:  %s\n", info.publicKey.x.toString(16).c_str());
-	printf("             %s\n", info.publicKey.y.toString(16).c_str());
+	printf("Compressed:  %s\n", info.compressed ? "yes" : "no");
+	printf("Public key:  ");
+	if(info.compressed) {
+		printf("%s\n", info.publicKey.toString(true).c_str());
+	} else {
+		printf("%s\n       %s\n", info.publicKey.x.toString(16).c_str(), info.publicKey.y.toString(16).c_str());
+	}
 	printf("\n");
 
 }
@@ -32,7 +37,6 @@ void statusCallback(KeyFinderStatusInfo info)
 		printf("\r%.2f MKey/s (%s total) [%s]", info.speed, util::formatThousands(info.total).c_str(), util::formatSeconds((unsigned int)(info.totalTime/1000)).c_str());
 	}
 }
-
 
 void usage()
 {
@@ -74,7 +78,19 @@ DeviceParameters findDefaultParameters(int device)
 }
 
 
+static std::string getCompressionString(int mode)
+{
+	switch(mode) {
+	case KeyFinder::Compression::BOTH:
+		return "both";
+	case KeyFinder::Compression::UNCOMPRESSED:
+		return "uncompressed";
+	case KeyFinder::Compression::COMPRESSED:
+		return "compressed";
+	}
 
+	throw std::string("Invalid compression setting");
+}
 
 int main(int argc, char **argv)
 {
@@ -148,11 +164,13 @@ int main(int argc, char **argv)
 		}
 	}
 
+	// Verify device exists
 	if(device >= cuda::getDeviceCount()) {
 		printf("CUDA device %d does not exist\n", device);
 		return 1;
 	}
 
+	// Parse operands
 	std::vector<std::string> ops = parser.getOperands();
 
 	if(ops.size() == 0) {
@@ -161,7 +179,10 @@ int main(int argc, char **argv)
 		return 1;
 	}
 
+	// Get device parameters (blocks, threads, points per thread)
 	DeviceParameters devParams = findDefaultParameters(device);
+
+	// Apply defaults if none given
 	if(threads == 0) {
 		threads = devParams.threads;
 	}
@@ -174,6 +195,7 @@ int main(int argc, char **argv)
 		pointsPerThread = devParams.pointsPerThread;
 	}
 	
+	// Check option for compressed, uncompressed, or both
 	if(optCompressed && optUncompressed) {
 		compression = KeyFinder::Compression::BOTH;
 	} else if(optCompressed) {
@@ -186,6 +208,7 @@ int main(int argc, char **argv)
 
 	cuda::CudaDeviceInfo devInfo;
 	
+	// Initialize the device
 	try {
 		devInfo = cuda::getDeviceInfo(device);
 	} catch(cuda::CudaException &Ex) {
@@ -193,22 +216,10 @@ int main(int argc, char **argv)
 		return 1;
 	}
 
-	printf("Device: %s\n", devInfo.name.c_str());
-	printf("Target: %s\n", targetList[0].c_str());
+	printf("Device:      %s\n", devInfo.name.c_str());
+	printf("Target:      %s\n", targetList[0].c_str());
 
-	const char *compStr;
-	switch(compression) {
-	case KeyFinder::Compression::BOTH:
-		compStr = "both";
-		break;
-	case KeyFinder::Compression::UNCOMPRESSED:
-		compStr = "off";
-		break;
-	case KeyFinder::Compression::COMPRESSED:
-		compStr = "on";
-	}
-
-	printf("Compression: %s\n", compStr);
+	printf("Compression: %s\n", getCompressionString(compression).c_str());
 
 	printf("Starting at: %s\n", start.toString().c_str());
 
