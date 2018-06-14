@@ -5,7 +5,7 @@
 #include "secp256k1.h"
 
 
-class DeviceContext;
+class CudaDeviceContext;
 
 typedef struct {
 	secp256k1::ecpoint publicKey;
@@ -41,6 +41,7 @@ public:
 	std::string msg;
 };
 
+class KeyFinderResult;
 
 class KeyFinder {
 
@@ -56,7 +57,7 @@ private:
 
 	unsigned int _statusInterval;
 
-	DeviceContext *_devCtx;
+	CudaDeviceContext *_devCtx;
 
 	unsigned long long _iterCount;
 	unsigned long long _total;
@@ -94,6 +95,7 @@ private:
 
 	bool verifyKey(const secp256k1::uint256 &privateKey, const secp256k1::ecpoint &publicKey, const unsigned int hash[5], bool compressed);
 
+	void getResults(std::vector<KeyFinderResult> &r);
 
 public:
 	class Compression {

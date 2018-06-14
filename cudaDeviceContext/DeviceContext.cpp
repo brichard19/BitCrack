@@ -8,16 +8,15 @@ static std::string getErrorString(cudaError_t err)
 	return std::string(cudaGetErrorString(err));
 }
 
-void DeviceContext::init(int device, int threads, int blocks, int pointsPerThread)
+void CudaDeviceContext::init(const DeviceParameters &params)
 {
-	_device = device;
-	_threads = threads;
-	_blocks = blocks;
-	_pointsPerThread = pointsPerThread;
+	_device = params.device;
+	_threads = params.threads;
+	_blocks = params.blocks;
+	_pointsPerThread = params.pointsPerThread;
 
-	this->_device = device;
-
-	unsigned int count = _pointsPerThread * _threads * _blocks;
+	
+	size_t count = _pointsPerThread * _threads * _blocks;
 
 	cudaError_t err = cudaSetDevice(_device);
 
@@ -55,12 +54,14 @@ void DeviceContext::init(int device, int threads, int blocks, int pointsPerThrea
 		goto end;
 	}
 
+	// The number of results found in the most recent kernel run
 	_numResultsHost = NULL;
 	err = cudaHostAlloc(&_numResultsHost, sizeof(unsigned int), cudaHostAllocMapped);
 	if(err) {
 		goto end;
 	}
 
+	// Number of results found in the most recent kernel run (device to host pointer)
 	_numResultsDev = NULL;
 	err = cudaHostGetDevicePointer(&_numResultsDev, _numResultsHost, 0);
 	if(err) {
@@ -68,13 +69,14 @@ void DeviceContext::init(int device, int threads, int blocks, int pointsPerThrea
 	}
 	*_numResultsHost = 0;
 
-
+	// Storage for results data
 	_resultsHost = NULL;
 	err = cudaHostAlloc(&_resultsHost, 4096, cudaHostAllocMapped);
 	if(err) {
 		goto end;
 	}
 
+	// Storage for results data (device to host pointer)
 	_resultsDev = NULL;
 	err = cudaHostGetDevicePointer(&_resultsDev, _resultsHost, 0);
 	if(err) {
@@ -94,7 +96,7 @@ end:
 	}
 }
 
-void DeviceContext::copyPoints(const std::vector<secp256k1::ecpoint> &points)
+void CudaDeviceContext::copyPoints(const std::vector<secp256k1::ecpoint> &points)
 {
 	int count = _pointsPerThread * _threads * _blocks * 8;
 	unsigned int *tmpX = new unsigned int[count];
@@ -129,7 +131,7 @@ void DeviceContext::copyPoints(const std::vector<secp256k1::ecpoint> &points)
 	delete[] tmpY;
 }
 
-int DeviceContext::getIndex(int block, int thread, int idx)
+int CudaDeviceContext::getIndex(int block, int thread, int idx)
 {
 	// Total number of threads
 	int totalThreads = _blocks * _threads;
@@ -142,7 +144,7 @@ int DeviceContext::getIndex(int block, int thread, int idx)
 	return base + threadId;
 }
 
-void DeviceContext::splatBigInt(unsigned int *dest, int block, int thread, int idx, const secp256k1::uint256 &i)
+void CudaDeviceContext::splatBigInt(unsigned int *dest, int block, int thread, int idx, const secp256k1::uint256 &i)
 {
 	unsigned int value[8] = { 0 };
 
@@ -161,7 +163,7 @@ void DeviceContext::splatBigInt(unsigned int *dest, int block, int thread, int i
 	}
 }
 
-void DeviceContext::cleanup()
+void CudaDeviceContext::cleanup()
 {
 	if(_x != NULL) {
 		cudaFree(_y);
@@ -191,7 +193,7 @@ void DeviceContext::cleanup()
 }
 
 
-KernelParams DeviceContext::getKernelParams()
+KernelParams CudaDeviceContext::getKernelParams()
 {
 	KernelParams params;
 	params.blocks = _blocks;
@@ -203,45 +205,33 @@ KernelParams DeviceContext::getKernelParams()
 
 	params.results = _resultsDev;
 	params.numResults = _numResultsDev;
-	params.flags = PointCompressionType::UNCOMPRESSED | PointCompressionType::COMPRESSED;
 
 	return params;
 }
 
-void DeviceContext::getKeyFinderResults(std::vector<struct KeyFinderResult> &results)
+void CudaDeviceContext::getResults(void *ptr, int size)
 {
-	results.clear();
+	memcpy(ptr, _resultsHost, size);
+}
 
-	int numResults = *_numResultsHost;
+int CudaDeviceContext::getResultCount()
+{
+	return *_numResultsHost;
+}
 
-	for(int i = 0; i < numResults; i++) {
-		struct KeyFinderDeviceResult *ptr = &((struct KeyFinderDeviceResult *)_resultsHost)[i];
-
-		KeyFinderResult minerResult;
-		minerResult.block = ptr->block;
-		minerResult.thread = ptr->thread;
-		minerResult.index = ptr->idx;
-		minerResult.compressed = ptr->compressed;
-		for(int i = 0; i < 5; i++) {
-			minerResult.hash[i] = ptr->digest[i];
-		}
-		minerResult.p = secp256k1::ecpoint(secp256k1::uint256(ptr->x, secp256k1::uint256::BigEndian), secp256k1::uint256(ptr->y, secp256k1::uint256::BigEndian));
-
-		results.push_back(minerResult);
-	}
-
-	// Clear results
+void CudaDeviceContext::clearResults()
+{
 	*_numResultsHost = 0;
 }
 
-bool DeviceContext::resultFound()
+bool CudaDeviceContext::resultFound()
 {
 	unsigned int numResults = (*_numResultsHost) != 0;
 
 	return numResults != 0;
 }
 
-DeviceContext::~DeviceContext()
+CudaDeviceContext::~CudaDeviceContext()
 {
 	cleanup();
 }

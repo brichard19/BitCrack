@@ -589,7 +589,7 @@ __device__ void mulModP(const unsigned int a[8], unsigned int c[8])
 }
 
 /**
- * Multiplicative inverse mod P using Fermat's method of x^(p-2) mod p
+ * Multiplicative inverse mod P using Fermat's method of x^(p-2) mod p and addition chains
  */
 __device__ void invModP(unsigned int value[8])
 {

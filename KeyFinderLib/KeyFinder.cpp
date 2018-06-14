@@ -103,8 +103,15 @@ void KeyFinder::setStatusInterval(unsigned int interval)
 void KeyFinder::init()
 {
 	// Allocate device memory
-	_devCtx = new DeviceContext;
-	_devCtx->init(_device, _numThreads, _numBlocks, _pointsPerThread);
+	_devCtx = new CudaDeviceContext;
+
+	DeviceParameters params;
+	params.device = _device;
+	params.threads = _numThreads;
+	params.blocks = _numBlocks;
+	params.pointsPerThread = _pointsPerThread;
+
+	_devCtx->init(params);
 
 	// Copy points to device
 	generateStartingPoints();
@@ -126,18 +133,18 @@ void KeyFinder::generateStartingPoints()
 	_startingPoints.clear();
 	_iterCount = 0;
 
-	unsigned int totalPoints = _pointsPerThread * _numThreads * _numBlocks;
+	unsigned long long totalPoints = _pointsPerThread * _numThreads * _numBlocks;
 
 	// Generate key pairs for k, k+1, k+2 ... k + <total points in parallel - 1>
 	secp256k1::uint256 privKey = _startExponent;
 
-	for(unsigned int i = 0; i < totalPoints; i++) {
+	for(unsigned long long i = 0; i < totalPoints; i++) {
 		_exponents.push_back(privKey.add(i));
 	}
 
 	secp256k1::generateKeyPairsBulk(secp256k1::G(), _exponents, _startingPoints);
 
-	for(unsigned int i = 0; i < _startingPoints.size(); i++) {
+	for(unsigned long long i = 0; i < _startingPoints.size(); i++) {
 		if(!secp256k1::pointExists(_startingPoints[i])) {
 			throw KeyFinderException("Point generation error");
 		}
@@ -186,6 +193,40 @@ bool KeyFinder::verifyKey(const secp256k1::uint256 &privateKey, const secp256k1:
 	return true;
 }
 
+void KeyFinder::getResults(std::vector<KeyFinderResult> &r)
+{
+	int count = _devCtx->getResultCount();
+
+	if(count == 0) {
+		return;
+	}
+
+	unsigned char *ptr = new unsigned char[count * sizeof(KeyFinderDeviceResult)];
+
+	_devCtx->getResults(ptr, count * sizeof(KeyFinderDeviceResult));
+
+
+	for(int i = 0; i < count; i++) {
+		struct KeyFinderDeviceResult *rPtr = &((struct KeyFinderDeviceResult *)ptr)[i];
+
+		KeyFinderResult minerResult;
+		minerResult.block = rPtr->block;
+		minerResult.thread = rPtr->thread;
+		minerResult.index = rPtr->idx;
+		minerResult.compressed = rPtr->compressed;
+		for(int i = 0; i < 5; i++) {
+			minerResult.hash[i] = rPtr->digest[i];
+		}
+		minerResult.p = secp256k1::ecpoint(secp256k1::uint256(rPtr->x, secp256k1::uint256::BigEndian), secp256k1::uint256(rPtr->y, secp256k1::uint256::BigEndian));
+
+		r.push_back(minerResult);
+	}
+
+	delete[] ptr;
+
+	_devCtx->clearResults();
+}
+
 void KeyFinder::run()
 {
 	unsigned int pointsPerIteration = _numBlocks * _numThreads * _pointsPerThread;
@@ -230,7 +271,7 @@ void KeyFinder::run()
 		if(_devCtx->resultFound()) {
 			std::vector<KeyFinderResult> results;
 
-			_devCtx->getKeyFinderResults(results);
+			getResults(results);
 
 			for(unsigned int i = 0; i < results.size(); i++) {
 				unsigned int index = _devCtx->getIndex(results[i].block, results[i].thread, results[i].index);

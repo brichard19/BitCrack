@@ -25,6 +25,20 @@ namespace secp256k1 {
 		{
 			std::string t = s;
 
+			// 0x prefix
+			if(t.length() >= 2 && (t[0] == '0' && t[1] == 'x' || t[1] == 'X')) {
+				t = t.substr(2);
+			}
+
+			// 'h' suffix
+			if(t.length() >= 1 && t[t.length() - 1] == 'h') {
+				t = t.substr(0, t.length() - 2);
+			}
+			
+			if(t.length() == 0) {
+				throw std::string("Incorrect hex formatting");
+			}
+
 			// Verify only valid hex characters
 			for(int i = 0; i < (int)t.length(); i++) {
 				if(!((t[i] >= 'a' && t[i] <= 'f') || (t[i] >= 'A' && t[i] <= 'F') || (t[i] >= '0' && t[i] <= '9'))) {

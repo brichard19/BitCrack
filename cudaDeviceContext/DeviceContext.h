@@ -28,15 +28,15 @@ typedef struct {
 
 	unsigned int *results;
 	unsigned int *numResults;
-	unsigned int flags;
+
 }KernelParams;
 
-namespace PointCompressionType {
-	enum Value {
-		COMPRESSED = 1,
-		UNCOMPRESSED = 2
-	};
-}
+typedef struct {
+	int device;
+	int blocks;
+	int threads;
+	int pointsPerThread;
+}DeviceParameters;
 
 class DeviceContextException {
 
@@ -51,6 +51,25 @@ public:
 };
 
 class DeviceContext {
+
+public:
+
+	virtual void init(const DeviceParameters &params) = 0;
+	virtual void copyPoints(const std::vector<secp256k1::ecpoint> &points) = 0;
+
+	virtual KernelParams getKernelParams() = 0;
+
+	virtual void cleanup() = 0;
+
+	virtual bool resultFound() = 0;
+	virtual int getResultCount() = 0;
+	virtual void getResults(void *ptr, int size) = 0;
+	virtual void clearResults() = 0;
+
+	virtual ~DeviceContext() {}
+};
+
+class CudaDeviceContext : DeviceContext {
 
 private:
 	int _device;
@@ -71,7 +90,7 @@ private:
 	void splatBigInt(unsigned int *dest, int block, int thread, int idx, const secp256k1::uint256 &value);
 
 public:
-	DeviceContext()
+	CudaDeviceContext()
 	{
 		_device = 0;
 		_threads = 0;
@@ -83,7 +102,8 @@ public:
 		_chain = NULL;
 	}
 
-	void init(int device, int threads, int blocks, int pointsPerThread);
+	void init(const DeviceParameters &params);
+
 	void copyPoints(const std::vector<secp256k1::ecpoint> &points);
 	int getIndex(int block, int thread, int idx);
 
@@ -92,10 +112,10 @@ public:
 	void cleanup();
 
 	bool resultFound();
-
-	void getKeyFinderResults(std::vector<struct KeyFinderResult> &results);
-
-	~DeviceContext();
+	int getResultCount();
+	void getResults(void *ptr, int size);
+	void clearResults();
+	~CudaDeviceContext();
 };
 
 #endif

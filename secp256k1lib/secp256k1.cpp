@@ -788,13 +788,12 @@ void secp256k1::generateKeyPairsBulk(const ecpoint &basePoint, std::vector<uint2
 
 		ecpoint p = doublePoint(table[i-1]);
 		if(!pointExists(p)) {
-			throw "Point does not exist!";
+			throw std::string("Point does not exist!");
 		}
 		table.push_back(p);
 	}
 
 	for(unsigned int i = 0; i < count; i++) {
-		//privKeysOut.push_back(generatePrivateKey());
 		pubKeysOut.push_back(ecpoint());
 	}
 
@@ -845,7 +844,7 @@ void secp256k1::generateKeyPairsBulk(const ecpoint &basePoint, std::vector<uint2
 
 					ecpoint r(rx, ry);
 					if(!pointExists(r)) {
-						throw "Point does not exist";
+						throw std::string("Point does not exist");
 					}
 					pubKeysOut[j] = r;
 				}

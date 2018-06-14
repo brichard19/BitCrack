@@ -35,8 +35,7 @@ cudaError_t setTargetHash(const unsigned int hash[5])
 	unsigned int h[5];
 
 
-	// Subtract the RIPEmd160 IV from the hash and swp endian, to avoid performing
-	// the addition and endian swap at the end of the RIPEMD160 call
+	// Undo the final round of RIPEMD160 and endian swap to save some computation
 	for(int i = 0; i < 5; i++) {
 		h[i] = swp(hash[i]) - _RIPEMD160_IV_HOST[(i + 1) % 5];
 	}
@@ -88,22 +87,20 @@ __device__ void hashPublicKeyCompressed(const unsigned int *x, const unsigned in
 	ripemd160sha256NoFinal(hash, digestOut);
 }
 
-__device__ void setHashFoundFlag(unsigned int *flagsAra, int idx, int value)
+__device__ void addResult(unsigned int *numResultsPtr, void *results, void *info, int size)
 {
 	grabLock();
-	int threadId = blockIdx.x * blockDim.x + threadIdx.x;
 
-	int base = gridDim.x * blockDim.x * idx;
+	unsigned char *ptr = (unsigned char *)results + (*numResultsPtr);
 
-	flagsAra[base + threadId] = value;
+	memcpy(ptr, info, size);
+
+	(*numResultsPtr)++;
 	releaseLock();
 }
 
-
 __device__ void setResultFound(unsigned int *numResultsPtr, void *results, int idx, bool compressed, unsigned int x[8], unsigned int y[8], unsigned int digest[5])
 {
-	grabLock();
-
 	struct KeyFinderDeviceResult r;
 
 	r.block = blockIdx.x;
@@ -119,11 +116,7 @@ __device__ void setResultFound(unsigned int *numResultsPtr, void *results, int i
 	for(int i = 0; i < 5; i++) {
 		r.digest[i] = endian(digest[i] + _RIPEMD160_IV[(i + 1) % 5]);
 	}
-
-	struct KeyFinderDeviceResult *resultsPtr = (struct KeyFinderDeviceResult *)results;
-	resultsPtr[*numResultsPtr] = r;
-	(*numResultsPtr)++;
-	releaseLock();
+	addResult(numResultsPtr, results, &r, sizeof(r));
 }
 
 __device__ bool checkHash(unsigned int hash[5])
@@ -137,7 +130,7 @@ __device__ bool checkHash(unsigned int hash[5])
 	return equal;
 }
 
-__device__ void doIteration(unsigned int *xPtr, unsigned int *yPtr, unsigned int *chain, int pointsPerThread, unsigned int *numResults, void *results, int flags, int compression)
+__device__ void doIteration(unsigned int *xPtr, unsigned int *yPtr, unsigned int *chain, int pointsPerThread, unsigned int *numResults, void *results, int compression)
 {
 	// Multiply together all (_Gx - x) and then invert
 	unsigned int inverse[8] = { 0,0,0,0,0,0,0,1 };
@@ -149,7 +142,7 @@ __device__ void doIteration(unsigned int *xPtr, unsigned int *yPtr, unsigned int
 		readInt(xPtr, i, x);
 		readInt(yPtr, i, y);
 
-		if(compression == 1 || compression == 2) {
+		if(compression == PointCompressionType::UNCOMPRESSED || compression == PointCompressionType::BOTH) {
 			hashPublicKey(x, y, digest);
 
 			if(checkHash(digest)) {
@@ -157,7 +150,7 @@ __device__ void doIteration(unsigned int *xPtr, unsigned int *yPtr, unsigned int
 			}
 		}
 
-		if(compression == 0 || compression == 2) {
+		if(compression == PointCompressionType::COMPRESSED || compression == PointCompressionType::BOTH) {
 			hashPublicKeyCompressed(x, y, digest);
 
 			if(checkHash(digest)) {
@@ -182,7 +175,7 @@ __device__ void doIteration(unsigned int *xPtr, unsigned int *yPtr, unsigned int
 	}
 }
 
-__device__ void doIterationWithDouble(unsigned int *xPtr, unsigned int *yPtr, unsigned int *chain, int pointsPerThread, unsigned int *numResults, void *results, int flags, int compression)
+__device__ void doIterationWithDouble(unsigned int *xPtr, unsigned int *yPtr, unsigned int *chain, int pointsPerThread, unsigned int *numResults, void *results, int compression)
 {
 	// Multiply together all (_Gx - x) and then invert
 	unsigned int inverse[8] = { 0,0,0,0,0,0,0,1 };
@@ -232,12 +225,12 @@ __device__ void doIterationWithDouble(unsigned int *xPtr, unsigned int *yPtr, un
 /**
 * Performs a single iteration
 */
-__global__ void keyFinderKernel(int points, unsigned int flags, unsigned int *x, unsigned int *y, unsigned int *chain, unsigned int *numResults, void *results, int compression)
+__global__ void keyFinderKernel(int points, unsigned int *x, unsigned int *y, unsigned int *chain, unsigned int *numResults, void *results, int compression)
 {
-	doIteration(x, y, chain, points, numResults, results, flags, compression);
+	doIteration(x, y, chain, points, numResults, results, compression);
 }
 
-__global__ void keyFinderKernelWithDouble(int points, unsigned int flags, unsigned int *x, unsigned int *y, unsigned int *chain, unsigned int *numResults, void *results, int compression)
+__global__ void keyFinderKernelWithDouble(int points, unsigned int *x, unsigned int *y, unsigned int *chain, unsigned int *numResults, void *results, int compression)
 {
-	doIterationWithDouble(x, y, chain, points, numResults, results, flags, compression);
+	doIterationWithDouble(x, y, chain, points, numResults, results, compression);
 }

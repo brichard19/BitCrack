@@ -12,4 +12,12 @@ struct KeyFinderDeviceResult {
 	unsigned int digest[5];
 };
 
+namespace PointCompressionType {
+	enum Value {
+		COMPRESSED = 0,
+		UNCOMPRESSED = 1,
+		BOTH = 2
+	};
+}
+
 #endif
