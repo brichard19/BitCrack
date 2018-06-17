@@ -47,8 +47,8 @@ void statusCallback(KeyFinderStatusInfo info)
 
 void usage()
 {
-	printf("[OPTIONS] TARGET\n");
-	printf("Where TARGET is an address\n\n");
+	printf("[OPTIONS] [TARGETS]\n");
+	printf("Where TARGETS is one or more addresses\n\n");
 
 	printf("Integer arguments can be in decimal (e.g. 123) or hex (e.g. 0x7B or 7Bh)\n\n");
 	
@@ -60,6 +60,8 @@ void usage()
 	printf("-p, --per-thread        Keys per thread\n");
 	printf("-s, --start             Staring key, in hex\n");
 	printf("-r, --range             Number of keys to search\n");
+	printf("-i, --in                Specify file containing addresses, one per line\n");
+	printf("-o, --out               Specify file where results are written\n");
 }
 
 
