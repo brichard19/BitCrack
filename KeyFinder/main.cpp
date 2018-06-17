@@ -1,4 +1,6 @@
 #include <stdio.h>
+#include <fstream>
+#include <iostream>
 
 #include "KeyFinder.h"
 #include "AddressUtil.h"
@@ -7,13 +9,15 @@
 #include "CmdParse.h"
 #include "cudaUtil.h"
 
+static std::string _outputFile = "";
 
 /**
 * Callback to display the private key
 */
 void resultCallback(KeyFinderResultInfo info)
 {
-	printf("\n");
+	printf("\r");
+	printf("Address:     %s\n", info.address.c_str());
 	printf("Private key: %s\n", info.privateKey.toString(16).c_str());
 	printf("Compressed:  %s\n", info.compressed ? "yes" : "no");
 	printf("Public key:  ");
@@ -22,8 +26,11 @@ void resultCallback(KeyFinderResultInfo info)
 	} else {
 		printf("%s\n       %s\n", info.publicKey.x.toString(16).c_str(), info.publicKey.y.toString(16).c_str());
 	}
-	printf("\n");
 
+	if(_outputFile.length() != 0) {
+		std::string s = info.address + " " + info.privateKey.toString(16) + " " + info.publicKey.toString(info.compressed);
+		util::appendToFile(_outputFile, s);
+	}
 }
 
 /**
@@ -92,6 +99,15 @@ static std::string getCompressionString(int mode)
 	throw std::string("Invalid compression setting");
 }
 
+bool readAddressesFromFile(const std::string &fileName, std::vector<std::string> &lines)
+{
+	if(fileName == "-") {
+		return util::readLinesFromStream(std::cin, lines);
+	} else {
+		return util::readLinesFromStream(fileName, lines);
+	}
+}
+
 int main(int argc, char **argv)
 {
 	int device = 0;
@@ -99,10 +115,12 @@ int main(int argc, char **argv)
 	int blocks = 0;
 	int pointsPerThread = 0;
 	int compression = KeyFinder::Compression::COMPRESSED;
+	std::string addressFile = "";
+	std::string outputFile = "";
 
 	bool optCompressed = false;
 	bool optUncompressed = false;
-
+	
 	std::vector<std::string> targetList;
 	secp256k1::uint256 start(1);
 	unsigned long long range = 0;
@@ -127,6 +145,8 @@ int main(int argc, char **argv)
 	parser.add("-d", "--device", true);
 	parser.add("-c", "--compressed", false);
 	parser.add("-u", "--uncompressed", false);
+	parser.add("-i", "--in", true);
+	parser.add("-o", "--out", true);
 
 	parser.parse(argc, argv);
 	std::vector<OptArg> args = parser.getArgs();
@@ -157,6 +177,10 @@ int main(int argc, char **argv)
 				optCompressed = true;
 			} else if(optArg.equals("-u", "--uncompressed")) {
 				optUncompressed = true;
+			} else if(optArg.equals("-i", "--in")) {
+				addressFile = optArg.arg;
+			} else if(optArg.equals("-o", "--out")) {
+				_outputFile = optArg.arg;
 			}
 		} catch(std::string err) {
 			printf("Error %s: %s\n", opt.c_str(), err.c_str());
@@ -170,14 +194,29 @@ int main(int argc, char **argv)
 		return 1;
 	}
 
+	if(addressFile.length() != 0) {
+		if(!readAddressesFromFile(addressFile, targetList) || targetList.size() == 0) {
+			printf("Error reading file '%s'\n", addressFile.c_str());
+
+			return 1;
+		}
+	}
+
 	// Parse operands
 	std::vector<std::string> ops = parser.getOperands();
 
 	if(ops.size() == 0) {
-		printf("Missing argument\n");
-		usage();
-		return 1;
+		if(addressFile.length() == 0) {
+			printf("Missing argument\n");
+			usage();
+			return 1;
+		}
+	} else {
+		for(int i = 0; i < ops.size(); i++) {
+			targetList.push_back(ops[i]);
+		}
 	}
+
 
 	// Get device parameters (blocks, threads, points per thread)
 	DeviceParameters devParams = findDefaultParameters(device);
@@ -204,8 +243,6 @@ int main(int argc, char **argv)
 		compression = KeyFinder::Compression::UNCOMPRESSED;
 	}
 
-	targetList.push_back(ops[0]);
-
 	cuda::CudaDeviceInfo devInfo;
 	
 	// Initialize the device
@@ -216,23 +253,26 @@ int main(int argc, char **argv)
 		return 1;
 	}
 
+	// Remove duplicate addresses from list
+	util::removeDuplicates(targetList);
+
 	printf("Device:      %s\n", devInfo.name.c_str());
-	printf("Target:      %s\n", targetList[0].c_str());
+	printf("Targets:     %d\n", targetList.size());
 
 	printf("Compression: %s\n", getCompressionString(compression).c_str());
 
 	printf("Starting at: %s\n", start.toString().c_str());
 
 	try {
+
 		KeyFinder f(device, start, range, targetList, compression, blocks, threads, pointsPerThread);
 
 		f.setResultCallback(resultCallback);
 		f.setStatusInterval(1800);
 		f.setStatusCallback(statusCallback);
 
-		printf("Initializing...\n");
+		printf("Initializing...");
 		f.init();
-		printf("Running\n");
 		f.run();
 	} catch(KeyFinderException ex) {
 		printf("Error: %s\n", ex.msg.c_str());

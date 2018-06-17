@@ -8,6 +8,7 @@
 class CudaDeviceContext;
 
 typedef struct {
+	std::string address;
 	secp256k1::ecpoint publicKey;
 	secp256k1::uint256 privateKey;
 	bool compressed;
@@ -96,6 +97,10 @@ private:
 	bool verifyKey(const secp256k1::uint256 &privateKey, const secp256k1::ecpoint &publicKey, const unsigned int hash[5], bool compressed);
 
 	void getResults(std::vector<KeyFinderResult> &r);
+
+	void removeHashFromList(const unsigned int hash[5]);
+	bool isHashInList(const unsigned int hash[5]);
+	void setTargetHashes();
 
 public:
 	class Compression {

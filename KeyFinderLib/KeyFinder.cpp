@@ -78,6 +78,8 @@ KeyFinder::KeyFinder(int device, const secp256k1::uint256 &start, unsigned long 
 
 KeyFinder::~KeyFinder()
 {
+	cleanupTargets();
+
 	if(_devCtx) {
 		delete _devCtx;
 	}
@@ -99,6 +101,21 @@ void KeyFinder::setStatusInterval(unsigned int interval)
 	_statusInterval = interval;
 }
 
+void KeyFinder::setTargetHashes()
+{
+	// Set the target in constant memory
+	std::vector<struct hash160> targets;
+	for(int i = 0; i < _targets.size(); i++) {
+		struct hash160 h;
+		memcpy(h.h, _targets[i].hash, sizeof(unsigned int) * 5);
+		targets.push_back(h);
+	}
+
+	cudaError_t err = setTargetHash(targets);
+	if(err) {
+		throw KeyFinderException("Error initializing device");
+	}
+}
 
 void KeyFinder::init()
 {
@@ -117,13 +134,15 @@ void KeyFinder::init()
 	generateStartingPoints();
 	_devCtx->copyPoints(_startingPoints);
 
-	// Set the target
-	setTargetHash(_targets[0].hash);
+	setTargetHashes();
 
 	// Set the incrementor
 	secp256k1::ecpoint g = secp256k1::G();
 	secp256k1::ecpoint p = secp256k1::multiplyPoint(secp256k1::uint256(_numThreads * _numBlocks * _pointsPerThread), g);
-	setIncrementorPoint(p.x, p.y);
+
+	if(setIncrementorPoint(p.x, p.y)) {
+		throw KeyFinderException("Error initializing device");
+	}
 }
 
 
@@ -193,6 +212,27 @@ bool KeyFinder::verifyKey(const secp256k1::uint256 &privateKey, const secp256k1:
 	return true;
 }
 
+void KeyFinder::removeHashFromList(const unsigned int hash[5])
+{
+	for(std::vector<KeyFinderTarget>::iterator i = _targets.begin(); i != _targets.end(); ++i) {
+		if(memcmp((*i).hash, hash, sizeof(unsigned int) * 5) == 0) {
+			_targets.erase(i);
+			break;
+		}
+	}
+}
+
+bool KeyFinder::isHashInList(const unsigned int hash[5])
+{
+	for(std::vector<KeyFinderTarget>::iterator i = _targets.begin(); i != _targets.end(); ++i) {
+		if(memcmp((*i).hash, hash, sizeof(unsigned int) * 5) == 0) {
+			return true;
+		}
+	}
+
+	return false;
+}
+
 void KeyFinder::getResults(std::vector<KeyFinderResult> &r)
 {
 	int count = _devCtx->getResultCount();
@@ -208,6 +248,11 @@ void KeyFinder::getResults(std::vector<KeyFinderResult> &r)
 
 	for(int i = 0; i < count; i++) {
 		struct KeyFinderDeviceResult *rPtr = &((struct KeyFinderDeviceResult *)ptr)[i];
+
+		// might be false-positive
+		if(!isHashInList(rPtr->digest)) {
+			continue;
+		}
 
 		KeyFinderResult minerResult;
 		minerResult.block = rPtr->block;
@@ -290,16 +335,25 @@ void KeyFinder::run()
 				info.privateKey = exp;
 				info.publicKey = publicKey;
 				info.compressed = results[i].compressed;
+				info.address = Address::fromPublicKey(publicKey, results[i].compressed);
 
 				_resultCallback(info);
 			}
 
 
-			_running = false;
+			// Remove the hashes that were found
+			for(int i = 0; i < results.size(); i++) {
+				removeHashFromList(results[i].hash);
+			}
+
+			// Update hash targets on device
+			setTargetHashes();
+
+			//_running = false;
 		}
 		_iterCount++;
 
-		if(_range > 0 && _iterCount * pointsPerIteration >= _range) {
+		if((_range > 0 && _iterCount * pointsPerIteration >= _range) || _targets.size() == 0) {
 			_running = false;
 		}
 	}

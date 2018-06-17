@@ -24,6 +24,10 @@ std::string formatSeconds(unsigned int seconds);
 unsigned int parseUInt32(std::string s);
 unsigned long long parseUInt64(std::string s);
 bool isHex(const std::string &s);
+bool appendToFile(const std::string &fileName, const std::string &s);
+bool readLinesFromStream(std::istream &in, std::vector<std::string> &lines);
+bool readLinesFromStream(const std::string &fileName, std::vector<std::string> &lines);
+unsigned int removeDuplicates(std::vector<std::string> &v);
 
 }
 

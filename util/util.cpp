@@ -1,4 +1,8 @@
 #include<stdio.h>
+#include<fstream>
+#include<vector>
+#include<set>
+
 #include"util.h"
 
 #ifdef _WIN32
@@ -78,6 +82,20 @@ namespace util {
 		return result;
 	}
 
+	unsigned int removeDuplicates(std::vector<std::string> &v)
+	{
+		std::set<std::string> s;
+		unsigned int size = v.size();
+
+		for(unsigned int i = 0; i < size; i++) {
+			s.insert(v[i]);
+		}
+
+		v.assign(s.begin(), s.end());
+
+		return size - v.size();
+	}
+
 	unsigned int parseUInt32(std::string s)
 	{
 		return (unsigned int)parseUInt64(s);
@@ -143,5 +161,70 @@ namespace util {
 		
 
 		return std::string(s);
+	}
+
+	long getFileSize(const std::string &fileName)
+	{
+		FILE *fp = fopen(fileName.c_str(), "rb");
+		if(fp == NULL) {
+			return -1;
+		}
+
+		fseek(fp, 0, SEEK_END);
+
+		long pos = ftell(fp);
+
+		fclose(fp);
+
+		return pos;
+	}
+
+	bool readLinesFromStream(const std::string &fileName, std::vector<std::string> &lines)
+	{
+		std::ifstream inFile(fileName);
+
+		if(!inFile.is_open()) {
+			return false;
+		}
+
+		return readLinesFromStream(inFile, lines);
+	}
+
+	bool readLinesFromStream(std::istream &in, std::vector<std::string> &lines)
+	{
+		std::string line;
+
+		while(std::getline(in, line)) {
+			if(line.length() > 0) {
+				lines.push_back(line);
+			}
+		}
+
+		return true;
+	}
+
+	bool appendToFile(const std::string &fileName, const std::string &s)
+	{
+		std::ofstream outFile;
+		bool newline = false;
+
+		if(getFileSize > 0) {
+			newline = true;
+		}
+
+		outFile.open(fileName, std::ios::app);
+
+		if(!outFile.is_open()) {
+			return false;
+		}
+
+		// Add newline following previous line
+		if(newline) {
+			outFile << std::endl;
+		}
+
+		outFile << s;
+
+		return true;
 	}
 }

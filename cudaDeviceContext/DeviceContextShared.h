@@ -12,6 +12,10 @@ struct KeyFinderDeviceResult {
 	unsigned int digest[5];
 };
 
+struct hash160 {
+	unsigned int h[5];
+};
+
 namespace PointCompressionType {
 	enum Value {
 		COMPRESSED = 0,

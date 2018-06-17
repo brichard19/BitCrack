@@ -34,7 +34,9 @@ void callKeyFinderKernel(KernelParams &params, bool useDouble, int compression);
 
 void waitForKernel();
 
-cudaError_t setTargetHash(const unsigned int hash[5]);
+cudaError_t setTargetHash(const std::vector<struct hash160> &targets);
+
+void cleanupTargets();
 
 cudaError_t setIncrementorPoint(const secp256k1::uint256 &x, const secp256k1::uint256 &y);
 

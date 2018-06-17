@@ -1,6 +1,8 @@
 #ifndef _PTX_H
 #define _PTX_H
 
+#include<cuda_runtime.h>
+
 #define madc_hi(dest, a, x, b) asm volatile("madc.hi.u32 %0, %1, %2, %3;\n\t" : "=r"(dest) : "r"(a), "r"(x), "r"(b))
 #define madc_hi_cc(dest, a, x, b) asm volatile("madc.hi.cc.u32 %0, %1, %2, %3;\n\t" : "=r"(dest) : "r"(a), "r"(x), "r"(b))
 #define mad_hi_cc(dest, a, x, b) asm volatile("mad.hi.cc.u32 %0, %1, %2, %3;\n\t" : "=r"(dest) : "r"(a), "r"(x), "r"(b))
@@ -21,17 +23,6 @@
 
 #define lsbpos(x) (__ffs((x)))
 
-__device__ unsigned int _lock = 0;
-
-__device__ void grabLock()
-{
-	while(atomicCAS(&_lock, 0, 1) != 0);
-}
-
-__device__ void releaseLock()
-{
-	atomicExch(&_lock, 0);
-}
 
 __device__ __forceinline__ unsigned int endian(unsigned int x)
 {

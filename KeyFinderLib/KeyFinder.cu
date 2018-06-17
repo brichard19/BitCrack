@@ -13,9 +13,19 @@
 #include "secp256k1.h"
 #include "DeviceContextShared.h"
 
-__constant__ unsigned int _TARGET_HASH[5];
+#define MAX_TARGETS_CONSTANT_MEM 16
+
+#define BLOOM_FILTER_SIZE_WORDS 2048
+
+__constant__ unsigned int _TARGET_HASH[MAX_TARGETS_CONSTANT_MEM][5];
+__constant__ unsigned int _NUM_TARGET_HASHES[1];
+__constant__ unsigned int *_BLOOM_FILTER[1];
+__constant__ unsigned int _USE_BLOOM_FILTER[1];
 __constant__ unsigned int _INC_X[8];
 __constant__ unsigned int _INC_Y[8];
+
+static bool _useBloomFilter = false;
+static unsigned int *_bloomFilterPtr = NULL;
 
 static const unsigned int _RIPEMD160_IV_HOST[5] = {
 	0x67452301,
@@ -30,18 +40,110 @@ static unsigned int swp(unsigned int x)
 	return (x << 24) | ((x << 8) & 0x00ff0000) | ((x >> 8) & 0x0000ff00) | (x >> 24);
 }
 
-cudaError_t setTargetHash(const unsigned int hash[5])
+void cleanupTargets()
 {
-	unsigned int h[5];
+	if(_useBloomFilter) {
+		if(_bloomFilterPtr != NULL) {
+			cudaFree(_bloomFilterPtr);
+			_bloomFilterPtr = NULL;
+		}
+	}
+}
+
+cudaError_t setTargetConstantMemory(const std::vector<struct hash160> &targets)
+{
+	unsigned int count = targets.size();
 
 
-	// Undo the final round of RIPEMD160 and endian swap to save some computation
-	for(int i = 0; i < 5; i++) {
-		h[i] = swp(hash[i]) - _RIPEMD160_IV_HOST[(i + 1) % 5];
+	for(int i = 0; i < count; i++) {
+		unsigned int h[5];
+
+		// Undo the final round of RIPEMD160 and endian swap to save some computation
+		for(int j = 0; j < 5; j++) {
+			h[j] = swp(targets[i].h[j]) - _RIPEMD160_IV_HOST[(j + 1) % 5];
+		}
+
+		cudaError_t err = cudaMemcpyToSymbol(_TARGET_HASH, h, sizeof(unsigned int) * 5, i * sizeof(unsigned int) * 5);
+
+		if(err) {
+			return err;
+		}
 	}
 
-	return cudaMemcpyToSymbol(_TARGET_HASH, h, sizeof(unsigned int) * 5);
+	cudaError_t err = cudaMemcpyToSymbol(_NUM_TARGET_HASHES, &count, sizeof(unsigned int));
+	if(err) {
+		return err;
+	}
+
+	unsigned int useBloomFilter = 0;
+
+	err = cudaMemcpyToSymbol(_USE_BLOOM_FILTER, &useBloomFilter, sizeof(bool));
+	if(err) {
+		return err;
+	}
+
+	return cudaSuccess;
 }
+
+cudaError_t setTargetBloomFilter(const std::vector<struct hash160> &targets)
+{
+	unsigned int filter[BLOOM_FILTER_SIZE_WORDS];
+
+	cudaError_t err = cudaMalloc(&_bloomFilterPtr, sizeof(unsigned int) *BLOOM_FILTER_SIZE_WORDS);
+
+	if(err) {
+		return err;
+	}
+
+	memset(filter, 0, sizeof(unsigned int) * BLOOM_FILTER_SIZE_WORDS);
+	
+	// Use the low 16 bits of each word in the hash as the index into the bloom filter
+	for(int i = 0; i < targets.size(); i++) {
+	
+		for(int j = 0; j < 5; j++) {
+			// Undo the final round of RIPEMD160 and endian swap to save some computation
+			unsigned int h = swp(targets[i].h[j]) - _RIPEMD160_IV_HOST[(j + 1) % 5];
+	
+			unsigned int idx = h & 0xffff;
+	
+			filter[idx / 32] |= (0x01 << (idx % 32));
+		}
+	}
+	
+	// Copy to device
+	err = cudaMemcpy(_bloomFilterPtr, filter, sizeof(unsigned int) * BLOOM_FILTER_SIZE_WORDS, cudaMemcpyHostToDevice);
+	if(err) {
+		cudaFree(_bloomFilterPtr);
+		_bloomFilterPtr = NULL;
+		return err;
+	}
+
+	// Copy device memory pointer to constant memory
+	err = cudaMemcpyToSymbol(_BLOOM_FILTER, &_bloomFilterPtr, sizeof(unsigned int *));
+	if(err) {
+		cudaFree(_bloomFilterPtr);
+		_bloomFilterPtr = NULL;
+		return err;
+	}
+
+	unsigned int useBloomFilter = 1;
+	err = cudaMemcpyToSymbol(_USE_BLOOM_FILTER, &useBloomFilter, sizeof(unsigned int));
+
+	return err;
+}
+
+cudaError_t setTargetHash(const std::vector<struct hash160> &targets)
+{
+	cleanupTargets();
+
+	if(targets.size() <= MAX_TARGETS_CONSTANT_MEM) {
+		return setTargetConstantMemory(targets);
+	} else {
+		return setTargetBloomFilter(targets);
+	}
+}
+
+
 
 cudaError_t setIncrementorPoint(const secp256k1::uint256 &x, const secp256k1::uint256 &y)
 {
@@ -87,16 +189,11 @@ __device__ void hashPublicKeyCompressed(const unsigned int *x, const unsigned in
 	ripemd160sha256NoFinal(hash, digestOut);
 }
 
-__device__ void addResult(unsigned int *numResultsPtr, void *results, void *info, int size)
+__device__ void addResult(unsigned int *numResultsPtr, void *results, void *info, unsigned int size)
 {
-	grabLock();
-
-	unsigned char *ptr = (unsigned char *)results + (*numResultsPtr);
-
+	unsigned int count = atomicAdd(numResultsPtr, 1);
+	unsigned char *ptr = (unsigned char *)results + count * size;
 	memcpy(ptr, info, size);
-
-	(*numResultsPtr)++;
-	releaseLock();
 }
 
 __device__ void setResultFound(unsigned int *numResultsPtr, void *results, int idx, bool compressed, unsigned int x[8], unsigned int y[8], unsigned int digest[5])
@@ -121,13 +218,29 @@ __device__ void setResultFound(unsigned int *numResultsPtr, void *results, int i
 
 __device__ bool checkHash(unsigned int hash[5])
 {
-	bool equal = true;
+	bool foundMatch = false;
 
-	for(int i = 0; i < 5; i++) {
-		equal &= (hash[i] == _TARGET_HASH[i]);
+	if(*_USE_BLOOM_FILTER) {
+		foundMatch = true;
+		for(int i = 0; i < 5; i++) {
+			unsigned int idx = hash[i] & 0xffff;
+
+			unsigned int f = ((unsigned int *)(_BLOOM_FILTER[0]))[idx / 32];
+			if((f & (0x01 << (idx % 32))) == 0) {
+				foundMatch = false;
+			}
+		}
+	} else {
+		for(int j = 0; j < *_NUM_TARGET_HASHES; j++) {
+			bool equal = true;
+			for(int i = 0; i < 5; i++) {
+				equal &= (hash[i] == _TARGET_HASH[j][i]);
+			}
+			foundMatch |= equal;
+		}
 	}
 
-	return equal;
+	return foundMatch;
 }
 
 __device__ void doIteration(unsigned int *xPtr, unsigned int *yPtr, unsigned int *chain, int pointsPerThread, unsigned int *numResults, void *results, int compression)
