@@ -4,7 +4,7 @@ A set of tools for brute-forcing Bitcoin private keys. Currently the project req
 
 Currently this project is CUDA only, but I would love to bring it to other architectures if there is enough interest in the project.
 
-## Dependencies
+## Build dependencies
 
 Visual Studio 2015
 
@@ -15,7 +15,7 @@ CUDA Toolkit
 
 ### Usage
 ```
-KeyFinder.exe [OPTIONS] [TARGETS]
+BitCrack.exe [OPTIONS] [TARGETS]
 
 Where [TARGETS] are one or more Bitcoin address
 
@@ -60,30 +60,30 @@ Options:
 
 The simplest usage, the keyspace will begin at 0, and the CUDA parameters will be chosen automatically
 ```
-KeyFinder.exe 1FshYsUh3mqgsG29XpZ23eLjWV8Ur3VwH
+BitCrack.exe 1FshYsUh3mqgsG29XpZ23eLjWV8Ur3VwH
 ```
 
 Multiple keys can be searched at once with minimal impact to performance. Provide the keys on the command line, or in a file with one address per line
 ```
-KeyFinder.exe 1FshYsUh3mqgsG29XpZ23eLjWV8Ur3VwH 15JhYXn6Mx3oF4Y7PcTAv2wVVAuCFFQNiP 19EEC52krRUK1RkUAEZmQdjTyHT7Gp1TYT
+BitCrack.exe 1FshYsUh3mqgsG29XpZ23eLjWV8Ur3VwH 15JhYXn6Mx3oF4Y7PcTAv2wVVAuCFFQNiP 19EEC52krRUK1RkUAEZmQdjTyHT7Gp1TYT
 ```
 
 To start the search at a specific private key, use the `-s` option:
 
 ```
-KeyFinder.exe -s 6BBF8CCF80F8E184D1D300EF2CE45F7260E56766519C977831678F0000000000 1FshYsUh3mqgsG29XpZ23eLjWV8Ur3VwH
+BitCrack.exe -s 6BBF8CCF80F8E184D1D300EF2CE45F7260E56766519C977831678F0000000000 1FshYsUh3mqgsG29XpZ23eLjWV8Ur3VwH
 ```
 
 
 Use the `-b,` `-t` and `-p` options to specify the number of blocks, threads per block, and keys per thread.
 ```
-KeyFinder.exe -b 32 -t 256 -p 16 1FshYsUh3mqgsG29XpZ23eLjWV8Ur3VwH
+BitCrack.exe -b 32 -t 256 -p 16 1FshYsUh3mqgsG29XpZ23eLjWV8Ur3VwH
 ```
 
 Use the `-r` or `--range` option to specify how many keys to search before stopping. For instance, to search up to 1 billion keys from the starting key:
 
 ```
-KeyFinder.exe -s 6BBF8CCF80F8E184D1D300EF2CE45F7260E56766519C977831678F0000000000 -r 1000000000
+BitCrack.exe -s 6BBF8CCF80F8E184D1D300EF2CE45F7260E56766519C977831678F0000000000 -r 1000000000
 ```
 
 Note:
