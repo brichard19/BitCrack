@@ -130,6 +130,8 @@ void KeyFinder::init()
 
 	_devCtx->init(params);
 
+	cudaDeviceSetCacheConfig(cudaFuncCachePreferL1);
+
 	// Copy points to device
 	generateStartingPoints();
 	_devCtx->copyPoints(_startingPoints);

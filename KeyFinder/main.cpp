@@ -16,7 +16,7 @@ static std::string _outputFile = "";
 */
 void resultCallback(KeyFinderResultInfo info)
 {
-	printf("\r");
+	printf("\n");
 	printf("Address:     %s\n", info.address.c_str());
 	printf("Private key: %s\n", info.privateKey.toString(16).c_str());
 	printf("Compressed:  %s\n", info.compressed ? "yes" : "no");
@@ -24,7 +24,7 @@ void resultCallback(KeyFinderResultInfo info)
 	if(info.compressed) {
 		printf("%s\n", info.publicKey.toString(true).c_str());
 	} else {
-		printf("%s\n       %s\n", info.publicKey.x.toString(16).c_str(), info.publicKey.y.toString(16).c_str());
+		printf("%s\n             %s\n", info.publicKey.x.toString(16).c_str(), info.publicKey.y.toString(16).c_str());
 	}
 
 	if(_outputFile.length() != 0) {

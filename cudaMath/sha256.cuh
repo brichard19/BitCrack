@@ -386,13 +386,13 @@ __device__ void sha256PublicKey(const unsigned int x[8], const unsigned int y[8]
 	digest[7] = tmp[7] + h;
 }
 
-__device__ void sha256PublicKeyCompressed(const unsigned int x[8], const unsigned int y[8], unsigned int digest[8])
+__device__ void sha256PublicKeyCompressed(const unsigned int x[8], unsigned int yParity, unsigned int digest[8])
 {
 	unsigned int a, b, c, d, e, f, g, h;
 	unsigned int w[16];
 
 	// 0x03 || x  or  0x02 || x
-	w[0] = 0x02000000 | ((y[7] & 1) << 24) | (x[0] >> 8);
+	w[0] = 0x02000000 | ((yParity & 1) << 24) | (x[0] >> 8);
 
 	w[1] = (x[1] >> 8) | (x[0] << 24);
 	w[2] = (x[2] >> 8) | (x[1] << 24);

@@ -7,9 +7,6 @@
 #include "ptx.cuh"
 
 
-__device__ __forceinline__ void copyBigInt(const unsigned int *src, unsigned int *dest);
-
-
 /**
  Prime modulus 2^256 - 2^32 - 977
  */
@@ -50,7 +47,7 @@ __constant__ unsigned int _LAMBDA[8] = {
 };
 
 
-__device__ __forceinline__ void copyBigInt(const unsigned int *src, unsigned int *dest)
+__device__ __forceinline__ void copyBigInt(const unsigned int src[8], unsigned int dest[8])
 {
 	for(int i = 0; i < 8; i++) {
 		dest[i] = src[i];
@@ -95,6 +92,19 @@ __device__ void readInt(const unsigned int *ara, int idx, unsigned int x[8])
 		x[i] = ara[index];
 		index += totalThreads;
 	}
+}
+
+__device__ unsigned int readIntLSW(const unsigned int *ara, int idx)
+{
+	int totalThreads = gridDim.x * blockDim.x;
+
+	int base = idx * totalThreads * 8;
+
+	int threadId = blockDim.x * blockIdx.x + threadIdx.x;
+
+	int index = base + threadId;
+
+	return ara[index + totalThreads * 7];
 }
 
 /**
@@ -179,50 +189,6 @@ __device__ unsigned int sub(const unsigned int a[8], const unsigned int b[8], un
 	return (borrow & 0x01);
 }
 
-/**
-   Subtract using two's compliment
- */
-__device__ unsigned int sub2c(const unsigned int a[8], const unsigned int b[8], unsigned int c[8])
-{
-	add_cc(c[7], a[7], ~b[7]);
-	addc_cc(c[6], a[6], ~b[6]);
-	addc_cc(c[5], a[5], ~b[5]);
-	addc_cc(c[4], a[4], ~b[4]);
-	addc_cc(c[3], a[3], ~b[3]);
-	addc_cc(c[2], a[2], ~b[2]);
-	addc_cc(c[1], a[1], ~b[1]);
-	addc_cc(c[0], a[0], ~b[0]);
-
-	unsigned int carry = 0;
-	addc(carry, 0, 0);
-
-	add_cc(c[7], c[7], 1);
-	addc_cc(c[6], c[6], 0);
-	addc_cc(c[5], c[5], 0);
-	addc_cc(c[4], c[4], 0);
-	addc_cc(c[3], c[3], 0);
-	addc_cc(c[2], c[2], 0);
-	addc_cc(c[1], c[1], 0);
-	addc_cc(c[0], c[0], 0);
-
-	addc(carry, carry, 0);
-
-	return carry;
-}
-
-__device__ void divBy2(unsigned int x[8])
-{
-	x[7] = (x[7] >> 1) | (x[6] << 31);
-	x[6] = (x[6] >> 1) | (x[5] << 31);
-	x[5] = (x[5] >> 1) | (x[4] << 31);
-	x[4] = (x[4] >> 1) | (x[3] << 31);
-	x[3] = (x[3] >> 1) | (x[2] << 31);
-	x[2] = (x[2] >> 1) | (x[1] << 31);
-	x[1] = (x[1] >> 1) | (x[0] << 31);
-	x[0] = (x[0] >> 1);
-}
-
-
 
 __device__ void addModP(const unsigned int a[8], const unsigned int b[8], unsigned int c[8])
 {
@@ -262,19 +228,15 @@ __device__ void addModP(const unsigned int a[8], const unsigned int b[8], unsign
 
 
 
-/**
- * Multiplication mod P
-*/
 __device__ void mulModP(const unsigned int a[8], const unsigned int b[8], unsigned int c[8])
 {
-	unsigned int high[8];
+	unsigned int high[8] = { 0 };
 
 	unsigned int t = a[7];
 
 	// a[7] * b (low)
-	for (int i = 7; i >= 0; i--) {
+	for(int i = 7; i >= 0; i--) {
 		c[i] = t * b[i];
-		high[i] = 0;
 	}
 
 	// a[7] * b (high)
@@ -310,8 +272,6 @@ __device__ void mulModP(const unsigned int a[8], const unsigned int b[8], unsign
 	madc_hi_cc(c[0], t, b[2], c[0]);
 	madc_hi_cc(high[7], t, b[1], high[7]);
 	madc_hi(high[6], t, b[0], high[6]);
-
-
 
 	// a[5] * b (low)
 	t = a[5];
@@ -460,7 +420,7 @@ __device__ void mulModP(const unsigned int a[8], const unsigned int b[8], unsign
 	// At this point we have 16 32-bit words representing a 512-bit value
 	// high[0 ... 7] and c[0 ... 7]
 	const unsigned int s = 977;
-	
+
 	// Store high[6] and high[7] since they will be overwritten
 	unsigned int high7 = high[7];
 	unsigned int high6 = high[6];
@@ -676,17 +636,15 @@ __device__ void negModP(const unsigned int *value, unsigned int *negative)
 }
 
 
-__device__ __forceinline__ void beginBatchAdd(const unsigned int *px, unsigned int *xPtr, unsigned int *chain, int i, unsigned int inverse[8])
+__device__ __forceinline__ void beginBatchAdd(const unsigned int *px, const unsigned int *x, unsigned int *chain, int i, unsigned int inverse[8])
 {
-	unsigned int x[8];
-	readInt(xPtr, i, x);
-
 	// x = Gx - x
-	subModP(px, x, x);
+	unsigned int t[8];
+	subModP(px, x, t);
 
 	// Keep a chain of multiples of the diff, i.e. c[0] = diff0, c[1] = diff0 * diff1,
 	// c[2] = diff2 * diff1 * diff0, etc
-	mulModP(x, inverse);
+	mulModP(t, inverse);
 
 	writeInt(chain, i, inverse);
 }

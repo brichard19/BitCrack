@@ -1,4 +1,5 @@
 #include<stdio.h>
+#include<string>
 #include<fstream>
 #include<vector>
 #include<set>
@@ -181,7 +182,7 @@ namespace util {
 
 	bool readLinesFromStream(const std::string &fileName, std::vector<std::string> &lines)
 	{
-		std::ifstream inFile(fileName);
+		std::ifstream inFile(fileName.c_str());
 
 		if(!inFile.is_open()) {
 			return false;
@@ -212,7 +213,7 @@ namespace util {
 			newline = true;
 		}
 
-		outFile.open(fileName, std::ios::app);
+		outFile.open(fileName.c_str(), std::ios::app);
 
 		if(!outFile.is_open()) {
 			return false;

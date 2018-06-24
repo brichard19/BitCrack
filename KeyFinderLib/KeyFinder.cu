@@ -175,11 +175,11 @@ __device__ void hashPublicKey(const unsigned int *x, const unsigned int *y, unsi
 	ripemd160sha256NoFinal(hash, digestOut);
 }
 
-__device__ void hashPublicKeyCompressed(const unsigned int *x, const unsigned int *y, unsigned int *digestOut)
+__device__ void hashPublicKeyCompressed(const unsigned int *x, unsigned int yParity, unsigned int *digestOut)
 {
 	unsigned int hash[8];
 
-	sha256PublicKeyCompressed(x, y, hash);
+	sha256PublicKeyCompressed(x, yParity, hash);
 
 	// Swap to little-endian
 	for(int i = 0; i < 8; i++) {
@@ -249,13 +249,16 @@ __device__ void doIteration(unsigned int *xPtr, unsigned int *yPtr, unsigned int
 	unsigned int inverse[8] = { 0,0,0,0,0,0,0,1 };
 	for(int i = 0; i < pointsPerThread; i++) {
 		unsigned int x[8];
-		unsigned int y[8];
+
 		unsigned int digest[5];
 
 		readInt(xPtr, i, x);
-		readInt(yPtr, i, y);
+
 
 		if(compression == PointCompressionType::UNCOMPRESSED || compression == PointCompressionType::BOTH) {
+			unsigned int y[8];
+			readInt(yPtr, i, y);
+
 			hashPublicKey(x, y, digest);
 
 			if(checkHash(digest)) {
@@ -264,14 +267,16 @@ __device__ void doIteration(unsigned int *xPtr, unsigned int *yPtr, unsigned int
 		}
 
 		if(compression == PointCompressionType::COMPRESSED || compression == PointCompressionType::BOTH) {
-			hashPublicKeyCompressed(x, y, digest);
+			hashPublicKeyCompressed(x, readIntLSW(yPtr, i), digest);
 
 			if(checkHash(digest)) {
+				unsigned int y[8];
+				readInt(yPtr, i, y);
 				setResultFound(numResults, results, i, true, x, y, digest);
 			}
 		}
 
-		beginBatchAdd(_INC_X, xPtr, chain, i, inverse);
+		beginBatchAdd(_INC_X, x, chain, i, inverse);
 	}
 
 	doBatchInverse(inverse);
@@ -294,14 +299,16 @@ __device__ void doIterationWithDouble(unsigned int *xPtr, unsigned int *yPtr, un
 	unsigned int inverse[8] = { 0,0,0,0,0,0,0,1 };
 	for(int i = 0; i < pointsPerThread; i++) {
 		unsigned int x[8];
-		unsigned int y[8];
+
 		unsigned int digest[5];
 
 		readInt(xPtr, i, x);
-		readInt(yPtr, i, y);
+		
 
 		// uncompressed
 		if(compression == 1 || compression == 2) {
+			unsigned int y[8];
+			readInt(yPtr, i, y);
 			hashPublicKey(x, y, digest);
 
 			if(checkHash(digest)) {
@@ -311,9 +318,12 @@ __device__ void doIterationWithDouble(unsigned int *xPtr, unsigned int *yPtr, un
 
 		// compressed
 		if(compression == 0 || compression == 2) {
-			hashPublicKeyCompressed(x, y, digest);
+			hashPublicKeyCompressed(x, readIntLSW(yPtr, i), digest);
 
 			if(checkHash(digest)) {
+				unsigned int y[8];
+				readInt(yPtr, i, y);
+
 				setResultFound(numResults, results, i, true, x, y, digest);
 			}
 		}

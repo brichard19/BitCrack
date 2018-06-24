@@ -36,7 +36,7 @@ export CUDA_INCLUDE
 export CUDA_MATH
 
 
-all:	dir_addressutil dir_cmdparse dir_cryptoutil dir_keyfinderlib dir_keyfinder dir_cudadevicecontext dir_cudautil dir_secp256k1lib dir_util
+all:	dir_addressutil dir_cmdparse dir_cryptoutil dir_keyfinderlib dir_keyfinder dir_cudadevicecontext dir_cudautil dir_secp256k1lib dir_util dir_cudainfo
 
 dir_addressutil:	dir_util dir_secp256k1lib dir_cryptoutil
 	make --directory AddressUtil
@@ -65,6 +65,8 @@ dir_secp256k1lib:	dir_cryptoutil
 dir_util:
 	make --directory util
 
+dir_cudainfo:
+	make --directory cudaInfo
 
 clean:
 	make --directory AddressUtil clean
@@ -76,6 +78,7 @@ clean:
 	make --directory cudaUtil clean
 	make --directory secp256k1lib clean
 	make --directory util clean
+	make --directory cudaInfo clean
 
 	rm -rf ${LIBDIR}
 	rm -rf ${BINDIR}
