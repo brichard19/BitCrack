@@ -79,6 +79,7 @@ KeyFinder::KeyFinder(int device, const secp256k1::uint256 &start, unsigned long 
 KeyFinder::~KeyFinder()
 {
 	cleanupTargets();
+	cleanupChainBuf();
 
 	if(_devCtx) {
 		delete _devCtx;
@@ -137,6 +138,8 @@ void KeyFinder::init()
 	_devCtx->copyPoints(_startingPoints);
 
 	setTargetHashes();
+
+	allocateChainBuf(_numThreads * _numBlocks * _pointsPerThread);
 
 	// Set the incrementor
 	secp256k1::ecpoint g = secp256k1::G();

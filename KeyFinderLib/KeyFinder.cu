@@ -23,9 +23,11 @@ __constant__ unsigned int *_BLOOM_FILTER[1];
 __constant__ unsigned int _USE_BLOOM_FILTER[1];
 __constant__ unsigned int _INC_X[8];
 __constant__ unsigned int _INC_Y[8];
+__constant__ unsigned int *_CHAIN[1];
 
 static bool _useBloomFilter = false;
 static unsigned int *_bloomFilterPtr = NULL;
+static unsigned int *_chainBufferPtr = NULL;
 
 static const unsigned int _RIPEMD160_IV_HOST[5] = {
 	0x67452301,
@@ -40,28 +42,27 @@ static unsigned int swp(unsigned int x)
 	return (x << 24) | ((x << 8) & 0x00ff0000) | ((x >> 8) & 0x0000ff00) | (x >> 24);
 }
 
-void cleanupTargets()
+
+static void undoRMD160FinalRound(const unsigned int hIn[5], unsigned int hOut[5])
 {
-	if(_useBloomFilter) {
-		if(_bloomFilterPtr != NULL) {
-			cudaFree(_bloomFilterPtr);
-			_bloomFilterPtr = NULL;
-		}
+	for(int i = 0; i < 5; i++) {
+		hOut[i] = swp(hIn[i]) - _RIPEMD160_IV_HOST[(i + 1) % 5];
 	}
 }
 
-cudaError_t setTargetConstantMemory(const std::vector<struct hash160> &targets)
+
+/**
+ Copies the target hashes to constant memory
+ */
+static cudaError_t setTargetConstantMemory(const std::vector<struct hash160> &targets)
 {
 	unsigned int count = targets.size();
 
 
-	for(int i = 0; i < count; i++) {
+	for(unsigned int i = 0; i < count; i++) {
 		unsigned int h[5];
 
-		// Undo the final round of RIPEMD160 and endian swap to save some computation
-		for(int j = 0; j < 5; j++) {
-			h[j] = swp(targets[i].h[j]) - _RIPEMD160_IV_HOST[(j + 1) % 5];
-		}
+		undoRMD160FinalRound(targets[i].h, h);
 
 		cudaError_t err = cudaMemcpyToSymbol(_TARGET_HASH, h, sizeof(unsigned int) * 5, i * sizeof(unsigned int) * 5);
 
@@ -85,7 +86,10 @@ cudaError_t setTargetConstantMemory(const std::vector<struct hash160> &targets)
 	return cudaSuccess;
 }
 
-cudaError_t setTargetBloomFilter(const std::vector<struct hash160> &targets)
+/**
+Populates the bloom filter with the target hashes
+*/
+static cudaError_t setTargetBloomFilter(const std::vector<struct hash160> &targets)
 {
 	unsigned int filter[BLOOM_FILTER_SIZE_WORDS];
 
@@ -96,20 +100,22 @@ cudaError_t setTargetBloomFilter(const std::vector<struct hash160> &targets)
 	}
 
 	memset(filter, 0, sizeof(unsigned int) * BLOOM_FILTER_SIZE_WORDS);
-	
+
 	// Use the low 16 bits of each word in the hash as the index into the bloom filter
-	for(int i = 0; i < targets.size(); i++) {
-	
+	for(unsigned int i = 0; i < targets.size(); i++) {
+
+		unsigned int h[5];
+
+		undoRMD160FinalRound(targets[i].h, h);
+
 		for(int j = 0; j < 5; j++) {
-			// Undo the final round of RIPEMD160 and endian swap to save some computation
-			unsigned int h = swp(targets[i].h[j]) - _RIPEMD160_IV_HOST[(j + 1) % 5];
-	
-			unsigned int idx = h & 0xffff;
-	
+			unsigned int idx = h[i] & 0xffff;
+
 			filter[idx / 32] |= (0x01 << (idx % 32));
 		}
+
 	}
-	
+
 	// Copy to device
 	err = cudaMemcpy(_bloomFilterPtr, filter, sizeof(unsigned int) * BLOOM_FILTER_SIZE_WORDS, cudaMemcpyHostToDevice);
 	if(err) {
@@ -132,6 +138,19 @@ cudaError_t setTargetBloomFilter(const std::vector<struct hash160> &targets)
 	return err;
 }
 
+
+void cleanupTargets()
+{
+	if(_useBloomFilter && _bloomFilterPtr != NULL) {
+		cudaFree(_bloomFilterPtr);
+		_bloomFilterPtr = NULL;
+	}
+}
+
+/**
+ *Copies the target hashes to either constant memory, or the bloom filter depending
+ on how many targets there are
+ */
 cudaError_t setTargetHash(const std::vector<struct hash160> &targets)
 {
 	cleanupTargets();
@@ -144,7 +163,39 @@ cudaError_t setTargetHash(const std::vector<struct hash160> &targets)
 }
 
 
+/**
+ * Allocates device memory for storing the multiplication chain used in
+ the batch inversion operation
+ */
+cudaError_t allocateChainBuf(unsigned int count)
+{
+	cudaError_t err = cudaMalloc(&_chainBufferPtr, count * sizeof(unsigned int) * 8);
 
+	if(err) {
+		return err;
+	}
+
+	err = cudaMemcpyToSymbol(_CHAIN, &_chainBufferPtr, sizeof(unsigned int *));
+	if(err) {
+		cudaFree(_chainBufferPtr);
+	}
+
+	return err;
+}
+
+void cleanupChainBuf()
+{
+	if(_chainBufferPtr != NULL) {
+		cudaFree(_chainBufferPtr);
+		_chainBufferPtr = NULL;
+	}
+}
+
+
+
+/**
+ *Sets the EC point which all points will be incremented by
+ */
 cudaError_t setIncrementorPoint(const secp256k1::uint256 &x, const secp256k1::uint256 &y)
 {
 	unsigned int xWords[8];
@@ -160,6 +211,8 @@ cudaError_t setIncrementorPoint(const secp256k1::uint256 &x, const secp256k1::ui
 
 	return cudaMemcpyToSymbol(_INC_Y, yWords, sizeof(unsigned int) * 8);
 }
+
+
 
 __device__ void hashPublicKey(const unsigned int *x, const unsigned int *y, unsigned int *digestOut)
 {
@@ -243,8 +296,10 @@ __device__ bool checkHash(unsigned int hash[5])
 	return foundMatch;
 }
 
-__device__ void doIteration(unsigned int *xPtr, unsigned int *yPtr, unsigned int *chain, int pointsPerThread, unsigned int *numResults, void *results, int compression)
+__device__ void doIteration(unsigned int *xPtr, unsigned int *yPtr, int pointsPerThread, unsigned int *numResults, void *results, int compression)
 {
+	unsigned int *chain = _CHAIN[0];
+
 	// Multiply together all (_Gx - x) and then invert
 	unsigned int inverse[8] = { 0,0,0,0,0,0,0,1 };
 	for(int i = 0; i < pointsPerThread; i++) {
@@ -253,7 +308,6 @@ __device__ void doIteration(unsigned int *xPtr, unsigned int *yPtr, unsigned int
 		unsigned int digest[5];
 
 		readInt(xPtr, i, x);
-
 
 		if(compression == PointCompressionType::UNCOMPRESSED || compression == PointCompressionType::BOTH) {
 			unsigned int y[8];
@@ -293,8 +347,10 @@ __device__ void doIteration(unsigned int *xPtr, unsigned int *yPtr, unsigned int
 	}
 }
 
-__device__ void doIterationWithDouble(unsigned int *xPtr, unsigned int *yPtr, unsigned int *chain, int pointsPerThread, unsigned int *numResults, void *results, int compression)
+__device__ void doIterationWithDouble(unsigned int *xPtr, unsigned int *yPtr, int pointsPerThread, unsigned int *numResults, void *results, int compression)
 {
+	unsigned int *chain = _CHAIN[0];
+
 	// Multiply together all (_Gx - x) and then invert
 	unsigned int inverse[8] = { 0,0,0,0,0,0,0,1 };
 	for(int i = 0; i < pointsPerThread; i++) {
@@ -348,12 +404,12 @@ __device__ void doIterationWithDouble(unsigned int *xPtr, unsigned int *yPtr, un
 /**
 * Performs a single iteration
 */
-__global__ void keyFinderKernel(int points, unsigned int *x, unsigned int *y, unsigned int *chain, unsigned int *numResults, void *results, int compression)
+__global__ void keyFinderKernel(int points, unsigned int *x, unsigned int *y, unsigned int *numResults, void *results, int compression)
 {
-	doIteration(x, y, chain, points, numResults, results, compression);
+	doIteration(x, y, points, numResults, results, compression);
 }
 
-__global__ void keyFinderKernelWithDouble(int points, unsigned int *x, unsigned int *y, unsigned int *chain, unsigned int *numResults, void *results, int compression)
+__global__ void keyFinderKernelWithDouble(int points, unsigned int *x, unsigned int *y, unsigned int *numResults, void *results, int compression)
 {
-	doIterationWithDouble(x, y, chain, points, numResults, results, compression);
+	doIterationWithDouble(x, y, points, numResults, results, compression);
 }

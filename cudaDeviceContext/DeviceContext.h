@@ -24,7 +24,6 @@ typedef struct {
 
 	unsigned int *x;
 	unsigned int *y;
-	unsigned int *chain;
 
 	unsigned int *results;
 	unsigned int *numResults;
@@ -80,7 +79,6 @@ private:
 
 	unsigned int *_x;
 	unsigned int *_y;
-	unsigned int *_chain;
 
 	unsigned int *_numResultsHost;
 	unsigned int *_numResultsDev;
@@ -99,7 +97,6 @@ public:
 
 		_x = NULL;
 		_y = NULL;
-		_chain = NULL;
 	}
 
 	void init(const DeviceParameters &params);

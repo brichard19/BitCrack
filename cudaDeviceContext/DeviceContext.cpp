@@ -48,12 +48,6 @@ void CudaDeviceContext::init(const DeviceParameters &params)
 		goto end;
 	}
 
-	// Allocate chain buf
-	err = cudaMalloc(&_chain, sizeof(unsigned int) * count * 8);
-	if(err) {
-		goto end;
-	}
-
 	// The number of results found in the most recent kernel run
 	_numResultsHost = NULL;
 	err = cudaHostAlloc(&_numResultsHost, sizeof(unsigned int), cudaHostAllocMapped);
@@ -87,7 +81,6 @@ end:
 	if(err) {
 		cudaFree(_x);
 		cudaFree(_y);
-		cudaFree(_chain);
 		cudaFreeHost(_numResultsHost);
 		cudaFree(_numResultsDev);
 		cudaFreeHost(_resultsHost);
@@ -173,10 +166,6 @@ void CudaDeviceContext::cleanup()
 		cudaFree(_y);
 	}
 
-	if(_chain != NULL) {
-		cudaFree(_chain);
-	}
-
 	if(_numResultsHost != NULL) {
 		cudaFreeHost(_numResultsHost);
 	}
@@ -187,7 +176,6 @@ void CudaDeviceContext::cleanup()
 
 	_x = NULL;
 	_y = NULL;
-	_chain = NULL;
 
 	cudaDeviceReset();
 }
@@ -201,7 +189,6 @@ KernelParams CudaDeviceContext::getKernelParams()
 	params.points = _pointsPerThread;
 	params.x = _x;
 	params.y = _y;
-	params.chain = _chain;
 
 	params.results = _resultsDev;
 	params.numResults = _numResultsDev;
