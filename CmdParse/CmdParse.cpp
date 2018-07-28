@@ -1,29 +1,5 @@
 #include "CmdParse.h"
 
-
-//static std::vector<std::string> splitString(const std::string s, const std::string delimeter)
-//{
-//	std::vector<int> idxVec;
-//
-//	int idx = 0;
-//	while((idx = s.find_first_of(delimeter, idx)) != -1) {
-//		idxVec.push_back(idx);
-//	}
-//
-//	std::vector<std::string> vec;
-//
-//	int prev = 0;
-//	for(int i = 0; i < idxVec.size(); i++) {
-//
-//		std::string tmp = s.substr(prev, idxVec[i] - prev);
-//		prev = idxVec[i];
-//
-//		vec.push_back(tmp);
-//	}
-//
-//	return vec;
-//}
-
 CmdParse::CmdParse()
 {
 

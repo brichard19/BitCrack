@@ -2,12 +2,8 @@
 #include "util.h"
 #include "AddressUtil.h"
 
-#include "DeviceContext.h"
+#include "CudaDeviceContext.h"
 #include "cudabridge.h"
-
-static const int DEFAULT_POINTS_PER_THREAD = 1;
-static const int DEFAULT_NUM_THREADS = 32;
-static const int DEFAULT_NUM_BLOCKS = 1;
 
 
 void KeyFinder::defaultResultCallback(KeyFinderResultInfo result)
@@ -27,25 +23,22 @@ KeyFinder::KeyFinder(int device, const secp256k1::uint256 &start, unsigned long 
 	_total = 0;
 	_statusInterval = 1000;
 	_device = device;
-	_pointsPerThread = DEFAULT_POINTS_PER_THREAD;
-	_numThreads = DEFAULT_NUM_THREADS;
-	_numBlocks = DEFAULT_NUM_BLOCKS;
+
+
+	if(threads <= 0 || threads % 32 != 0) {
+		throw KeyFinderException("The number of threads must be a multiple of 32");
+	}
+
+	if(blocks <= 0) {
+		throw KeyFinderException("At least one block required");
+	}
+
+	if(pointsPerThread <= 0) {
+		throw KeyFinderException("At least one point per thread required");
+	}
 
 	if(!(compression == Compression::COMPRESSED || compression == Compression::UNCOMPRESSED || compression == Compression::BOTH)) {
 		throw KeyFinderException("Invalid argument for compression");
-	}
-	_compression = compression;
-
-	if(threads != 0) {
-		_numThreads = threads;
-	}
-
-	if(blocks != 0) {
-		_numBlocks = blocks;
-	}
-
-	if(pointsPerThread != 0) {
-		_pointsPerThread = pointsPerThread;
 	}
 
 	if(start.cmp(secp256k1::N) >= 0) {
@@ -58,21 +51,32 @@ KeyFinder::KeyFinder(int device, const secp256k1::uint256 &start, unsigned long 
 
 	// Convert each address from base58 encoded form to a 160-bit integer
 	for(unsigned int i = 0; i < targetHashes.size(); i++) {
-		KeyFinderTarget t;
-
+		
 		if(!Address::verifyAddress(targetHashes[i])) {
-			throw KeyFinderException("Invalid address");
+			throw KeyFinderException("Invalid address '" + targetHashes[i] + "'");
 		}
 
-		Base58::toHash160(targetHashes[i], t.hash);
+		KeyFinderTarget t;
 
-		_targets.push_back(t);
+		Base58::toHash160(targetHashes[i], t.value);
+
+		_targets.insert(t);
 	}
 
+	_compression = compression;
+
+	_numThreads = threads;
+
+	_numBlocks = blocks;
+
+	_pointsPerThread = pointsPerThread;
+
 	_startExponent = start;
+
 	_range = range;
 
 	_statusCallback = NULL;
+
 	_resultCallback = NULL;
 }
 
@@ -102,21 +106,20 @@ void KeyFinder::setStatusInterval(unsigned int interval)
 	_statusInterval = interval;
 }
 
-void KeyFinder::setTargetHashes()
+void KeyFinder::setTargetsOnDevice()
 {
 	// Set the target in constant memory
 	std::vector<struct hash160> targets;
-	for(int i = 0; i < _targets.size(); i++) {
-		struct hash160 h;
-		memcpy(h.h, _targets[i].hash, sizeof(unsigned int) * 5);
-		targets.push_back(h);
+
+	for(std::set<KeyFinderTarget>::iterator i = _targets.begin(); i != _targets.end(); ++i) {
+		targets.push_back(hash160((*i).value));
 	}
 
 	cudaError_t err = setTargetHash(targets);
 	if(err) {
 		std::string cudaErrorString(cudaGetErrorString(err));
 
-		throw KeyFinderException("Error initializing device: " + cudaErrorString);
+		throw KeyFinderException("Device error: " + cudaErrorString);
 	}
 }
 
@@ -139,13 +142,14 @@ void KeyFinder::init()
 	generateStartingPoints();
 	_devCtx->copyPoints(_startingPoints);
 
-	setTargetHashes();
+	setTargetsOnDevice();
 
 	allocateChainBuf(_numThreads * _numBlocks * _pointsPerThread);
 
 	// Set the incrementor
 	secp256k1::ecpoint g = secp256k1::G();
 	secp256k1::ecpoint p = secp256k1::multiplyPoint(secp256k1::uint256(_numThreads * _numBlocks * _pointsPerThread), g);
+
 
 	cudaError_t err = setIncrementorPoint(p.x, p.y);
 	if(err) {
@@ -173,7 +177,7 @@ void KeyFinder::generateStartingPoints()
 
 	secp256k1::generateKeyPairsBulk(secp256k1::G(), _exponents, _startingPoints);
 
-	for(unsigned long long i = 0; i < _startingPoints.size(); i++) {
+	for(unsigned int i = 0; i < _startingPoints.size(); i++) {
 		if(!secp256k1::pointExists(_startingPoints[i])) {
 			throw KeyFinderException("Point generation error");
 		}
@@ -222,25 +226,16 @@ bool KeyFinder::verifyKey(const secp256k1::uint256 &privateKey, const secp256k1:
 	return true;
 }
 
-void KeyFinder::removeHashFromList(const unsigned int hash[5])
+void KeyFinder::removeTargetFromList(const unsigned int hash[5])
 {
-	for(std::vector<KeyFinderTarget>::iterator i = _targets.begin(); i != _targets.end(); ++i) {
-		if(memcmp((*i).hash, hash, sizeof(unsigned int) * 5) == 0) {
-			_targets.erase(i);
-			break;
-		}
-	}
+	KeyFinderTarget t(hash);
+	_targets.erase(t);
 }
 
-bool KeyFinder::isHashInList(const unsigned int hash[5])
+bool KeyFinder::isTargetInList(const unsigned int hash[5])
 {
-	for(std::vector<KeyFinderTarget>::iterator i = _targets.begin(); i != _targets.end(); ++i) {
-		if(memcmp((*i).hash, hash, sizeof(unsigned int) * 5) == 0) {
-			return true;
-		}
-	}
-
-	return false;
+	KeyFinderTarget t(hash);
+	return _targets.find(t) != _targets.end();
 }
 
 void KeyFinder::getResults(std::vector<KeyFinderResult> &r)
@@ -260,7 +255,7 @@ void KeyFinder::getResults(std::vector<KeyFinderResult> &r)
 		struct KeyFinderDeviceResult *rPtr = &((struct KeyFinderDeviceResult *)ptr)[i];
 
 		// might be false-positive
-		if(!isHashInList(rPtr->digest)) {
+		if(!isTargetInList(rPtr->digest)) {
 			continue;
 		}
 
@@ -293,6 +288,8 @@ void KeyFinder::run()
 	_totalTime = 0;
 
 	while(_running) {
+
+		_devCtx->clearResults();
 
 		KernelParams params = _devCtx->getKernelParams();
 		if(_iterCount < 2 && _startExponent.cmp(pointsPerIteration) <= 0) {
@@ -337,7 +334,7 @@ void KeyFinder::run()
 				unsigned long long offset = (unsigned long long)_numBlocks * _numThreads * _pointsPerThread * _iterCount;
 				exp = secp256k1::addModN(exp, secp256k1::uint256(offset));
 
-				if(!verifyKey(exp, publicKey, results[i].hash, results[0].compressed)) {
+				if(!verifyKey(exp, publicKey, results[i].hash, results[i].compressed)) {
 					throw KeyFinderException("Invalid point");
 				}
 
@@ -352,17 +349,16 @@ void KeyFinder::run()
 
 
 			// Remove the hashes that were found
-			for(int i = 0; i < results.size(); i++) {
-				removeHashFromList(results[i].hash);
+			for(unsigned int i = 0; i < results.size(); i++) {
+				removeTargetFromList(results[i].hash);
 			}
 
 			// Update hash targets on device
-			setTargetHashes();
-
-			//_running = false;
+			setTargetsOnDevice();
 		}
 		_iterCount++;
 
+		// Stop if we searched the entire range, or have no targets left
 		if((_range > 0 && _iterCount * pointsPerIteration >= _range) || _targets.size() == 0) {
 			_running = false;
 		}

@@ -2,10 +2,21 @@
 #define _KEY_FINDER_H
 
 #include <vector>
+#include <set>
 #include "secp256k1.h"
 
 
 class CudaDeviceContext;
+
+struct KeyFinderResult {
+	int thread;
+	int block;
+	int index;
+	bool compressed;
+
+	secp256k1::ecpoint p;
+	unsigned int hash[5];
+};
 
 typedef struct {
 	std::string address;
@@ -25,9 +36,59 @@ typedef struct {
 }KeyFinderStatusInfo;
 
 
-struct KeyFinderTarget {
-	secp256k1::ecpoint p;
-	unsigned int hash[5];
+class KeyFinderTarget {
+
+public:
+	unsigned int value[5] = { 0 };
+
+	KeyFinderTarget()
+	{
+	}
+
+	KeyFinderTarget(const unsigned int h[5])
+	{
+		for(int i = 0; i < 5; i++) {
+			value[i] = h[i];
+		}
+	}
+
+
+	bool operator==(const KeyFinderTarget &t) const
+	{
+		for(int i = 0; i < 5; i++) {
+			if(value[i] != t.value[i]) {
+				return false;
+			}
+		}
+
+		return true;
+	}
+
+	bool operator<(const KeyFinderTarget &t) const
+	{
+		for(int i = 0; i < 5; i++) {
+			if(value[i] < t.value[i]) {
+				return true;
+			} else if(value[i] > t.value[i]) {
+				return false;
+			}
+		}
+
+		return false;
+	}
+
+	bool operator>(const KeyFinderTarget &t) const
+	{
+		for(int i = 0; i < 5; i++) {
+			if(value[i] > t.value[i]) {
+				return true;
+			} else if(value[i] < t.value[i]) {
+				return false;
+			}
+		}
+
+		return false;
+	}
 };
 
 class KeyFinderException {
@@ -42,19 +103,15 @@ public:
 	std::string msg;
 };
 
-class KeyFinderResult;
-
 class KeyFinder {
 
 private:
-
-	static const int FORMAT_PUBKEY = 0x00000001;
 
 	unsigned int _compression;
 
 	unsigned int _flags;
 
-	std::vector<KeyFinderTarget> _targets;
+	std::set<KeyFinderTarget> _targets;
 
 	unsigned int _statusInterval;
 
@@ -98,9 +155,9 @@ private:
 
 	void getResults(std::vector<KeyFinderResult> &r);
 
-	void removeHashFromList(const unsigned int hash[5]);
-	bool isHashInList(const unsigned int hash[5]);
-	void setTargetHashes();
+	void removeTargetFromList(const unsigned int value[5]);
+	bool isTargetInList(const unsigned int value[5]);
+	void setTargetsOnDevice();
 
 public:
 	class Compression {

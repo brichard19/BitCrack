@@ -1,6 +1,9 @@
 #include<stdio.h>
 
-#include "DeviceContext.h"
+#include <cuda.h>
+#include <cuda_runtime.h>
+
+#include "CudaDeviceContext.h"
 
 
 static std::string getErrorString(cudaError_t err)
@@ -158,21 +161,13 @@ void CudaDeviceContext::splatBigInt(unsigned int *dest, int block, int thread, i
 
 void CudaDeviceContext::cleanup()
 {
-	if(_x != NULL) {
-		cudaFree(_y);
-	}
+	cudaFree(_y);
 
-	if(_y != NULL) {
-		cudaFree(_y);
-	}
+	cudaFree(_y);
 
-	if(_numResultsHost != NULL) {
-		cudaFreeHost(_numResultsHost);
-	}
+	cudaFreeHost(_numResultsHost);
 
-	if(_resultsHost != NULL) {
-		cudaFreeHost(_resultsHost);
-	}
+	cudaFreeHost(_resultsHost);
 
 	_x = NULL;
 	_y = NULL;

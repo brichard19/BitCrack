@@ -13,7 +13,13 @@ struct KeyFinderDeviceResult {
 };
 
 struct hash160 {
+
 	unsigned int h[5];
+
+	hash160(const unsigned int hash[5])
+	{
+		memcpy(h, hash, sizeof(unsigned int) * 5);
+	}
 };
 
 namespace PointCompressionType {

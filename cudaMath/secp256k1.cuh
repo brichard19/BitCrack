@@ -55,7 +55,7 @@ __device__ __forceinline__ void copyBigInt(const unsigned int src[8], unsigned i
 }
 
 
-__device__ void printBigInt(const unsigned int *x, int len)
+__host__ __device__ void printBigInt(const unsigned int *x, int len)
 {
 	for(int i = 0; i < len; i++) {
 		printf("%.8x", x[i]);

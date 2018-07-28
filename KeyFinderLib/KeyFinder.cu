@@ -29,13 +29,7 @@ static bool _useBloomFilter = false;
 static unsigned int *_bloomFilterPtr = NULL;
 static unsigned int *_chainBufferPtr = NULL;
 
-static const unsigned int _RIPEMD160_IV_HOST[5] = {
-	0x67452301,
-	0xefcdab89,
-	0x98badcfe,
-	0x10325476,
-	0xc3d2e1f0
-};
+
 
 static unsigned int swp(unsigned int x)
 {
@@ -45,11 +39,33 @@ static unsigned int swp(unsigned int x)
 
 static void undoRMD160FinalRound(const unsigned int hIn[5], unsigned int hOut[5])
 {
+	unsigned int iv[5] = {
+		0x67452301,
+		0xefcdab89,
+		0x98badcfe,
+		0x10325476,
+		0xc3d2e1f0
+	};
+
 	for(int i = 0; i < 5; i++) {
-		hOut[i] = swp(hIn[i]) - _RIPEMD160_IV_HOST[(i + 1) % 5];
+		hOut[i] = swp(hIn[i]) - iv[(i + 1) % 5];
 	}
 }
 
+__device__ void doRMD160FinalRound(const unsigned int hIn[5], unsigned int hOut[5])
+{
+	unsigned int iv[5] = {
+		0x67452301,
+		0xefcdab89,
+		0x98badcfe,
+		0x10325476,
+		0xc3d2e1f0
+	};
+
+	for(int i = 0; i < 5; i++) {
+		hOut[i] = endian(hIn[i] + iv[(i + 1) % 5]);
+	}
+}
 
 /**
  Copies the target hashes to constant memory
@@ -245,6 +261,7 @@ __device__ void hashPublicKeyCompressed(const unsigned int *x, unsigned int yPar
 __device__ void addResult(unsigned int *numResultsPtr, void *results, void *info, unsigned int size)
 {
 	unsigned int count = atomicAdd(numResultsPtr, 1);
+
 	unsigned char *ptr = (unsigned char *)results + count * size;
 	memcpy(ptr, info, size);
 }
@@ -263,9 +280,11 @@ __device__ void setResultFound(unsigned int *numResultsPtr, void *results, int i
 		r.y[i] = y[i];
 	}
 
-	for(int i = 0; i < 5; i++) {
-		r.digest[i] = endian(digest[i] + _RIPEMD160_IV[(i + 1) % 5]);
-	}
+	//for(int i = 0; i < 5; i++) {
+	//	r.digest[i] = endian(digest[i] + _RIPEMD160_IV[(i + 1) % 5]);
+	//}
+	doRMD160FinalRound(digest, r.digest);
+
 	addResult(numResultsPtr, results, &r, sizeof(r));
 }
 
@@ -289,6 +308,7 @@ __device__ bool checkHash(unsigned int hash[5])
 			for(int i = 0; i < 5; i++) {
 				equal &= (hash[i] == _TARGET_HASH[j][i]);
 			}
+
 			foundMatch |= equal;
 		}
 	}
@@ -362,7 +382,7 @@ __device__ void doIterationWithDouble(unsigned int *xPtr, unsigned int *yPtr, in
 		
 
 		// uncompressed
-		if(compression == 1 || compression == 2) {
+		if(compression == PointCompressionType::UNCOMPRESSED || compression == PointCompressionType::BOTH) {
 			unsigned int y[8];
 			readInt(yPtr, i, y);
 			hashPublicKey(x, y, digest);
@@ -373,7 +393,7 @@ __device__ void doIterationWithDouble(unsigned int *xPtr, unsigned int *yPtr, in
 		}
 
 		// compressed
-		if(compression == 0 || compression == 2) {
+		if(compression == PointCompressionType::COMPRESSED || compression == PointCompressionType::BOTH) {
 			hashPublicKeyCompressed(x, readIntLSW(yPtr, i), digest);
 
 			if(checkHash(digest)) {

@@ -19,9 +19,10 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="DeviceContext.cpp" />
+    <ClCompile Include="CudaDeviceContext.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="CudaDeviceContext.h" />
     <ClInclude Include="DeviceContext.h" />
     <ClInclude Include="DeviceContextShared.h" />
   </ItemGroup>
