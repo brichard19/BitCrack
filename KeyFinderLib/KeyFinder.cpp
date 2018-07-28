@@ -114,7 +114,9 @@ void KeyFinder::setTargetHashes()
 
 	cudaError_t err = setTargetHash(targets);
 	if(err) {
-		throw KeyFinderException("Error initializing device");
+		std::string cudaErrorString(cudaGetErrorString(err));
+
+		throw KeyFinderException("Error initializing device: " + cudaErrorString);
 	}
 }
 
@@ -145,7 +147,12 @@ void KeyFinder::init()
 	secp256k1::ecpoint g = secp256k1::G();
 	secp256k1::ecpoint p = secp256k1::multiplyPoint(secp256k1::uint256(_numThreads * _numBlocks * _pointsPerThread), g);
 
-	if(setIncrementorPoint(p.x, p.y)) {
+	cudaError_t err = setIncrementorPoint(p.x, p.y);
+	if(err) {
+		std::string cudaErrorString(cudaGetErrorString(err));
+
+		throw KeyFinderException("Error initializing device: " + cudaErrorString);
+
 		throw KeyFinderException("Error initializing device");
 	}
 }

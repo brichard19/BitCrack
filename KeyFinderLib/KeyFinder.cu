@@ -109,7 +109,7 @@ static cudaError_t setTargetBloomFilter(const std::vector<struct hash160> &targe
 		undoRMD160FinalRound(targets[i].h, h);
 
 		for(int j = 0; j < 5; j++) {
-			unsigned int idx = h[i] & 0xffff;
+			unsigned int idx = h[j] & 0xffff;
 
 			filter[idx / 32] |= (0x01 << (idx % 32));
 		}
