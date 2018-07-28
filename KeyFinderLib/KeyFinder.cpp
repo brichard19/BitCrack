@@ -152,8 +152,6 @@ void KeyFinder::init()
 		std::string cudaErrorString(cudaGetErrorString(err));
 
 		throw KeyFinderException("Error initializing device: " + cudaErrorString);
-
-		throw KeyFinderException("Error initializing device");
 	}
 }
 
