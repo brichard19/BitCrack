@@ -15,7 +15,11 @@
 
 #define MAX_TARGETS_CONSTANT_MEM 16
 
-#define BLOOM_FILTER_SIZE_WORDS 2048
+#define BLOOM_FILTER_SIZE_LOG2 24
+#define BLOOM_FILTER_SIZE_WORDS ((1 << BLOOM_FILTER_SIZE_LOG2) / 32)
+#define BLOOM_FILTER_SIZE_BYTES ((1 << BLOOM_FILTER_SIZE_LOG2) / 8)
+
+#define BLOOM_FILTER_MASK      ((1 << BLOOM_FILTER_SIZE_LOG2) - 1)
 
 __constant__ unsigned int _TARGET_HASH[MAX_TARGETS_CONSTANT_MEM][5];
 __constant__ unsigned int _NUM_TARGET_HASHES[1];
@@ -107,9 +111,9 @@ Populates the bloom filter with the target hashes
 */
 static cudaError_t setTargetBloomFilter(const std::vector<struct hash160> &targets)
 {
-	unsigned int filter[BLOOM_FILTER_SIZE_WORDS];
+	unsigned int *filter = new unsigned int [BLOOM_FILTER_SIZE_WORDS];
 
-	cudaError_t err = cudaMalloc(&_bloomFilterPtr, sizeof(unsigned int) *BLOOM_FILTER_SIZE_WORDS);
+	cudaError_t err = cudaMalloc(&_bloomFilterPtr, BLOOM_FILTER_SIZE_BYTES);
 
 	if(err) {
 		return err;
@@ -125,7 +129,7 @@ static cudaError_t setTargetBloomFilter(const std::vector<struct hash160> &targe
 		undoRMD160FinalRound(targets[i].h, h);
 
 		for(int j = 0; j < 5; j++) {
-			unsigned int idx = h[j] & 0xffff;
+			unsigned int idx = h[j] & BLOOM_FILTER_MASK;
 
 			filter[idx / 32] |= (0x01 << (idx % 32));
 		}
@@ -150,6 +154,8 @@ static cudaError_t setTargetBloomFilter(const std::vector<struct hash160> &targe
 
 	unsigned int useBloomFilter = 1;
 	err = cudaMemcpyToSymbol(_USE_BLOOM_FILTER, &useBloomFilter, sizeof(unsigned int));
+
+	delete[] filter;
 
 	return err;
 }
@@ -280,9 +286,6 @@ __device__ void setResultFound(unsigned int *numResultsPtr, void *results, int i
 		r.y[i] = y[i];
 	}
 
-	//for(int i = 0; i < 5; i++) {
-	//	r.digest[i] = endian(digest[i] + _RIPEMD160_IV[(i + 1) % 5]);
-	//}
 	doRMD160FinalRound(digest, r.digest);
 
 	addResult(numResultsPtr, results, &r, sizeof(r));
@@ -295,7 +298,7 @@ __device__ bool checkHash(unsigned int hash[5])
 	if(*_USE_BLOOM_FILTER) {
 		foundMatch = true;
 		for(int i = 0; i < 5; i++) {
-			unsigned int idx = hash[i] & 0xffff;
+			unsigned int idx = hash[i] & BLOOM_FILTER_MASK;
 
 			unsigned int f = ((unsigned int *)(_BLOOM_FILTER[0]))[idx / 32];
 			if((f & (0x01 << (idx % 32))) == 0) {

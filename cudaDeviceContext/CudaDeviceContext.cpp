@@ -5,6 +5,7 @@
 
 #include "CudaDeviceContext.h"
 
+#define RESULTS_BUFFER_SIZE 4 * 1024 * 1024
 
 static std::string getErrorString(cudaError_t err)
 {
@@ -68,7 +69,7 @@ void CudaDeviceContext::init(const DeviceParameters &params)
 
 	// Storage for results data
 	_resultsHost = NULL;
-	err = cudaHostAlloc(&_resultsHost, 4096, cudaHostAllocMapped);
+	err = cudaHostAlloc(&_resultsHost, RESULTS_BUFFER_SIZE, cudaHostAllocMapped);
 	if(err) {
 		goto end;
 	}
