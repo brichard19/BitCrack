@@ -6,6 +6,9 @@
 class CudaDeviceContext : DeviceContext {
 
 private:
+
+	std::string _deviceName;
+
 	int _device;
 
 	int _threads;
@@ -23,16 +26,7 @@ private:
 	void splatBigInt(unsigned int *dest, int block, int thread, int idx, const secp256k1::uint256 &value);
 
 public:
-	CudaDeviceContext()
-	{
-		_device = 0;
-		_threads = 0;
-		_blocks = 0;
-		_pointsPerThread = 0;
-
-		_x = NULL;
-		_y = NULL;
-	}
+	CudaDeviceContext();
 
 	void init(const DeviceParameters &params);
 
@@ -47,6 +41,9 @@ public:
 	int getResultCount();
 	void getResults(void *ptr, int size);
 	void clearResults();
+	void getMemInfo(size_t &freeMem, size_t &totalMem);
+	std::string getDeviceName();
+
 	~CudaDeviceContext();
 };
 

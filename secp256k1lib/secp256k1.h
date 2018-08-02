@@ -323,7 +323,7 @@ namespace secp256k1 {
 
 	bool pointExists(const ecpoint &p);
 
-	void generateKeypairsBulk(unsigned int count, const ecpoint &basePoint, std::vector<uint256> &privKeysOut, std::vector<ecpoint> &pubKeysOut);
+	void generateKeyPairsBulk(unsigned int count, const ecpoint &basePoint, std::vector<uint256> &privKeysOut, std::vector<ecpoint> &pubKeysOut);
 	void generateKeyPairsBulk(const ecpoint &basePoint, std::vector<uint256> &privKeys, std::vector<ecpoint> &pubKeysOut);
 
 	ecpoint parsePublicKey(const std::string &pubKeyString);

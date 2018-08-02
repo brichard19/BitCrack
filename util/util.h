@@ -28,6 +28,8 @@ bool appendToFile(const std::string &fileName, const std::string &s);
 bool readLinesFromStream(std::istream &in, std::vector<std::string> &lines);
 bool readLinesFromStream(const std::string &fileName, std::vector<std::string> &lines);
 unsigned int removeDuplicates(std::vector<std::string> &v);
+std::string format(const char *formatStr, double value);
+std::string format(unsigned int value);
 
 }
 

@@ -3,6 +3,7 @@
 #include <device_launch_parameters.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <math.h>
 
 #include "ptx.cuh"
 #include "secp256k1.cuh"
@@ -15,15 +16,10 @@
 
 #define MAX_TARGETS_CONSTANT_MEM 16
 
-#define BLOOM_FILTER_SIZE_LOG2 24
-#define BLOOM_FILTER_SIZE_WORDS ((1 << BLOOM_FILTER_SIZE_LOG2) / 32)
-#define BLOOM_FILTER_SIZE_BYTES ((1 << BLOOM_FILTER_SIZE_LOG2) / 8)
-
-#define BLOOM_FILTER_MASK      ((1 << BLOOM_FILTER_SIZE_LOG2) - 1)
-
 __constant__ unsigned int _TARGET_HASH[MAX_TARGETS_CONSTANT_MEM][5];
 __constant__ unsigned int _NUM_TARGET_HASHES[1];
 __constant__ unsigned int *_BLOOM_FILTER[1];
+__constant__ unsigned int _BLOOM_FILTER_MASK[1];
 __constant__ unsigned int _USE_BLOOM_FILTER[1];
 __constant__ unsigned int _INC_X[8];
 __constant__ unsigned int _INC_Y[8];
@@ -107,19 +103,36 @@ static cudaError_t setTargetConstantMemory(const std::vector<struct hash160> &ta
 }
 
 /**
+ Returns the optimal bloom filter size in bits given the probability of false-positives and the
+ number of hash functions
+ */
+static unsigned int getOptimalBloomFilterBits(double p, int k, unsigned int n)
+{
+	double m = 3.6 * ceil((n * log(p)) / log(1 / pow(2, log(2))));
+
+	return (unsigned int)ceil(log(m) / log(2));
+}
+
+/**
 Populates the bloom filter with the target hashes
 */
 static cudaError_t setTargetBloomFilter(const std::vector<struct hash160> &targets)
 {
-	unsigned int *filter = new unsigned int [BLOOM_FILTER_SIZE_WORDS];
+	unsigned int bloomFilterBits = getOptimalBloomFilterBits(1.0e-9, 5, targets.size());
 
-	cudaError_t err = cudaMalloc(&_bloomFilterPtr, BLOOM_FILTER_SIZE_BYTES);
+	unsigned int bloomFilterSizeWords = 1 << (bloomFilterBits - 5);
+	unsigned int bloomFilterBytes = 1 << (bloomFilterBits - 3);
+	unsigned int bloomFilterMask = ((unsigned int)1 << bloomFilterBits) - 1;
+
+	unsigned int *filter = new unsigned int [bloomFilterSizeWords];
+
+	cudaError_t err = cudaMalloc(&_bloomFilterPtr, bloomFilterBytes);
 
 	if(err) {
 		return err;
 	}
 
-	memset(filter, 0, sizeof(unsigned int) * BLOOM_FILTER_SIZE_WORDS);
+	memset(filter, 0, sizeof(unsigned int) * bloomFilterSizeWords);
 
 	// Use the low 16 bits of each word in the hash as the index into the bloom filter
 	for(unsigned int i = 0; i < targets.size(); i++) {
@@ -129,7 +142,7 @@ static cudaError_t setTargetBloomFilter(const std::vector<struct hash160> &targe
 		undoRMD160FinalRound(targets[i].h, h);
 
 		for(int j = 0; j < 5; j++) {
-			unsigned int idx = h[j] & BLOOM_FILTER_MASK;
+			unsigned int idx = h[j] & bloomFilterMask;
 
 			filter[idx / 32] |= (0x01 << (idx % 32));
 		}
@@ -137,7 +150,7 @@ static cudaError_t setTargetBloomFilter(const std::vector<struct hash160> &targe
 	}
 
 	// Copy to device
-	err = cudaMemcpy(_bloomFilterPtr, filter, sizeof(unsigned int) * BLOOM_FILTER_SIZE_WORDS, cudaMemcpyHostToDevice);
+	err = cudaMemcpy(_bloomFilterPtr, filter, sizeof(unsigned int) * bloomFilterSizeWords, cudaMemcpyHostToDevice);
 	if(err) {
 		cudaFree(_bloomFilterPtr);
 		_bloomFilterPtr = NULL;
@@ -146,6 +159,14 @@ static cudaError_t setTargetBloomFilter(const std::vector<struct hash160> &targe
 
 	// Copy device memory pointer to constant memory
 	err = cudaMemcpyToSymbol(_BLOOM_FILTER, &_bloomFilterPtr, sizeof(unsigned int *));
+	if(err) {
+		cudaFree(_bloomFilterPtr);
+		_bloomFilterPtr = NULL;
+		return err;
+	}
+
+	// Copy device memory pointer to constant memory
+	err = cudaMemcpyToSymbol(_BLOOM_FILTER_MASK, &bloomFilterMask, sizeof(unsigned int *));
 	if(err) {
 		cudaFree(_bloomFilterPtr);
 		_bloomFilterPtr = NULL;
@@ -298,7 +319,7 @@ __device__ bool checkHash(unsigned int hash[5])
 	if(*_USE_BLOOM_FILTER) {
 		foundMatch = true;
 		for(int i = 0; i < 5; i++) {
-			unsigned int idx = hash[i] & BLOOM_FILTER_MASK;
+			unsigned int idx = hash[i] & _BLOOM_FILTER_MASK[0];
 
 			unsigned int f = ((unsigned int *)(_BLOOM_FILTER[0]))[idx / 32];
 			if((f & (0x01 << (idx % 32))) == 0) {

@@ -762,7 +762,7 @@ static void bulkInversionModP(std::vector<uint256> &in)
 	}
 }
 
-void secp256k1::generateKeypairsBulk(unsigned int count, const ecpoint &basePoint, std::vector<uint256> &privKeysOut, std::vector<ecpoint> &pubKeysOut)
+void secp256k1::generateKeyPairsBulk(unsigned int count, const ecpoint &basePoint, std::vector<uint256> &privKeysOut, std::vector<ecpoint> &pubKeysOut)
 {
 	privKeysOut.clear();
 

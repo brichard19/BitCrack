@@ -3,6 +3,7 @@
 #include <cuda.h>
 #include <cuda_runtime.h>
 
+#include "cudaUtil.h"
 #include "CudaDeviceContext.h"
 
 #define RESULTS_BUFFER_SIZE 4 * 1024 * 1024
@@ -10,6 +11,21 @@
 static std::string getErrorString(cudaError_t err)
 {
 	return std::string(cudaGetErrorString(err));
+}
+
+CudaDeviceContext::CudaDeviceContext()
+{
+	_device = 0;
+	_threads = 0;
+	_blocks = 0;
+	_pointsPerThread = 0;
+
+	_x = NULL;
+	_y = NULL;
+
+	cuda::CudaDeviceInfo device = cuda::getDeviceInfo(_device);
+
+	_deviceName = device.name;
 }
 
 void CudaDeviceContext::init(const DeviceParameters &params)
@@ -217,4 +233,18 @@ bool CudaDeviceContext::resultFound()
 CudaDeviceContext::~CudaDeviceContext()
 {
 	cleanup();
+}
+
+void CudaDeviceContext::getMemInfo(size_t &freeMem, size_t &totalMem)
+{
+	cudaError_t err = cudaMemGetInfo(&freeMem, &totalMem);
+
+	if(err) {
+		throw DeviceContextException(getErrorString(err));
+	}
+}
+
+std::string CudaDeviceContext::getDeviceName()
+{
+	return _deviceName;
 }

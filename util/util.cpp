@@ -83,20 +83,6 @@ namespace util {
 		return result;
 	}
 
-	unsigned int removeDuplicates(std::vector<std::string> &v)
-	{
-		std::set<std::string> s;
-		unsigned int size = v.size();
-
-		for(unsigned int i = 0; i < size; i++) {
-			s.insert(v[i]);
-		}
-
-		v.assign(s.begin(), s.end());
-
-		return size - v.size();
-	}
-
 	unsigned int parseUInt32(std::string s)
 	{
 		return (unsigned int)parseUInt64(s);
@@ -209,7 +195,7 @@ namespace util {
 		std::ofstream outFile;
 		bool newline = false;
 
-		if(getFileSize > 0) {
+		if(getFileSize(fileName) > 0) {
 			newline = true;
 		}
 
@@ -227,5 +213,32 @@ namespace util {
 		outFile << s;
 
 		return true;
+	}
+
+	std::string format(const char *formatStr, double value)
+	{
+		char buf[100] = { 0 };
+
+		sprintf(buf, formatStr, value);
+
+		return std::string(buf);
+	}
+
+	std::string format(unsigned int value)
+	{
+		char buf[100] = { 0 };
+
+		sprintf(buf, "%d", value);
+
+		return std::string(buf);
+	}
+
+	std::string format(unsigned long long value)
+	{
+		char buf[100] = { 0 };
+
+		sprintf(buf, "%lld", value);
+
+		return std::string(buf);
 	}
 }

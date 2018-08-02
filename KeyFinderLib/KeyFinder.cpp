@@ -1,3 +1,6 @@
+#include <fstream>
+#include <iostream>
+
 #include "KeyFinder.h"
 #include "util.h"
 #include "AddressUtil.h"
@@ -16,8 +19,7 @@ void KeyFinder::defaultStatusCallback(KeyFinderStatusInfo status)
 	// Do nothing
 }
 
-
-KeyFinder::KeyFinder(int device, const secp256k1::uint256 &start, unsigned long long range, std::vector<std::string> &targetHashes, int compression, int blocks, int threads, int pointsPerThread)
+KeyFinder::KeyFinder(int device, const secp256k1::uint256 &start, unsigned long long range, int compression, int blocks, int threads, int pointsPerThread)
 {
 	_devCtx = NULL;
 	_total = 0;
@@ -45,23 +47,6 @@ KeyFinder::KeyFinder(int device, const secp256k1::uint256 &start, unsigned long 
 		throw KeyFinderException("Starting key is out of range");
 	}
 
-	if(targetHashes.size() == 0) {
-		throw KeyFinderException("Requires at least 1 target");
-	}
-
-	// Convert each address from base58 encoded form to a 160-bit integer
-	for(unsigned int i = 0; i < targetHashes.size(); i++) {
-		
-		if(!Address::verifyAddress(targetHashes[i])) {
-			throw KeyFinderException("Invalid address '" + targetHashes[i] + "'");
-		}
-
-		KeyFinderTarget t;
-
-		Base58::toHash160(targetHashes[i], t.value);
-
-		_targets.insert(t);
-	}
 
 	_compression = compression;
 
@@ -87,6 +72,56 @@ KeyFinder::~KeyFinder()
 
 	if(_devCtx) {
 		delete _devCtx;
+	}
+}
+
+void KeyFinder::setTargets(std::vector<std::string> &targets)
+{
+	if(targets.size() == 0) {
+		throw KeyFinderException("Requires at least 1 target");
+	}
+
+	_targets.clear();
+
+	// Convert each address from base58 encoded form to a 160-bit integer
+	for(unsigned int i = 0; i < targets.size(); i++) {
+
+		if(!Address::verifyAddress(targets[i])) {
+			throw KeyFinderException("Invalid address '" + targets[i] + "'");
+		}
+
+		KeyFinderTarget t;
+
+		Base58::toHash160(targets[i], t.value);
+
+		_targets.insert(t);
+	}
+}
+
+void KeyFinder::setTargets(std::string targetsFile)
+{
+	std::ifstream inFile(targetsFile.c_str());
+
+	if(!inFile.is_open()) {
+		throw KeyFinderException("Cannot open targets file");
+	}
+
+	_targets.clear();
+
+	std::string line;
+
+	while(std::getline(inFile, line)) {
+		if(line.length() > 0) {
+			if(!Address::verifyAddress(line)) {
+				throw KeyFinderException("Invalid address '" + line + "'");
+			}
+
+			KeyFinderTarget t;
+
+			Base58::toHash160(line, t.value);
+
+			_targets.insert(t);
+		}
 	}
 }
 
@@ -311,6 +346,19 @@ void KeyFinder::run()
 
 			info.total = _total;
 			info.totalTime = _totalTime;
+
+			size_t freeMem = 0;
+
+			size_t totalMem = 0;
+
+			if(cudaMemGetInfo(&freeMem, &totalMem)) {
+				fprintf(stderr, "Error querying device memory usage\n");
+			}
+
+			info.freeMemory = freeMem;
+			info.deviceMemory = totalMem;
+			info.deviceName = _devCtx->getDeviceName();
+			info.targets = _targets.size();
 			_statusCallback(info);
 
 			timer.start();
@@ -325,36 +373,39 @@ void KeyFinder::run()
 
 			getResults(results);
 
-			for(unsigned int i = 0; i < results.size(); i++) {
-				unsigned int index = _devCtx->getIndex(results[i].block, results[i].thread, results[i].index);
 
-				secp256k1::uint256 exp = _exponents[index];
-				secp256k1::ecpoint publicKey = results[i].p;
+			if(results.size() > 0) 				{
 
-				unsigned long long offset = (unsigned long long)_numBlocks * _numThreads * _pointsPerThread * _iterCount;
-				exp = secp256k1::addModN(exp, secp256k1::uint256(offset));
+				for(unsigned int i = 0; i < results.size(); i++) {
+					unsigned int index = _devCtx->getIndex(results[i].block, results[i].thread, results[i].index);
 
-				if(!verifyKey(exp, publicKey, results[i].hash, results[i].compressed)) {
-					throw KeyFinderException("Invalid point");
+					secp256k1::uint256 exp = _exponents[index];
+					secp256k1::ecpoint publicKey = results[i].p;
+
+					unsigned long long offset = (unsigned long long)_numBlocks * _numThreads * _pointsPerThread * _iterCount;
+					exp = secp256k1::addModN(exp, secp256k1::uint256(offset));
+
+					if(!verifyKey(exp, publicKey, results[i].hash, results[i].compressed)) {
+						throw KeyFinderException("Invalid point");
+					}
+
+					KeyFinderResultInfo info;
+					info.privateKey = exp;
+					info.publicKey = publicKey;
+					info.compressed = results[i].compressed;
+					info.address = Address::fromPublicKey(publicKey, results[i].compressed);
+
+					_resultCallback(info);
 				}
 
-				KeyFinderResultInfo info;
-				info.privateKey = exp;
-				info.publicKey = publicKey;
-				info.compressed = results[i].compressed;
-				info.address = Address::fromPublicKey(publicKey, results[i].compressed);
+				// Remove the hashes that were found
+				for(unsigned int i = 0; i < results.size(); i++) {
+					removeTargetFromList(results[i].hash);
+				}
 
-				_resultCallback(info);
+				// Update hash targets on device
+				setTargetsOnDevice();
 			}
-
-
-			// Remove the hashes that were found
-			for(unsigned int i = 0; i < results.size(); i++) {
-				removeTargetFromList(results[i].hash);
-			}
-
-			// Update hash targets on device
-			setTargetsOnDevice();
 		}
 		_iterCount++;
 

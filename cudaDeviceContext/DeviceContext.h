@@ -54,6 +54,10 @@ public:
 	virtual void getResults(void *ptr, int size) = 0;
 	virtual void clearResults() = 0;
 
+	virtual void getMemInfo(size_t &freeMem, size_t &totalMem) = 0;
+
+	virtual std::string getDeviceName() = 0;
+
 	virtual ~DeviceContext() {}
 };
 

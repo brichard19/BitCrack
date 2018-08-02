@@ -28,11 +28,14 @@ typedef struct {
 
 
 typedef struct {
-	bool compressed;
 	int device;
 	double speed;
 	unsigned long long total;
 	unsigned long long totalTime;
+	std::string deviceName;
+	unsigned long long freeMemory;
+	unsigned long long deviceMemory;
+	unsigned int targets;
 }KeyFinderStatusInfo;
 
 
@@ -169,7 +172,8 @@ public:
 		};
 	};
 
-	KeyFinder(int device, const secp256k1::uint256 &start, unsigned long long range, std::vector<std::string> &targetHashes, int compression, int blocks = 0, int threads = 0, int pointsPerThread = 0);
+	KeyFinder(int device, const secp256k1::uint256 &start, unsigned long long range, int compression, int blocks = 0, int threads = 0, int pointsPerThread = 0);
+
 	~KeyFinder();
 
 	void init();
@@ -179,6 +183,10 @@ public:
 	void setResultCallback(void(*callback)(KeyFinderResultInfo));
 	void setStatusCallback(void(*callback)(KeyFinderStatusInfo));
 	void setStatusInterval(unsigned int interval);
+
+	void setTargets(std::string targetFile);
+	void setTargets(std::vector<std::string> &targets);
+
 };
 
 #endif

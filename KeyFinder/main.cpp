@@ -38,11 +38,32 @@ Callback to display progress
 */
 void statusCallback(KeyFinderStatusInfo info)
 {
+	std::string speedStr;
+
 	if(info.speed < 0.01) {
-		printf("\r< 0.01 MKey/s (%s total) [%s]", util::formatThousands(info.total).c_str(), util::formatSeconds((unsigned int)(info.totalTime/1000)).c_str());
+		speedStr = "< 0.01 MKey/s";
 	} else {
-		printf("\r%.2f MKey/s (%s total) [%s]", info.speed, util::formatThousands(info.total).c_str(), util::formatSeconds((unsigned int)(info.totalTime/1000)).c_str());
+		speedStr = util::format("%.2f", info.speed) + " MKey/s";
 	}
+
+	std::string totalStr = "(" + util::formatThousands(info.total) + " total)";
+
+	std::string timeStr = "[" + util::formatSeconds((unsigned int)(info.totalTime / 1000)) + "]";
+
+	std::string usedMemStr = util::format((info.deviceMemory - info.freeMemory) / (unsigned long long)(1024 * 1024));
+
+	std::string totalMemStr = util::format(info.deviceMemory / (unsigned long long)(1024 * 1024));
+
+	std::string targetStr = util::format(info.targets) + " target";
+	if(info.targets > 1) {
+		targetStr += "s";
+	}
+
+	// Fit device name in 16 characters, pad with spaces if less
+	std::string devName = info.deviceName.substr(0, 16);
+	devName += std::string(16 - devName.length(), ' ');
+
+	printf("\r%s %s/%sMB | %s %s %s %s", devName.c_str(), usedMemStr.c_str(), totalMemStr.c_str(), targetStr.c_str(), speedStr.c_str(), totalStr.c_str(), timeStr.c_str());
 }
 
 void usage()
@@ -117,7 +138,8 @@ int main(int argc, char **argv)
 	int blocks = 0;
 	int pointsPerThread = 0;
 	int compression = KeyFinder::Compression::COMPRESSED;
-	std::string addressFile = "";
+	std::string targetFile = "";
+
 	std::string outputFile = "";
 
 	bool optCompressed = false;
@@ -180,7 +202,7 @@ int main(int argc, char **argv)
 			} else if(optArg.equals("-u", "--uncompressed")) {
 				optUncompressed = true;
 			} else if(optArg.equals("-i", "--in")) {
-				addressFile = optArg.arg;
+				targetFile = optArg.arg;
 			} else if(optArg.equals("-o", "--out")) {
 				_outputFile = optArg.arg;
 			}
@@ -191,24 +213,16 @@ int main(int argc, char **argv)
 	}
 
 	// Verify device exists
-	if(device >= cuda::getDeviceCount()) {
+	if(device < 0 || device >= cuda::getDeviceCount()) {
 		printf("CUDA device %d does not exist\n", device);
 		return 1;
-	}
-
-	if(addressFile.length() != 0) {
-		if(!readAddressesFromFile(addressFile, targetList) || targetList.size() == 0) {
-			printf("Error reading file '%s'\n", addressFile.c_str());
-
-			return 1;
-		}
 	}
 
 	// Parse operands
 	std::vector<std::string> ops = parser.getOperands();
 
 	if(ops.size() == 0) {
-		if(addressFile.length() == 0) {
+		if(targetFile.length() == 0) {
 			printf("Missing argument\n");
 			usage();
 			return 1;
@@ -255,25 +269,26 @@ int main(int argc, char **argv)
 		return 1;
 	}
 
-	// Remove duplicate addresses from list
-	util::removeDuplicates(targetList);
-
-	printf("Device:      %s\n", devInfo.name.c_str());
-	printf("Targets:     %d\n", targetList.size());
-
 	printf("Compression: %s\n", getCompressionString(compression).c_str());
 
 	printf("Starting at: %s\n", start.toString().c_str());
 
 	try {
 
-		KeyFinder f(device, start, range, targetList, compression, blocks, threads, pointsPerThread);
+		KeyFinder f(device, start, range, compression, blocks, threads, pointsPerThread);
 
 		f.setResultCallback(resultCallback);
 		f.setStatusInterval(1800);
 		f.setStatusCallback(statusCallback);
 
 		printf("Initializing...");
+
+		if(!targetFile.empty()) {
+			f.setTargets(targetFile);
+		} else {
+			f.setTargets(targetList);
+		}
+
 		f.init();
 		f.run();
 	} catch(KeyFinderException ex) {
