@@ -42,10 +42,11 @@ typedef struct {
 class KeyFinderTarget {
 
 public:
-	unsigned int value[5] = { 0 };
+	unsigned int value[5];
 
 	KeyFinderTarget()
 	{
+		memset(value, 0, sizeof(value));
 	}
 
 	KeyFinderTarget(const unsigned int h[5])
