@@ -54,16 +54,6 @@ __device__ __forceinline__ void copyBigInt(const unsigned int src[8], unsigned i
 	}
 }
 
-
-__host__ __device__ void printBigInt(const unsigned int *x, int len)
-{
-	for(int i = 0; i < len; i++) {
-		printf("%.8x", x[i]);
-	}
-	printf("\n");
-
-}
-
 __device__ bool equal(const unsigned int *a, const unsigned int *b)
 {
 	bool eq = true;

@@ -228,6 +228,15 @@ namespace util {
 	{
 		char buf[100] = { 0 };
 
+		sprintf(buf, "%u", value);
+
+		return std::string(buf);
+	}
+
+	std::string format(int value)
+	{
+		char buf[100] = { 0 };
+
 		sprintf(buf, "%d", value);
 
 		return std::string(buf);

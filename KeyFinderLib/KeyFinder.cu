@@ -1,9 +1,9 @@
 #include <cuda.h>
 #include <cuda_runtime.h>
 #include <device_launch_parameters.h>
-#include <stdlib.h>
-#include <stdio.h>
-#include <math.h>
+
+
+#include "KeyFinderShared.h"
 
 #include "ptx.cuh"
 #include "secp256k1.cuh"
@@ -12,49 +12,22 @@
 #include "ripemd160.cuh"
 
 #include "secp256k1.h"
-#include "DeviceContextShared.h"
 
-#define MAX_TARGETS_CONSTANT_MEM 16
+#include "hashlookup.cuh"
+#include "atomiclist.cuh"
 
-__constant__ unsigned int _TARGET_HASH[MAX_TARGETS_CONSTANT_MEM][5];
-__constant__ unsigned int _NUM_TARGET_HASHES[1];
-__constant__ unsigned int *_BLOOM_FILTER[1];
-__constant__ unsigned int _BLOOM_FILTER_MASK[1];
-__constant__ unsigned int _USE_BLOOM_FILTER[1];
 __constant__ unsigned int _INC_X[8];
+
 __constant__ unsigned int _INC_Y[8];
+
 __constant__ unsigned int *_CHAIN[1];
 
-static bool _useBloomFilter = false;
-static unsigned int *_bloomFilterPtr = NULL;
 static unsigned int *_chainBufferPtr = NULL;
 
 
-
-static unsigned int swp(unsigned int x)
-{
-	return (x << 24) | ((x << 8) & 0x00ff0000) | ((x >> 8) & 0x0000ff00) | (x >> 24);
-}
-
-
-static void undoRMD160FinalRound(const unsigned int hIn[5], unsigned int hOut[5])
-{
-	unsigned int iv[5] = {
-		0x67452301,
-		0xefcdab89,
-		0x98badcfe,
-		0x10325476,
-		0xc3d2e1f0
-	};
-
-	for(int i = 0; i < 5; i++) {
-		hOut[i] = swp(hIn[i]) - iv[(i + 1) % 5];
-	}
-}
-
 __device__ void doRMD160FinalRound(const unsigned int hIn[5], unsigned int hOut[5])
 {
-	unsigned int iv[5] = {
+	const unsigned int iv[5] = {
 		0x67452301,
 		0xefcdab89,
 		0x98badcfe,
@@ -64,144 +37,6 @@ __device__ void doRMD160FinalRound(const unsigned int hIn[5], unsigned int hOut[
 
 	for(int i = 0; i < 5; i++) {
 		hOut[i] = endian(hIn[i] + iv[(i + 1) % 5]);
-	}
-}
-
-/**
- Copies the target hashes to constant memory
- */
-static cudaError_t setTargetConstantMemory(const std::vector<struct hash160> &targets)
-{
-	unsigned int count = targets.size();
-
-
-	for(unsigned int i = 0; i < count; i++) {
-		unsigned int h[5];
-
-		undoRMD160FinalRound(targets[i].h, h);
-
-		cudaError_t err = cudaMemcpyToSymbol(_TARGET_HASH, h, sizeof(unsigned int) * 5, i * sizeof(unsigned int) * 5);
-
-		if(err) {
-			return err;
-		}
-	}
-
-	cudaError_t err = cudaMemcpyToSymbol(_NUM_TARGET_HASHES, &count, sizeof(unsigned int));
-	if(err) {
-		return err;
-	}
-
-	unsigned int useBloomFilter = 0;
-
-	err = cudaMemcpyToSymbol(_USE_BLOOM_FILTER, &useBloomFilter, sizeof(bool));
-	if(err) {
-		return err;
-	}
-
-	return cudaSuccess;
-}
-
-/**
- Returns the optimal bloom filter size in bits given the probability of false-positives and the
- number of hash functions
- */
-static unsigned int getOptimalBloomFilterBits(double p, int k, unsigned int n)
-{
-	double m = 3.6 * ceil((n * log(p)) / log(1 / pow(2, log(2))));
-
-	return (unsigned int)ceil(log(m) / log(2));
-}
-
-/**
-Populates the bloom filter with the target hashes
-*/
-static cudaError_t setTargetBloomFilter(const std::vector<struct hash160> &targets)
-{
-	unsigned int bloomFilterBits = getOptimalBloomFilterBits(1.0e-9, 5, targets.size());
-
-	unsigned int bloomFilterSizeWords = 1 << (bloomFilterBits - 5);
-	unsigned int bloomFilterBytes = 1 << (bloomFilterBits - 3);
-	unsigned int bloomFilterMask = ((unsigned int)1 << bloomFilterBits) - 1;
-
-	unsigned int *filter = new unsigned int [bloomFilterSizeWords];
-
-	cudaError_t err = cudaMalloc(&_bloomFilterPtr, bloomFilterBytes);
-
-	if(err) {
-		return err;
-	}
-
-	memset(filter, 0, sizeof(unsigned int) * bloomFilterSizeWords);
-
-	// Use the low 16 bits of each word in the hash as the index into the bloom filter
-	for(unsigned int i = 0; i < targets.size(); i++) {
-
-		unsigned int h[5];
-
-		undoRMD160FinalRound(targets[i].h, h);
-
-		for(int j = 0; j < 5; j++) {
-			unsigned int idx = h[j] & bloomFilterMask;
-
-			filter[idx / 32] |= (0x01 << (idx % 32));
-		}
-
-	}
-
-	// Copy to device
-	err = cudaMemcpy(_bloomFilterPtr, filter, sizeof(unsigned int) * bloomFilterSizeWords, cudaMemcpyHostToDevice);
-	if(err) {
-		cudaFree(_bloomFilterPtr);
-		_bloomFilterPtr = NULL;
-		return err;
-	}
-
-	// Copy device memory pointer to constant memory
-	err = cudaMemcpyToSymbol(_BLOOM_FILTER, &_bloomFilterPtr, sizeof(unsigned int *));
-	if(err) {
-		cudaFree(_bloomFilterPtr);
-		_bloomFilterPtr = NULL;
-		return err;
-	}
-
-	// Copy device memory pointer to constant memory
-	err = cudaMemcpyToSymbol(_BLOOM_FILTER_MASK, &bloomFilterMask, sizeof(unsigned int *));
-	if(err) {
-		cudaFree(_bloomFilterPtr);
-		_bloomFilterPtr = NULL;
-		return err;
-	}
-
-	unsigned int useBloomFilter = 1;
-	err = cudaMemcpyToSymbol(_USE_BLOOM_FILTER, &useBloomFilter, sizeof(unsigned int));
-
-	delete[] filter;
-
-	return err;
-}
-
-
-void cleanupTargets()
-{
-	if(_useBloomFilter && _bloomFilterPtr != NULL) {
-		cudaFree(_bloomFilterPtr);
-		_bloomFilterPtr = NULL;
-	}
-}
-
-/**
- *Copies the target hashes to either constant memory, or the bloom filter depending
- on how many targets there are
- */
-cudaError_t setTargetHash(const std::vector<struct hash160> &targets)
-{
-	cleanupTargets();
-
-	if(targets.size() <= MAX_TARGETS_CONSTANT_MEM) {
-		return setTargetConstantMemory(targets);
-	} else {
-		return setTargetBloomFilter(targets);
 	}
 }
 
@@ -233,8 +68,6 @@ void cleanupChainBuf()
 		_chainBufferPtr = NULL;
 	}
 }
-
-
 
 /**
  *Sets the EC point which all points will be incremented by
@@ -285,15 +118,8 @@ __device__ void hashPublicKeyCompressed(const unsigned int *x, unsigned int yPar
 	ripemd160sha256NoFinal(hash, digestOut);
 }
 
-__device__ void addResult(unsigned int *numResultsPtr, void *results, void *info, unsigned int size)
-{
-	unsigned int count = atomicAdd(numResultsPtr, 1);
 
-	unsigned char *ptr = (unsigned char *)results + count * size;
-	memcpy(ptr, info, size);
-}
-
-__device__ void setResultFound(unsigned int *numResultsPtr, void *results, int idx, bool compressed, unsigned int x[8], unsigned int y[8], unsigned int digest[5])
+__device__ void setResultFound(int idx, bool compressed, unsigned int x[8], unsigned int y[8], unsigned int digest[5])
 {
 	struct KeyFinderDeviceResult r;
 
@@ -309,38 +135,10 @@ __device__ void setResultFound(unsigned int *numResultsPtr, void *results, int i
 
 	doRMD160FinalRound(digest, r.digest);
 
-	addResult(numResultsPtr, results, &r, sizeof(r));
+	atomicListAdd(&r, sizeof(r));
 }
 
-__device__ bool checkHash(unsigned int hash[5])
-{
-	bool foundMatch = false;
-
-	if(*_USE_BLOOM_FILTER) {
-		foundMatch = true;
-		for(int i = 0; i < 5; i++) {
-			unsigned int idx = hash[i] & _BLOOM_FILTER_MASK[0];
-
-			unsigned int f = ((unsigned int *)(_BLOOM_FILTER[0]))[idx / 32];
-			if((f & (0x01 << (idx % 32))) == 0) {
-				foundMatch = false;
-			}
-		}
-	} else {
-		for(int j = 0; j < *_NUM_TARGET_HASHES; j++) {
-			bool equal = true;
-			for(int i = 0; i < 5; i++) {
-				equal &= (hash[i] == _TARGET_HASH[j][i]);
-			}
-
-			foundMatch |= equal;
-		}
-	}
-
-	return foundMatch;
-}
-
-__device__ void doIteration(unsigned int *xPtr, unsigned int *yPtr, int pointsPerThread, unsigned int *numResults, void *results, int compression)
+__device__ void doIteration(unsigned int *xPtr, unsigned int *yPtr, int pointsPerThread, int compression)
 {
 	unsigned int *chain = _CHAIN[0];
 
@@ -360,7 +158,7 @@ __device__ void doIteration(unsigned int *xPtr, unsigned int *yPtr, int pointsPe
 			hashPublicKey(x, y, digest);
 
 			if(checkHash(digest)) {
-				setResultFound(numResults, results, i, false, x, y, digest);
+				setResultFound(i, false, x, y, digest);
 			}
 		}
 
@@ -370,7 +168,7 @@ __device__ void doIteration(unsigned int *xPtr, unsigned int *yPtr, int pointsPe
 			if(checkHash(digest)) {
 				unsigned int y[8];
 				readInt(yPtr, i, y);
-				setResultFound(numResults, results, i, true, x, y, digest);
+				setResultFound(i, true, x, y, digest);
 			}
 		}
 
@@ -391,7 +189,7 @@ __device__ void doIteration(unsigned int *xPtr, unsigned int *yPtr, int pointsPe
 	}
 }
 
-__device__ void doIterationWithDouble(unsigned int *xPtr, unsigned int *yPtr, int pointsPerThread, unsigned int *numResults, void *results, int compression)
+__device__ void doIterationWithDouble(unsigned int *xPtr, unsigned int *yPtr, int pointsPerThread, int compression)
 {
 	unsigned int *chain = _CHAIN[0];
 
@@ -412,7 +210,7 @@ __device__ void doIterationWithDouble(unsigned int *xPtr, unsigned int *yPtr, in
 			hashPublicKey(x, y, digest);
 
 			if(checkHash(digest)) {
-				setResultFound(numResults, results, i, false, x, y, digest);
+				setResultFound(i, false, x, y, digest);
 			}
 		}
 
@@ -424,7 +222,7 @@ __device__ void doIterationWithDouble(unsigned int *xPtr, unsigned int *yPtr, in
 				unsigned int y[8];
 				readInt(yPtr, i, y);
 
-				setResultFound(numResults, results, i, true, x, y, digest);
+				setResultFound(i, true, x, y, digest);
 			}
 		}
 
@@ -448,12 +246,12 @@ __device__ void doIterationWithDouble(unsigned int *xPtr, unsigned int *yPtr, in
 /**
 * Performs a single iteration
 */
-__global__ void keyFinderKernel(int points, unsigned int *x, unsigned int *y, unsigned int *numResults, void *results, int compression)
+__global__ void keyFinderKernel(int points, unsigned int *x, unsigned int *y, int compression)
 {
-	doIteration(x, y, points, numResults, results, compression);
+	doIteration(x, y, points, compression);
 }
 
-__global__ void keyFinderKernelWithDouble(int points, unsigned int *x, unsigned int *y, unsigned int *numResults, void *results, int compression)
+__global__ void keyFinderKernelWithDouble(int points, unsigned int *x, unsigned int *y, int compression)
 {
-	doIterationWithDouble(x, y, points, numResults, results, compression);
+	doIterationWithDouble(x, y, points, compression);
 }

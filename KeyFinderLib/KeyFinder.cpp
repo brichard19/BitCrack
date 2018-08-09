@@ -1,12 +1,21 @@
 #include <fstream>
 #include <iostream>
 
+#include "CudaDeviceContext.h"
+
 #include "KeyFinder.h"
 #include "util.h"
 #include "AddressUtil.h"
 
-#include "CudaDeviceContext.h"
+#include "KeyFinderShared.h"
+
 #include "cudabridge.h"
+
+#include "hashlookup.h"
+
+#include "atomiclist.h"
+
+#include "Logger.h"
 
 
 void KeyFinder::defaultResultCallback(KeyFinderResultInfo result)
@@ -32,11 +41,11 @@ KeyFinder::KeyFinder(int device, const secp256k1::uint256 &start, unsigned long 
 	}
 
 	if(blocks <= 0) {
-		throw KeyFinderException("At least one block required");
+		throw KeyFinderException("At least 1 block required");
 	}
 
 	if(pointsPerThread <= 0) {
-		throw KeyFinderException("At least one point per thread required");
+		throw KeyFinderException("At least 1 point per thread required");
 	}
 
 	if(!(compression == Compression::COMPRESSED || compression == Compression::UNCOMPRESSED || compression == Compression::BOTH)) {
@@ -67,7 +76,6 @@ KeyFinder::KeyFinder(int device, const secp256k1::uint256 &start, unsigned long 
 
 KeyFinder::~KeyFinder()
 {
-	cleanupTargets();
 	cleanupChainBuf();
 
 	if(_devCtx) {
@@ -103,17 +111,19 @@ void KeyFinder::setTargets(std::string targetsFile)
 	std::ifstream inFile(targetsFile.c_str());
 
 	if(!inFile.is_open()) {
-		throw KeyFinderException("Cannot open targets file");
+		Logger::log(LogLevel::Error, "Unable to open '" + targetsFile + "'");
+		throw KeyFinderException();
 	}
 
 	_targets.clear();
 
 	std::string line;
-
+	Logger::log(LogLevel::Info, "Loading addresses from '" + targetsFile + "'");
 	while(std::getline(inFile, line)) {
 		if(line.length() > 0) {
 			if(!Address::verifyAddress(line)) {
-				throw KeyFinderException("Invalid address '" + line + "'");
+				Logger::log(LogLevel::Error, "Invalid address '" + line + "'");
+				throw KeyFinderException();
 			}
 
 			KeyFinderTarget t;
@@ -123,6 +133,8 @@ void KeyFinder::setTargets(std::string targetsFile)
 			_targets.insert(t);
 		}
 	}
+	Logger::log(LogLevel::Info, util::formatThousands(_targets.size()) + " addresses loaded ("
+		+ util::format("%.1f", (double)(sizeof(KeyFinderTarget) * _targets.size()) / (double)(1024 * 1024)) + "MB)");
 }
 
 
@@ -150,31 +162,35 @@ void KeyFinder::setTargetsOnDevice()
 		targets.push_back(hash160((*i).value));
 	}
 
-	cudaError_t err = setTargetHash(targets);
+	cudaError_t err = _targetLookup.setTargets(targets);
+
 	if(err) {
 		std::string cudaErrorString(cudaGetErrorString(err));
 
-		throw KeyFinderException("Device error: " + cudaErrorString);
+		throw KeyFinderException();
 	}
 }
 
 void KeyFinder::init()
 {
-	// Allocate device memory
-	_devCtx = new CudaDeviceContext;
-
 	DeviceParameters params;
 	params.device = _device;
 	params.threads = _numThreads;
 	params.blocks = _numBlocks;
 	params.pointsPerThread = _pointsPerThread;
 
-	_devCtx->init(params);
+	// Allocate device memory
+	_devCtx = new CudaDeviceContext(params);
+
+	Logger::log(LogLevel::Info, "Initializing " + _devCtx->getDeviceName());
+
+	_devCtx->init();
 
 	cudaDeviceSetCacheConfig(cudaFuncCachePreferL1);
 
 	// Copy points to device
 	generateStartingPoints();
+
 	_devCtx->copyPoints(_startingPoints);
 
 	setTargetsOnDevice();
@@ -185,8 +201,16 @@ void KeyFinder::init()
 	secp256k1::ecpoint g = secp256k1::G();
 	secp256k1::ecpoint p = secp256k1::multiplyPoint(secp256k1::uint256(_numThreads * _numBlocks * _pointsPerThread), g);
 
+	cudaError_t err = _resultList.init(sizeof(KeyFinderDeviceResult), 16);
 
-	cudaError_t err = setIncrementorPoint(p.x, p.y);
+	if(err) {
+		std::string cudaErrorString(cudaGetErrorString(err));
+
+		throw KeyFinderException("Error initializing device: " + cudaErrorString);
+	}
+
+	err = setIncrementorPoint(p.x, p.y);
+
 	if(err) {
 		std::string cudaErrorString(cudaGetErrorString(err));
 
@@ -202,6 +226,9 @@ void KeyFinder::generateStartingPoints()
 	_iterCount = 0;
 
 	unsigned long long totalPoints = _pointsPerThread * _numThreads * _numBlocks;
+	unsigned long long totalMemory = totalPoints * 40;
+
+	Logger::log(LogLevel::Info, "Generating " + util::formatThousands(totalPoints) + " starting points (" + util::format("%.1f", (double)totalMemory/(double)(1024*1024)) + "MB)");
 
 	// Generate key pairs for k, k+1, k+2 ... k + <total points in parallel - 1>
 	secp256k1::uint256 privKey = _startExponent;
@@ -264,6 +291,7 @@ bool KeyFinder::verifyKey(const secp256k1::uint256 &privateKey, const secp256k1:
 void KeyFinder::removeTargetFromList(const unsigned int hash[5])
 {
 	KeyFinderTarget t(hash);
+
 	_targets.erase(t);
 }
 
@@ -275,7 +303,7 @@ bool KeyFinder::isTargetInList(const unsigned int hash[5])
 
 void KeyFinder::getResults(std::vector<KeyFinderResult> &r)
 {
-	int count = _devCtx->getResultCount();
+	int count = _resultList.size();
 
 	if(count == 0) {
 		return;
@@ -283,8 +311,8 @@ void KeyFinder::getResults(std::vector<KeyFinderResult> &r)
 
 	unsigned char *ptr = new unsigned char[count * sizeof(KeyFinderDeviceResult)];
 
-	_devCtx->getResults(ptr, count * sizeof(KeyFinderDeviceResult));
-
+	//_devCtx->getResults(ptr, count * sizeof(KeyFinderDeviceResult));
+	_resultList.read(ptr, count);
 
 	for(int i = 0; i < count; i++) {
 		struct KeyFinderDeviceResult *rPtr = &((struct KeyFinderDeviceResult *)ptr)[i];
@@ -309,22 +337,26 @@ void KeyFinder::getResults(std::vector<KeyFinderResult> &r)
 
 	delete[] ptr;
 
-	_devCtx->clearResults();
+	_resultList.clear();
 }
 
 void KeyFinder::run()
 {
 	unsigned int pointsPerIteration = _numBlocks * _numThreads * _pointsPerThread;
+
 	_running = true;
+
 	util::Timer timer;
 
 	timer.start();
+
 	unsigned long long prevIterCount = 0;
+
 	_totalTime = 0;
 
 	while(_running) {
 
-		_devCtx->clearResults();
+		_resultList.clear();
 
 		KernelParams params = _devCtx->getKernelParams();
 		if(_iterCount < 2 && _startExponent.cmp(pointsPerIteration) <= 0) {
@@ -335,30 +367,38 @@ void KeyFinder::run()
 
 		// Update status
 		unsigned int t = timer.getTime();
+
 		if(t >= _statusInterval) {
 
 			KeyFinderStatusInfo info;
+
 			unsigned long long count = (_iterCount - prevIterCount) * pointsPerIteration;
+
 			_total += count;
 
 			double seconds = (double)t / 1000.0;
+
 			info.speed = (double)((double)count / seconds) / 1000000.0;
 
 			info.total = _total;
+
 			info.totalTime = _totalTime;
 
 			size_t freeMem = 0;
 
 			size_t totalMem = 0;
 
-			if(cudaMemGetInfo(&freeMem, &totalMem)) {
-				fprintf(stderr, "Error querying device memory usage\n");
+			try {
+				_devCtx->getMemInfo(freeMem, totalMem);
+			} catch(DeviceContextException ex) {
+				Logger::log(LogLevel::Error, "Error querying device memory: " + ex.msg);
 			}
 
 			info.freeMemory = freeMem;
 			info.deviceMemory = totalMem;
 			info.deviceName = _devCtx->getDeviceName();
 			info.targets = _targets.size();
+
 			_statusCallback(info);
 
 			timer.start();
@@ -368,13 +408,12 @@ void KeyFinder::run()
 
 
 		// Report any results
-		if(_devCtx->resultFound()) {
+		if(_resultList.size() > 0) {
 			std::vector<KeyFinderResult> results;
 
 			getResults(results);
 
-
-			if(results.size() > 0) 				{
+			if(results.size() > 0) {
 
 				for(unsigned int i = 0; i < results.size(); i++) {
 					unsigned int index = _devCtx->getIndex(results[i].block, results[i].thread, results[i].index);
@@ -404,6 +443,7 @@ void KeyFinder::run()
 				}
 
 				// Update hash targets on device
+				Logger::log(LogLevel::Info, "Reloading targets");
 				setTargetsOnDevice();
 			}
 		}

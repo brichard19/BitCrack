@@ -19,8 +19,13 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="atomiclist.h" />
     <ClInclude Include="cudabridge.h" />
+    <ClInclude Include="hashlookup.h" />
     <ClInclude Include="KeyFinder.h" />
+    <ClInclude Include="hashlookup.cuh" />
+    <ClInclude Include="atomiclist.cuh" />
+    <ClInclude Include="KeyFinderShared.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="KeyFinder.cpp" />
@@ -32,6 +37,9 @@
     <ProjectReference Include="..\cudaDeviceContext\cudaDeviceContext.vcxproj">
       <Project>{129c2b98-babf-4e50-b7d7-e885774df4a9}</Project>
     </ProjectReference>
+    <ProjectReference Include="..\Logger\Logger.vcxproj">
+      <Project>{150af404-1f80-4a13-855b-4383c4a3326f}</Project>
+    </ProjectReference>
     <ProjectReference Include="..\secp256k1lib\secp256k1lib.vcxproj">
       <Project>{bff4b5fe-c2c5-4384-8941-cd6cb29e78c6}</Project>
     </ProjectReference>
@@ -42,6 +50,8 @@
   <ItemGroup>
     <CudaCompile Include="cudabridge.cu" />
     <CudaCompile Include="KeyFinder.cu" />
+    <CudaCompile Include="hashlookup.cu" />
+    <CudaCompile Include="atomiclist.cu" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{10326A77-D6FF-49F1-93CE-35991555DD29}</ProjectGuid>
@@ -104,7 +114,7 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>$(SolutionDir)secp256k1lib;$(SolutionDir)\cudaDeviceContext;$(SolutionDir)\cudaMath;$(SolutionDir)\util;$(SolutionDir)\AddressUtil;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)secp256k1lib;$(SolutionDir)\cudaDeviceContext;$(SolutionDir)\cudaMath;$(SolutionDir)\util;$(SolutionDir)\AddressUtil;$(SolutionDir)\Logger;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -115,13 +125,16 @@
       <Command>echo copy "$(CudaToolkitBinDir)\cudart*.dll" "$(OutDir)"
 copy "$(CudaToolkitBinDir)\cudart*.dll" "$(OutDir)"</Command>
     </PostBuildEvent>
+    <CudaCompile>
+      <GenerateRelocatableDeviceCode>true</GenerateRelocatableDeviceCode>
+    </CudaCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;WIN32;WIN64;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>$(SolutionDir)secp256k1lib;$(SolutionDir)\cudaDeviceContext;$(SolutionDir)\cudaMath;$(SolutionDir)\util;$(SolutionDir)\AddressUtil;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)secp256k1lib;$(SolutionDir)\cudaDeviceContext;$(SolutionDir)\cudaMath;$(SolutionDir)\util;$(SolutionDir)\AddressUtil;$(SolutionDir)\Logger;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -134,6 +147,7 @@ copy "$(CudaToolkitBinDir)\cudart*.dll" "$(OutDir)"</Command>
     </PostBuildEvent>
     <CudaCompile>
       <TargetMachinePlatform>64</TargetMachinePlatform>
+      <GenerateRelocatableDeviceCode>true</GenerateRelocatableDeviceCode>
     </CudaCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -143,7 +157,7 @@ copy "$(CudaToolkitBinDir)\cudart*.dll" "$(OutDir)"</Command>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>$(SolutionDir)secp256k1lib;$(SolutionDir)\cudaDeviceContext;$(SolutionDir)\cudaMath;$(SolutionDir)\util;$(SolutionDir)\AddressUtil;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)secp256k1lib;$(SolutionDir)\cudaDeviceContext;$(SolutionDir)\cudaMath;$(SolutionDir)\util;$(SolutionDir)\AddressUtil;$(SolutionDir)\Logger;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -156,6 +170,9 @@ copy "$(CudaToolkitBinDir)\cudart*.dll" "$(OutDir)"</Command>
       <Command>echo copy "$(CudaToolkitBinDir)\cudart*.dll" "$(OutDir)"
 copy "$(CudaToolkitBinDir)\cudart*.dll" "$(OutDir)"</Command>
     </PostBuildEvent>
+    <CudaCompile>
+      <GenerateRelocatableDeviceCode>true</GenerateRelocatableDeviceCode>
+    </CudaCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
@@ -164,7 +181,7 @@ copy "$(CudaToolkitBinDir)\cudart*.dll" "$(OutDir)"</Command>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;WIN32;WIN64;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>$(SolutionDir)secp256k1lib;$(SolutionDir)\cudaDeviceContext;$(SolutionDir)\cudaMath;$(SolutionDir)\util;$(SolutionDir)\AddressUtil;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)secp256k1lib;$(SolutionDir)\cudaDeviceContext;$(SolutionDir)\cudaMath;$(SolutionDir)\util;$(SolutionDir)\AddressUtil;$(SolutionDir)\Logger;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -179,6 +196,7 @@ copy "$(CudaToolkitBinDir)\cudart*.dll" "$(OutDir)"</Command>
     </PostBuildEvent>
     <CudaCompile>
       <TargetMachinePlatform>64</TargetMachinePlatform>
+      <GenerateRelocatableDeviceCode>true</GenerateRelocatableDeviceCode>
     </CudaCompile>
   </ItemDefinitionGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

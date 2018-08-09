@@ -8,6 +8,7 @@
 #include "secp256k1.h"
 #include "CmdParse.h"
 #include "cudaUtil.h"
+#include "Logger.h"
 
 static std::string _outputFile = "";
 
@@ -16,21 +17,35 @@ static std::string _outputFile = "";
 */
 void resultCallback(KeyFinderResultInfo info)
 {
-	printf("\n");
-	printf("Address:     %s\n", info.address.c_str());
-	printf("Private key: %s\n", info.privateKey.toString(16).c_str());
-	printf("Compressed:  %s\n", info.compressed ? "yes" : "no");
-	printf("Public key:  ");
-	if(info.compressed) {
-		printf("%s\n", info.publicKey.toString(true).c_str());
-	} else {
-		printf("%s\n             %s\n", info.publicKey.x.toString(16).c_str(), info.publicKey.y.toString(16).c_str());
-	}
-
 	if(_outputFile.length() != 0) {
+		Logger::log(LogLevel::Info, "Found key for address '" + info.address + "'. Written to '" + _outputFile + "'");
+
 		std::string s = info.address + " " + info.privateKey.toString(16) + " " + info.publicKey.toString(info.compressed);
 		util::appendToFile(_outputFile, s);
+
+		return;
 	}
+
+	std::string logStr = "Address:     " + info.address + "\n";
+	logStr += "Private key: " + info.privateKey.toString(16) + "\n";
+	logStr += "Compressed:  ";
+
+	if(info.compressed) {
+		logStr += "yes\n";
+	} else {
+		logStr += "no\n";
+	}
+
+	logStr += "Public key:  \n";
+
+	if(info.compressed) {
+		logStr += info.publicKey.toString(true) + "\n";
+	} else {
+		logStr += info.publicKey.x.toString(16) + "\n";
+		logStr += info.publicKey.y.toString(16) + "\n";
+	}
+
+	Logger::log(LogLevel::Info, logStr);
 }
 
 /**
@@ -150,7 +165,7 @@ int main(int argc, char **argv)
 	unsigned long long range = 0;
 
 	if(cuda::getDeviceCount == 0) {
-		printf("No CUDA devices available\n");
+		Logger::log(LogLevel::Error, "No CUDA devices available");
 		return 1;
 	}
 
@@ -207,14 +222,14 @@ int main(int argc, char **argv)
 				_outputFile = optArg.arg;
 			}
 		} catch(std::string err) {
-			printf("Error %s: %s\n", opt.c_str(), err.c_str());
+			Logger::log(LogLevel::Error, "Error " + opt + ": " + err);
 			return 1;
 		}
 	}
 
 	// Verify device exists
 	if(device < 0 || device >= cuda::getDeviceCount()) {
-		printf("CUDA device %d does not exist\n", device);
+		Logger::log(LogLevel::Error, "CUDA device " + util::format(device) + " does not exist");
 		return 1;
 	}
 
@@ -223,12 +238,12 @@ int main(int argc, char **argv)
 
 	if(ops.size() == 0) {
 		if(targetFile.length() == 0) {
-			printf("Missing argument\n");
+			Logger::log(LogLevel::Error, "Missing arguments");
 			usage();
 			return 1;
 		}
 	} else {
-		for(int i = 0; i < ops.size(); i++) {
+		for(unsigned int i = 0; i < ops.size(); i++) {
 			targetList.push_back(ops[i]);
 		}
 	}
@@ -265,13 +280,12 @@ int main(int argc, char **argv)
 	try {
 		devInfo = cuda::getDeviceInfo(device);
 	} catch(cuda::CudaException &Ex) {
-		printf("Error initializing device: %s\n", Ex.msg.c_str());
+		Logger::log(LogLevel::Error, "Cannot initialize device: " + Ex.msg);
 		return 1;
 	}
 
-	printf("Compression: %s\n", getCompressionString(compression).c_str());
-
-	printf("Starting at: %s\n", start.toString().c_str());
+	Logger::log(LogLevel::Info, "Compression: " + getCompressionString(compression));
+	Logger::log(LogLevel::Info, "Starting at: " + start.toString());
 
 	try {
 
@@ -281,7 +295,6 @@ int main(int argc, char **argv)
 		f.setStatusInterval(1800);
 		f.setStatusCallback(statusCallback);
 
-		printf("Initializing...");
 
 		if(!targetFile.empty()) {
 			f.setTargets(targetFile);
@@ -292,8 +305,7 @@ int main(int argc, char **argv)
 		f.init();
 		f.run();
 	} catch(KeyFinderException ex) {
-		printf("Error: %s\n", ex.msg.c_str());
-
+		Logger::log(LogLevel::Info, "Exiting");
 		return 1;
 	}
 

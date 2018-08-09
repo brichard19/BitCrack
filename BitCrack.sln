@@ -35,6 +35,11 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "CryptoUtil", "CryptoUtil\Cr
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "cudaInfo", "cudaInfo\cudaInfo.vcxproj", "{01FE6B24-6652-42D5-8C19-CCF11627856F}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Logger", "Logger\Logger.vcxproj", "{150AF404-1F80-4A13-855B-4383C4A3326F}"
+	ProjectSection(ProjectDependencies) = postProject
+		{93B89BF6-32B9-4EBA-AA44-BCFEC4836B76} = {93B89BF6-32B9-4EBA-AA44-BCFEC4836B76}
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -139,6 +144,14 @@ Global
 		{01FE6B24-6652-42D5-8C19-CCF11627856F}.Release|x64.Build.0 = Release|x64
 		{01FE6B24-6652-42D5-8C19-CCF11627856F}.Release|x86.ActiveCfg = Release|Win32
 		{01FE6B24-6652-42D5-8C19-CCF11627856F}.Release|x86.Build.0 = Release|Win32
+		{150AF404-1F80-4A13-855B-4383C4A3326F}.Debug|x64.ActiveCfg = Debug|x64
+		{150AF404-1F80-4A13-855B-4383C4A3326F}.Debug|x64.Build.0 = Debug|x64
+		{150AF404-1F80-4A13-855B-4383C4A3326F}.Debug|x86.ActiveCfg = Debug|Win32
+		{150AF404-1F80-4A13-855B-4383C4A3326F}.Debug|x86.Build.0 = Debug|Win32
+		{150AF404-1F80-4A13-855B-4383C4A3326F}.Release|x64.ActiveCfg = Release|x64
+		{150AF404-1F80-4A13-855B-4383C4A3326F}.Release|x64.Build.0 = Release|x64
+		{150AF404-1F80-4A13-855B-4383C4A3326F}.Release|x86.ActiveCfg = Release|Win32
+		{150AF404-1F80-4A13-855B-4383C4A3326F}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

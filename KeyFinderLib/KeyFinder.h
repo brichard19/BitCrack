@@ -4,7 +4,8 @@
 #include <vector>
 #include <set>
 #include "secp256k1.h"
-
+#include "atomiclist.h"
+#include "hashlookup.h"
 
 class CudaDeviceContext;
 
@@ -99,6 +100,11 @@ class KeyFinderException {
 
 public:
 
+	KeyFinderException()
+	{
+
+	}
+
 	KeyFinderException(const std::string &msg)
 	{
 		this->msg = msg;
@@ -110,6 +116,10 @@ public:
 class KeyFinder {
 
 private:
+
+	CudaAtomicList _resultList;
+
+	CudaHashLookup _targetLookup;
 
 	unsigned int _compression;
 

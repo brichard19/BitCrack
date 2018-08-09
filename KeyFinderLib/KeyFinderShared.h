@@ -1,5 +1,13 @@
-#ifndef _DEVICE_CONTEXT_SHARED_H
-#define _DEVICE_CONTEXT_SHARED_H
+#ifndef _KEY_FINDER_SHARED_H
+#define _KEY_FINDER_SHARED_H
+
+namespace PointCompressionType {
+	enum Value {
+		COMPRESSED = 0,
+		UNCOMPRESSED = 1,
+		BOTH = 2
+	};
+}
 
 // Structures that exist on both host and device side
 struct KeyFinderDeviceResult {
@@ -21,13 +29,5 @@ struct hash160 {
 		memcpy(h, hash, sizeof(unsigned int) * 5);
 	}
 };
-
-namespace PointCompressionType {
-	enum Value {
-		COMPRESSED = 0,
-		UNCOMPRESSED = 1,
-		BOTH = 2
-	};
-}
 
 #endif

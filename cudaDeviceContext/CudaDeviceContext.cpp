@@ -6,36 +6,33 @@
 #include "cudaUtil.h"
 #include "CudaDeviceContext.h"
 
-#define RESULTS_BUFFER_SIZE 4 * 1024 * 1024
 
 static std::string getErrorString(cudaError_t err)
 {
 	return std::string(cudaGetErrorString(err));
 }
 
-CudaDeviceContext::CudaDeviceContext()
-{
-	_device = 0;
-	_threads = 0;
-	_blocks = 0;
-	_pointsPerThread = 0;
-
-	_x = NULL;
-	_y = NULL;
-
-	cuda::CudaDeviceInfo device = cuda::getDeviceInfo(_device);
-
-	_deviceName = device.name;
-}
-
-void CudaDeviceContext::init(const DeviceParameters &params)
+CudaDeviceContext::CudaDeviceContext(const DeviceParameters &params)
 {
 	_device = params.device;
 	_threads = params.threads;
 	_blocks = params.blocks;
 	_pointsPerThread = params.pointsPerThread;
 
-	
+	try {
+		cuda::CudaDeviceInfo device = cuda::getDeviceInfo(_device);
+
+		_deviceName = device.name;
+	} catch(cuda::CudaException ex) {
+		throw DeviceContextException(ex.msg);
+	}
+
+	_x = NULL;
+	_y = NULL;
+}
+
+void CudaDeviceContext::init()
+{
 	size_t count = _pointsPerThread * _threads * _blocks;
 
 	cudaError_t err = cudaSetDevice(_device);
@@ -68,43 +65,11 @@ void CudaDeviceContext::init(const DeviceParameters &params)
 		goto end;
 	}
 
-	// The number of results found in the most recent kernel run
-	_numResultsHost = NULL;
-	err = cudaHostAlloc(&_numResultsHost, sizeof(unsigned int), cudaHostAllocMapped);
-	if(err) {
-		goto end;
-	}
-
-	// Number of results found in the most recent kernel run (device to host pointer)
-	_numResultsDev = NULL;
-	err = cudaHostGetDevicePointer(&_numResultsDev, _numResultsHost, 0);
-	if(err) {
-		goto end;
-	}
-	*_numResultsHost = 0;
-
-	// Storage for results data
-	_resultsHost = NULL;
-	err = cudaHostAlloc(&_resultsHost, RESULTS_BUFFER_SIZE, cudaHostAllocMapped);
-	if(err) {
-		goto end;
-	}
-
-	// Storage for results data (device to host pointer)
-	_resultsDev = NULL;
-	err = cudaHostGetDevicePointer(&_resultsDev, _resultsHost, 0);
-	if(err) {
-		goto end;
-	}
-
 end:
 	if(err) {
 		cudaFree(_x);
 		cudaFree(_y);
-		cudaFreeHost(_numResultsHost);
-		cudaFree(_numResultsDev);
-		cudaFreeHost(_resultsHost);
-		cudaFree(_resultsDev);
+
 		throw DeviceContextException(getErrorString(err));
 	}
 }
@@ -132,11 +97,15 @@ void CudaDeviceContext::copyPoints(const std::vector<secp256k1::ecpoint> &points
 
 	cudaError_t err = cudaMemcpy(_x, tmpX, sizeof(unsigned int) * count, cudaMemcpyHostToDevice);
 	if(err != cudaSuccess) {
+		delete[] tmpX;
+		delete[] tmpY;
 		throw DeviceContextException(getErrorString(err));
 	}
 
 	err = cudaMemcpy(_y, tmpY, sizeof(unsigned int) * count, cudaMemcpyHostToDevice);
 	if(err != cudaSuccess) {
+		delete[] tmpX;
+		delete[] tmpY;
 		throw DeviceContextException(getErrorString(err));
 	}
 
@@ -182,10 +151,6 @@ void CudaDeviceContext::cleanup()
 
 	cudaFree(_y);
 
-	cudaFreeHost(_numResultsHost);
-
-	cudaFreeHost(_resultsHost);
-
 	_x = NULL;
 	_y = NULL;
 
@@ -202,32 +167,7 @@ KernelParams CudaDeviceContext::getKernelParams()
 	params.x = _x;
 	params.y = _y;
 
-	params.results = _resultsDev;
-	params.numResults = _numResultsDev;
-
 	return params;
-}
-
-void CudaDeviceContext::getResults(void *ptr, int size)
-{
-	memcpy(ptr, _resultsHost, size);
-}
-
-int CudaDeviceContext::getResultCount()
-{
-	return *_numResultsHost;
-}
-
-void CudaDeviceContext::clearResults()
-{
-	*_numResultsHost = 0;
-}
-
-bool CudaDeviceContext::resultFound()
-{
-	unsigned int numResults = (*_numResultsHost) != 0;
-
-	return numResults != 0;
 }
 
 CudaDeviceContext::~CudaDeviceContext()
