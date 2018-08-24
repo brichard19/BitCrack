@@ -17,6 +17,7 @@
 
 #include "Logger.h"
 
+#include "ec.h"
 
 void KeyFinder::defaultResultCallback(KeyFinderResultInfo result)
 {
@@ -191,8 +192,6 @@ void KeyFinder::init()
 	// Copy points to device
 	generateStartingPoints();
 
-	_devCtx->copyPoints(_startingPoints);
-
 	setTargetsOnDevice();
 
 	allocateChainBuf(_numThreads * _numBlocks * _pointsPerThread);
@@ -228,7 +227,7 @@ void KeyFinder::generateStartingPoints()
 	unsigned long long totalPoints = _pointsPerThread * _numThreads * _numBlocks;
 	unsigned long long totalMemory = totalPoints * 40;
 
-	Logger::log(LogLevel::Info, "Generating " + util::formatThousands(totalPoints) + " starting points (" + util::format("%.1f", (double)totalMemory/(double)(1024*1024)) + "MB)");
+	Logger::log(LogLevel::Info, "Generating " + util::formatThousands(totalPoints) + " starting points (" + util::format("%.1f", (double)totalMemory / (double)(1024 * 1024)) + "MB)");
 
 	// Generate key pairs for k, k+1, k+2 ... k + <total points in parallel - 1>
 	secp256k1::uint256 privKey = _startExponent;
@@ -237,13 +236,31 @@ void KeyFinder::generateStartingPoints()
 		_exponents.push_back(privKey.add(i));
 	}
 
-	secp256k1::generateKeyPairsBulk(secp256k1::G(), _exponents, _startingPoints);
+	_deviceKeys.init(_numBlocks, _numThreads, _pointsPerThread, _exponents);
 
-	for(unsigned int i = 0; i < _startingPoints.size(); i++) {
-		if(!secp256k1::pointExists(_startingPoints[i])) {
-			throw KeyFinderException("Point generation error");
+	// Show progress in 10% increments
+	double pct = 10.0;
+	for(int i = 1; i <= 256; i++) {
+		_deviceKeys.doStep();
+		if(((double)i / 256.0) * 100.0 >= pct) {
+			Logger::log(LogLevel::Info, util::format("%.1f%%", pct));
+			pct += 10.0;
 		}
 	}
+
+#ifdef _DEBUG
+	try {
+		Logger::log(LogLevel::Debug, "Verifying points on device...");
+		_deviceKeys.selfTest(_exponents);
+	} catch(std::string &e) {
+		Logger::log(LogLevel::Debug, e);
+		exit(1);
+	}
+#endif
+
+	Logger::log(LogLevel::Info, "Done");
+
+	_deviceKeys.clearPrivateKeys();
 }
 
 
@@ -311,7 +328,6 @@ void KeyFinder::getResults(std::vector<KeyFinderResult> &r)
 
 	unsigned char *ptr = new unsigned char[count * sizeof(KeyFinderDeviceResult)];
 
-	//_devCtx->getResults(ptr, count * sizeof(KeyFinderDeviceResult));
 	_resultList.read(ptr, count);
 
 	for(int i = 0; i < count; i++) {
@@ -443,8 +459,10 @@ void KeyFinder::run()
 				}
 
 				// Update hash targets on device
-				Logger::log(LogLevel::Info, "Reloading targets");
-				setTargetsOnDevice();
+				if(_targets.size() > 0) {
+					Logger::log(LogLevel::Info, "Reloading targets");
+					setTargetsOnDevice();
+				}
 			}
 		}
 		_iterCount++;

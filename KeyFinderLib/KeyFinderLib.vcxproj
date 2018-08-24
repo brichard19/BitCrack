@@ -21,6 +21,8 @@
   <ItemGroup>
     <ClInclude Include="atomiclist.h" />
     <ClInclude Include="cudabridge.h" />
+    <ClInclude Include="ec.cuh" />
+    <ClInclude Include="ec.h" />
     <ClInclude Include="hashlookup.h" />
     <ClInclude Include="KeyFinder.h" />
     <ClInclude Include="hashlookup.cuh" />
@@ -49,6 +51,7 @@
   </ItemGroup>
   <ItemGroup>
     <CudaCompile Include="cudabridge.cu" />
+    <CudaCompile Include="ec.cu" />
     <CudaCompile Include="KeyFinder.cu" />
     <CudaCompile Include="hashlookup.cu" />
     <CudaCompile Include="atomiclist.cu" />

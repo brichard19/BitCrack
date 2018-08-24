@@ -10,14 +10,14 @@
 /**
  Prime modulus 2^256 - 2^32 - 977
  */
-__constant__ unsigned int _P[8] = {
+__constant__ static unsigned int _P[8] = {
 	0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFE, 0xFFFFFC2F
 };
 
 /**
  Base point X
  */
-__constant__ unsigned int _GX[8] = {
+__constant__ static unsigned int _GX[8] = {
 	0x79BE667E, 0xF9DCBBAC, 0x55A06295, 0xCE870B07, 0x029BFCDB, 0x2DCE28D9, 0x59F2815B, 0x16F81798
 };
 
@@ -25,7 +25,7 @@ __constant__ unsigned int _GX[8] = {
 /**
  Base point Y
  */
-__constant__ unsigned int _GY[8] = {
+__constant__ static unsigned int _GY[8] = {
 	0x483ADA77, 0x26A3C465, 0x5DA4FBFC, 0x0E1108A8, 0xFD17B448, 0xA6855419, 0x9C47D08F, 0xFB10D4B8
 };
 
@@ -33,28 +33,41 @@ __constant__ unsigned int _GY[8] = {
 /**
  * Group order
  */
-__constant__ unsigned int _N[8] = {
+__constant__ static unsigned int _N[8] = {
 	0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFE, 0xBAAEDCE6, 0xAF48A03B, 0xBFD25E8C, 0xD0364141
 };
 
-__constant__ unsigned int _BETA[8] = {
+__constant__ static unsigned int _BETA[8] = {
 	0x7AE96A2B, 0x657C0710, 0x6E64479E, 0xAC3434E9, 0x9CF04975, 0x12F58995, 0xC1396C28, 0x719501EE
 };
 
 
-__constant__ unsigned int _LAMBDA[8] = {
+__constant__ static unsigned int _LAMBDA[8] = {
 	0x5363AD4C, 0xC05C30E0, 0xA5261C02, 0x8812645A, 0x122E22EA, 0x20816678, 0xDF02967C, 0x1B23BD72
 };
 
 
-__device__ __forceinline__ void copyBigInt(const unsigned int src[8], unsigned int dest[8])
+__device__ __forceinline__ bool isInfinity(const unsigned int x[8])
+{
+	bool isf = true;
+
+	for(int i = 0; i < 8; i++) {
+		if(x[i] != 0xffffffff) {
+			isf = false;
+		}
+	}
+
+	return isf;
+}
+
+__device__ __forceinline__ static void copyBigInt(const unsigned int src[8], unsigned int dest[8])
 {
 	for(int i = 0; i < 8; i++) {
 		dest[i] = src[i];
 	}
 }
 
-__device__ bool equal(const unsigned int *a, const unsigned int *b)
+__device__ static bool equal(const unsigned int *a, const unsigned int *b)
 {
 	bool eq = true;
 
@@ -68,7 +81,7 @@ __device__ bool equal(const unsigned int *a, const unsigned int *b)
 /**
  * Reads an 8-word big integer from device memory
  */
-__device__ void readInt(const unsigned int *ara, int idx, unsigned int x[8])
+__device__ static void readInt(const unsigned int *ara, int idx, unsigned int x[8])
 {
 	int totalThreads = gridDim.x * blockDim.x;
 
@@ -84,7 +97,7 @@ __device__ void readInt(const unsigned int *ara, int idx, unsigned int x[8])
 	}
 }
 
-__device__ unsigned int readIntLSW(const unsigned int *ara, int idx)
+__device__ static unsigned int readIntLSW(const unsigned int *ara, int idx)
 {
 	int totalThreads = gridDim.x * blockDim.x;
 
@@ -100,7 +113,7 @@ __device__ unsigned int readIntLSW(const unsigned int *ara, int idx)
 /**
  * Writes an 8-word big integer to device memory
  */
-__device__ void writeInt(unsigned int *ara, int idx, const unsigned int x[8])
+__device__ static void writeInt(unsigned int *ara, int idx, const unsigned int x[8])
 {
 	int totalThreads = gridDim.x * blockDim.x;
 
@@ -119,7 +132,7 @@ __device__ void writeInt(unsigned int *ara, int idx, const unsigned int x[8])
 /**
  * Subtraction mod p
  */
-__device__ void subModP(const unsigned int a[8], const unsigned int b[8], unsigned int c[8])
+__device__ static void subModP(const unsigned int a[8], const unsigned int b[8], unsigned int c[8])
 {
 	sub_cc(c[7], a[7], b[7]);
 	subc_cc(c[6], a[6], b[6]);
@@ -145,7 +158,7 @@ __device__ void subModP(const unsigned int a[8], const unsigned int b[8], unsign
 	}
 }
 
-__device__ unsigned int add(const unsigned int a[8], const unsigned int b[8], unsigned int c[8])
+__device__ static unsigned int add(const unsigned int a[8], const unsigned int b[8], unsigned int c[8])
 {
 	add_cc(c[7], a[7], b[7]);
 	addc_cc(c[6], a[6], b[6]);
@@ -162,7 +175,7 @@ __device__ unsigned int add(const unsigned int a[8], const unsigned int b[8], un
 	return carry;
 }
 
-__device__ unsigned int sub(const unsigned int a[8], const unsigned int b[8], unsigned int c[8])
+__device__ static unsigned int sub(const unsigned int a[8], const unsigned int b[8], unsigned int c[8])
 {
 	sub_cc(c[7], a[7], b[7]);
 	subc_cc(c[6], a[6], b[6]);
@@ -180,7 +193,7 @@ __device__ unsigned int sub(const unsigned int a[8], const unsigned int b[8], un
 }
 
 
-__device__ void addModP(const unsigned int a[8], const unsigned int b[8], unsigned int c[8])
+__device__ static void addModP(const unsigned int a[8], const unsigned int b[8], unsigned int c[8])
 {
 	add_cc(c[7], a[7], b[7]);
 	addc_cc(c[6], a[6], b[6]);
@@ -218,7 +231,7 @@ __device__ void addModP(const unsigned int a[8], const unsigned int b[8], unsign
 
 
 
-__device__ void mulModP(const unsigned int a[8], const unsigned int b[8], unsigned int c[8])
+__device__ static void mulModP(const unsigned int a[8], const unsigned int b[8], unsigned int c[8])
 {
 	unsigned int high[8] = { 0 };
 
@@ -510,7 +523,7 @@ __device__ void mulModP(const unsigned int a[8], const unsigned int b[8], unsign
  * Square mod P
  * b = a * a
  */
-__device__ void squareModP(const unsigned int a[8], unsigned int b[8])
+__device__ static void squareModP(const unsigned int a[8], unsigned int b[8])
 {
 	mulModP(a, a, b);
 }
@@ -519,7 +532,7 @@ __device__ void squareModP(const unsigned int a[8], unsigned int b[8])
  * Square mod P
  * x = x * x
  */
-__device__ void squareModP(unsigned int x[8])
+__device__ static void squareModP(unsigned int x[8])
 {
 	unsigned int tmp[8];
 	squareModP(x, tmp);
@@ -530,7 +543,7 @@ __device__ void squareModP(unsigned int x[8])
  * Multiply mod P
  * c = a * c
  */
-__device__ void mulModP(const unsigned int a[8], unsigned int c[8])
+__device__ static void mulModP(const unsigned int a[8], unsigned int c[8])
 {
 	unsigned int tmp[8];
 	mulModP(a, c, tmp);
@@ -541,7 +554,7 @@ __device__ void mulModP(const unsigned int a[8], unsigned int c[8])
 /**
  * Multiplicative inverse mod P using Fermat's method of x^(p-2) mod p and addition chains
  */
-__device__ void invModP(unsigned int value[8])
+__device__ static void invModP(unsigned int value[8])
 {
 	unsigned int x[8];
 
@@ -606,14 +619,14 @@ __device__ void invModP(unsigned int value[8])
 	copyBigInt(y, value);
 }
 
-__device__ void invModP(const unsigned int *value, unsigned int *inverse)
+__device__ static void invModP(const unsigned int *value, unsigned int *inverse)
 {
 	copyBigInt(value, inverse);
 
 	invModP(inverse);
 }
 
-__device__ void negModP(const unsigned int *value, unsigned int *negative)
+__device__ static void negModP(const unsigned int *value, unsigned int *negative)
 {
 	sub_cc(negative[0], _P[0], value[0]);
 	subc_cc(negative[1], _P[1], value[1]);
@@ -626,7 +639,7 @@ __device__ void negModP(const unsigned int *value, unsigned int *negative)
 }
 
 
-__device__ __forceinline__ void beginBatchAdd(const unsigned int *px, const unsigned int *x, unsigned int *chain, int i, unsigned int inverse[8])
+__device__ __forceinline__ static void beginBatchAdd(const unsigned int *px, const unsigned int *x, unsigned int *chain, int i, int batchIdx, unsigned int inverse[8])
 {
 	// x = Gx - x
 	unsigned int t[8];
@@ -636,11 +649,11 @@ __device__ __forceinline__ void beginBatchAdd(const unsigned int *px, const unsi
 	// c[2] = diff2 * diff1 * diff0, etc
 	mulModP(t, inverse);
 
-	writeInt(chain, i, inverse);
+	writeInt(chain, batchIdx, inverse);
 }
 
 
-__device__ __forceinline__ void beginBatchAddWithDouble(const unsigned int *px, const unsigned int *py, unsigned int *xPtr, unsigned int *chain, int i, unsigned int inverse[8])
+__device__ __forceinline__ static void beginBatchAddWithDouble(const unsigned int *px, const unsigned int *py, unsigned int *xPtr, unsigned int *chain, int i, int batchIdx, unsigned int inverse[8])
 {
 	unsigned int x[8];
 	readInt(xPtr, i, x);
@@ -656,11 +669,10 @@ __device__ __forceinline__ void beginBatchAddWithDouble(const unsigned int *px, 
 	// c[2] = diff2 * diff1 * diff0, etc
 	mulModP(x, inverse);
 
-	writeInt(chain, i, inverse);
+	writeInt(chain, batchIdx, inverse);
 }
 
-
-__device__ void completeBatchAddWithDouble(const unsigned int *px, const unsigned int *py, unsigned int *xPtr, unsigned int *yPtr, int i, unsigned int *chain, unsigned int *inverse, unsigned int newX[8], unsigned int newY[8])
+__device__ static void completeBatchAddWithDouble(const unsigned int *px, const unsigned int *py, const unsigned int *xPtr, const unsigned int *yPtr, int i, int batchIdx, unsigned int *chain, unsigned int *inverse, unsigned int newX[8], unsigned int newY[8])
 {
 	unsigned int s[8];
 	unsigned int x[8];
@@ -669,10 +681,10 @@ __device__ void completeBatchAddWithDouble(const unsigned int *px, const unsigne
 	readInt(xPtr, i, x);
 	readInt(yPtr, i, y);
 
-	if(i >= 1) {
+	if(batchIdx >= 1) {
 		unsigned int c[8];
 
-		readInt(chain, i - 1, c);
+		readInt(chain, batchIdx - 1, c);
 
 		mulModP(inverse, c, s);
 
@@ -740,18 +752,17 @@ __device__ void completeBatchAddWithDouble(const unsigned int *px, const unsigne
 	}
 }
 
-
-__device__ void completeBatchAdd(const unsigned int *px, const unsigned int *py, unsigned int *xPtr, unsigned int *yPtr, int i, unsigned int *chain, unsigned int *inverse, unsigned int newX[8], unsigned int newY[8])
+__device__ static void completeBatchAdd(const unsigned int *px, const unsigned int *py, unsigned int *xPtr, unsigned int *yPtr, int i, int batchIdx, unsigned int *chain, unsigned int *inverse, unsigned int newX[8], unsigned int newY[8])
 {
 	unsigned int s[8];
 	unsigned int x[8];
 
 	readInt(xPtr, i, x);
 
-	if(i >= 1) {
+	if(batchIdx >= 1) {
 		unsigned int c[8];
 
-		readInt(chain, i - 1, c);
+		readInt(chain, batchIdx - 1, c);
 		mulModP(inverse, c, s);
 
 		unsigned int diff[8];
@@ -783,7 +794,7 @@ __device__ void completeBatchAdd(const unsigned int *px, const unsigned int *py,
 }
 
 
-__device__ __forceinline__ void doBatchInverse(unsigned int inverse[8])
+__device__ __forceinline__ static void doBatchInverse(unsigned int inverse[8])
 {
 	invModP(inverse);
 }

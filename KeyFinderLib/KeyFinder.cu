@@ -15,6 +15,7 @@
 
 #include "hashlookup.cuh"
 #include "atomiclist.cuh"
+#include "ec.cuh"
 
 __constant__ unsigned int _INC_X[8];
 
@@ -138,9 +139,11 @@ __device__ void setResultFound(int idx, bool compressed, unsigned int x[8], unsi
 	atomicListAdd(&r, sizeof(r));
 }
 
-__device__ void doIteration(unsigned int *xPtr, unsigned int *yPtr, int pointsPerThread, int compression)
+__device__ void doIteration(int pointsPerThread, int compression)
 {
 	unsigned int *chain = _CHAIN[0];
+	unsigned int *xPtr = ec::getXPtr();
+	unsigned int *yPtr = ec::getYPtr();
 
 	// Multiply together all (_Gx - x) and then invert
 	unsigned int inverse[8] = { 0,0,0,0,0,0,0,1 };
@@ -172,7 +175,7 @@ __device__ void doIteration(unsigned int *xPtr, unsigned int *yPtr, int pointsPe
 			}
 		}
 
-		beginBatchAdd(_INC_X, x, chain, i, inverse);
+		beginBatchAdd(_INC_X, x, chain, i, i, inverse);
 	}
 
 	doBatchInverse(inverse);
@@ -182,16 +185,18 @@ __device__ void doIteration(unsigned int *xPtr, unsigned int *yPtr, int pointsPe
 		unsigned int newX[8];
 		unsigned int newY[8];
 
-		completeBatchAdd(_INC_X, _INC_Y, xPtr, yPtr, i, chain, inverse, newX, newY);
+		completeBatchAdd(_INC_X, _INC_Y, xPtr, yPtr, i, i, chain, inverse, newX, newY);
 
 		writeInt(xPtr, i, newX);
 		writeInt(yPtr, i, newY);
 	}
 }
 
-__device__ void doIterationWithDouble(unsigned int *xPtr, unsigned int *yPtr, int pointsPerThread, int compression)
+__device__ void doIterationWithDouble(int pointsPerThread, int compression)
 {
 	unsigned int *chain = _CHAIN[0];
+	unsigned int *xPtr = ec::getXPtr();
+	unsigned int *yPtr = ec::getYPtr();
 
 	// Multiply together all (_Gx - x) and then invert
 	unsigned int inverse[8] = { 0,0,0,0,0,0,0,1 };
@@ -201,7 +206,6 @@ __device__ void doIterationWithDouble(unsigned int *xPtr, unsigned int *yPtr, in
 		unsigned int digest[5];
 
 		readInt(xPtr, i, x);
-		
 
 		// uncompressed
 		if(compression == PointCompressionType::UNCOMPRESSED || compression == PointCompressionType::BOTH) {
@@ -216,9 +220,11 @@ __device__ void doIterationWithDouble(unsigned int *xPtr, unsigned int *yPtr, in
 
 		// compressed
 		if(compression == PointCompressionType::COMPRESSED || compression == PointCompressionType::BOTH) {
+
 			hashPublicKeyCompressed(x, readIntLSW(yPtr, i), digest);
 
 			if(checkHash(digest)) {
+
 				unsigned int y[8];
 				readInt(yPtr, i, y);
 
@@ -226,7 +232,7 @@ __device__ void doIterationWithDouble(unsigned int *xPtr, unsigned int *yPtr, in
 			}
 		}
 
-		beginBatchAddWithDouble(_INC_X, _INC_Y, xPtr, chain, i, inverse);
+		beginBatchAddWithDouble(_INC_X, _INC_Y, xPtr, chain, i, i, inverse);
 	}
 
 	doBatchInverse(inverse);
@@ -236,7 +242,7 @@ __device__ void doIterationWithDouble(unsigned int *xPtr, unsigned int *yPtr, in
 		unsigned int newX[8];
 		unsigned int newY[8];
 
-		completeBatchAddWithDouble(_INC_X, _INC_Y, xPtr, yPtr, i, chain, inverse, newX, newY);
+		completeBatchAddWithDouble(_INC_X, _INC_Y, xPtr, yPtr, i, i, chain, inverse, newX, newY);
 
 		writeInt(xPtr, i, newX);
 		writeInt(yPtr, i, newY);
@@ -248,10 +254,10 @@ __device__ void doIterationWithDouble(unsigned int *xPtr, unsigned int *yPtr, in
 */
 __global__ void keyFinderKernel(int points, unsigned int *x, unsigned int *y, int compression)
 {
-	doIteration(x, y, points, compression);
+	doIteration(points, compression);
 }
 
 __global__ void keyFinderKernelWithDouble(int points, unsigned int *x, unsigned int *y, int compression)
 {
-	doIterationWithDouble(x, y, points, compression);
+	doIterationWithDouble(points, compression);
 }

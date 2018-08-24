@@ -26,9 +26,6 @@ CudaDeviceContext::CudaDeviceContext(const DeviceParameters &params)
 	} catch(cuda::CudaException ex) {
 		throw DeviceContextException(ex.msg);
 	}
-
-	_x = NULL;
-	_y = NULL;
 }
 
 void CudaDeviceContext::init()
@@ -41,76 +38,10 @@ void CudaDeviceContext::init()
 		goto end;
 	}
 
-	// Allocate X array
-	err = cudaMalloc(&_x, sizeof(unsigned int) * count * 8);
-	if(err != cudaSuccess) {
-		goto end;
-	}
-
-	// Clear X array
-	err = cudaMemset(_x, 0, sizeof(unsigned int) * count * 8);
-	if(err != cudaSuccess) {
-		goto end;
-	}
-
-	// Allocate Y array
-	err = cudaMalloc(&_y, sizeof(unsigned int) * count * 8);
-	if(err != cudaSuccess) {
-		goto end;
-	}
-
-	// Clear Y array
-	err = cudaMemset(_y, 0, sizeof(unsigned int) * count * 8);
-	if(err != cudaSuccess) {
-		goto end;
-	}
-
 end:
 	if(err) {
-		cudaFree(_x);
-		cudaFree(_y);
-
 		throw DeviceContextException(getErrorString(err));
 	}
-}
-
-void CudaDeviceContext::copyPoints(const std::vector<secp256k1::ecpoint> &points)
-{
-	int count = _pointsPerThread * _threads * _blocks * 8;
-	unsigned int *tmpX = new unsigned int[count];
-	unsigned int *tmpY = new unsigned int[count];
-
-	unsigned int totalThreads = _blocks * _threads;
-
-	for(int block = 0; block < _blocks; block++) {
-		for(int thread = 0; thread < _threads; thread++) {
-			for(int idx = 0; idx < _pointsPerThread; idx++) {
-
-				int index = getIndex(block, thread, idx);
-
-				splatBigInt(tmpX, block, thread, idx, points[index].x);
-				splatBigInt(tmpY, block, thread, idx, points[index].y);
-
-			}
-		}
-	}
-
-	cudaError_t err = cudaMemcpy(_x, tmpX, sizeof(unsigned int) * count, cudaMemcpyHostToDevice);
-	if(err != cudaSuccess) {
-		delete[] tmpX;
-		delete[] tmpY;
-		throw DeviceContextException(getErrorString(err));
-	}
-
-	err = cudaMemcpy(_y, tmpY, sizeof(unsigned int) * count, cudaMemcpyHostToDevice);
-	if(err != cudaSuccess) {
-		delete[] tmpX;
-		delete[] tmpY;
-		throw DeviceContextException(getErrorString(err));
-	}
-
-	delete[] tmpX;
-	delete[] tmpY;
 }
 
 int CudaDeviceContext::getIndex(int block, int thread, int idx)
@@ -147,13 +78,6 @@ void CudaDeviceContext::splatBigInt(unsigned int *dest, int block, int thread, i
 
 void CudaDeviceContext::cleanup()
 {
-	cudaFree(_y);
-
-	cudaFree(_y);
-
-	_x = NULL;
-	_y = NULL;
-
 	cudaDeviceReset();
 }
 
@@ -164,8 +88,6 @@ KernelParams CudaDeviceContext::getKernelParams()
 	params.blocks = _blocks;
 	params.threads = _threads;
 	params.points = _pointsPerThread;
-	params.x = _x;
-	params.y = _y;
 
 	return params;
 }

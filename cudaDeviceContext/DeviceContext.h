@@ -40,8 +40,6 @@ public:
 
 	virtual void init() = 0;
 
-	virtual void copyPoints(const std::vector<secp256k1::ecpoint> &points) = 0;
-
 	virtual KernelParams getKernelParams() = 0;
 
 	virtual void cleanup() = 0;

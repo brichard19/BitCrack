@@ -68,10 +68,8 @@ std::vector<cuda::CudaDeviceInfo> cuda::getDevices()
 int cuda::getDeviceCount()
 {
 	int count = 0;
-	cudaError_t err = cudaGetDeviceCount(&count);
-	if(err) {
-		throw cuda::CudaException(err);
-	}
+
+	cudaGetDeviceCount(&count);
 
 	return count;
 }

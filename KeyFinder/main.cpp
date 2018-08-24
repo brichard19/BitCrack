@@ -164,7 +164,8 @@ int main(int argc, char **argv)
 	secp256k1::uint256 start(1);
 	unsigned long long range = 0;
 
-	if(cuda::getDeviceCount == 0) {
+	
+	if(cuda::getDeviceCount() == 0) {
 		Logger::log(LogLevel::Error, "No CUDA devices available");
 		return 1;
 	}
@@ -305,7 +306,7 @@ int main(int argc, char **argv)
 		f.init();
 		f.run();
 	} catch(KeyFinderException ex) {
-		Logger::log(LogLevel::Info, "Exiting");
+		Logger::log(LogLevel::Info, "Error: " + ex.msg + " Exiting.");
 		return 1;
 	}
 

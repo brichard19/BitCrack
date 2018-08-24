@@ -6,6 +6,7 @@
 #include "secp256k1.h"
 #include "atomiclist.h"
 #include "hashlookup.h"
+#include "ec.h"
 
 class CudaDeviceContext;
 
@@ -116,6 +117,8 @@ public:
 class KeyFinder {
 
 private:
+
+	CudaDeviceKeys _deviceKeys;
 
 	CudaAtomicList _resultList;
 

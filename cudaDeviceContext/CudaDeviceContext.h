@@ -15,9 +15,6 @@ private:
 	int _blocks;
 	int _pointsPerThread;
 
-	unsigned int *_x;
-	unsigned int *_y;
-
 	void splatBigInt(unsigned int *dest, int block, int thread, int idx, const secp256k1::uint256 &value);
 
 public:
