@@ -50,9 +50,9 @@ Copies the target hashes to constant memory
 */
 cudaError_t CudaHashLookup::setTargetConstantMemory(const std::vector<struct hash160> &targets)
 {
-	unsigned int count = targets.size();
+	size_t count = targets.size();
 
-	for(unsigned int i = 0; i < count; i++) {
+	for(auto i = 0; i < count; i++) {
 		unsigned int h[5];
 
 		undoRMD160FinalRound(targets[i].h, h);
@@ -83,7 +83,7 @@ cudaError_t CudaHashLookup::setTargetConstantMemory(const std::vector<struct has
 Returns the optimal bloom filter size in bits given the probability of false-positives and the
 number of hash functions
 */
-unsigned int CudaHashLookup::getOptimalBloomFilterBits(double p, int k, unsigned int n)
+unsigned int CudaHashLookup::getOptimalBloomFilterBits(double p, int k, size_t n)
 {
 	double m = 3.6 * ceil((n * log(p)) / log(1 / pow(2, log(2))));
 

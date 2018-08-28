@@ -37,7 +37,7 @@ typedef struct {
 	std::string deviceName;
 	unsigned long long freeMemory;
 	unsigned long long deviceMemory;
-	unsigned int targets;
+	size_t targets;
 }KeyFinderStatusInfo;
 
 

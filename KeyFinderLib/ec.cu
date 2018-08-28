@@ -280,7 +280,7 @@ cudaError_t CudaDeviceKeys::doStep()
 	multiplyStepKernel <<<_blocks, _threads>>>(_devPrivate, _pointsPerThread, _step, _devChain, _devBasePointX, _devBasePointY);
 
 	// Wait for kernel to complete
-	cudaError_t err = cudaDeviceSynchronize();
+    cudaError_t err = cudaDeviceSynchronize();
 	fflush(stdout);
 	_step++;
 	return err;

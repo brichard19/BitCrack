@@ -12,7 +12,7 @@ private:
 	
 	cudaError_t setTargetConstantMemory(const std::vector<struct hash160> &targets);
 	
-	unsigned int getOptimalBloomFilterBits(double p, int k, unsigned int n);
+	unsigned int getOptimalBloomFilterBits(double p, int k, size_t n);
 
 	void cleanup();
 
