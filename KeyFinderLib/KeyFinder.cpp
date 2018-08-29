@@ -187,6 +187,7 @@ void KeyFinder::init()
 
 	_devCtx->init();
 
+    cudaSetDeviceFlags(cudaDeviceScheduleBlockingSync);
 	cudaDeviceSetCacheConfig(cudaFuncCachePreferL1);
 
 	// Copy points to device
@@ -250,7 +251,7 @@ void KeyFinder::generateStartingPoints()
 
 #ifdef _DEBUG
 	try {
-		Logger::log(LogLevel::Debug, "Verifying points on device...");
+        Logger::log(LogLevel::Debug, "Verifying points on device. This will take a while...");
 		_deviceKeys.selfTest(_exponents);
 	} catch(std::string &e) {
 		Logger::log(LogLevel::Debug, e);
@@ -375,12 +376,13 @@ void KeyFinder::run()
 		_resultList.clear();
 
 		KernelParams params = _devCtx->getKernelParams();
+
 		if(_iterCount < 2 && _startExponent.cmp(pointsPerIteration) <= 0) {
 			callKeyFinderKernel(params, true, _compression);
 		} else {
 			callKeyFinderKernel(params, false, _compression);
 		}
-
+        
 		// Update status
 		unsigned int t = timer.getTime();
 
