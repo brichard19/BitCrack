@@ -152,7 +152,7 @@ cudaError_t CudaDeviceKeys::initializeBasePoints()
 	return err;
 }
 
-cudaError_t CudaDeviceKeys::initializePublicKeys(unsigned int count)
+cudaError_t CudaDeviceKeys::initializePublicKeys(size_t count)
 {
 
 	// Allocate X array
@@ -195,7 +195,7 @@ cudaError_t CudaDeviceKeys::init(int blocks, int threads, int pointsPerThread, c
 	_threads = threads;
 	_pointsPerThread = pointsPerThread;
 
-	unsigned int count = privateKeys.size();
+	size_t count = privateKeys.size();
 
 	// Allocate space for public keys on device
 	cudaError_t err = initializePublicKeys(count);

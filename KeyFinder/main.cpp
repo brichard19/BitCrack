@@ -163,12 +163,18 @@ int main(int argc, char **argv)
 	std::vector<std::string> targetList;
 	secp256k1::uint256 start(1);
 	unsigned long long range = 0;
+    int deviceCount = 0;
 
-	
-	if(cuda::getDeviceCount() == 0) {
-		Logger::log(LogLevel::Error, "No CUDA devices available");
-		return 1;
-	}
+    try {
+        deviceCount = cuda::getDeviceCount();
+        if(deviceCount == 0) {
+            Logger::log(LogLevel::Error, "No CUDA devices available");
+            return 1;
+        }
+    } catch(cuda::CudaException ex) {
+        Logger::log(LogLevel::Error, "Error detecting CUDA devices: " + ex.msg);
+        return 1;
+    }
 
 	if(argc == 1) {
 		usage();
@@ -228,8 +234,9 @@ int main(int argc, char **argv)
 		}
 	}
 
+
 	// Verify device exists
-	if(device < 0 || device >= cuda::getDeviceCount()) {
+	if(device < 0 || device >= deviceCount) {
 		Logger::log(LogLevel::Error, "CUDA device " + util::format(device) + " does not exist");
 		return 1;
 	}
@@ -289,7 +296,6 @@ int main(int argc, char **argv)
 	Logger::log(LogLevel::Info, "Starting at: " + start.toString());
 
 	try {
-
 		KeyFinder f(device, start, range, compression, blocks, threads, pointsPerThread);
 
 		f.setResultCallback(resultCallback);

@@ -108,7 +108,7 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>$(SolutionDir)\KeyFinderLib;$(SolutionDir)\util;$(SolutionDir)\AddressUtil;$(SolutionDir)\secp256k1lib;$(SolutionDir)\CmdParse;$(SolutionDir)\cudaDeviceContext;C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v9.2\include;$(SolutionDir)\cudaUtil;$(SolutionDir)\Logger;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)KeyFinderLib;$(SolutionDir)util;$(SolutionDir)AddressUtil;$(SolutionDir)secp256k1lib;$(SolutionDir)CmdParse;$(SolutionDir)cudaDeviceContext;C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v9.2\include;$(SolutionDir)cudaUtil;$(SolutionDir)Logger;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -146,7 +146,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>$(SolutionDir)\KeyFinderLib;$(SolutionDir)\util;$(SolutionDir)\AddressUtil;$(SolutionDir)\secp256k1lib;$(SolutionDir)\CmdParse;$(SolutionDir)\cudaDeviceContext;C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v9.2\include;$(SolutionDir)\cudaUtil;$(SolutionDir)\Logger;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)KeyFinderLib;$(SolutionDir)util;$(SolutionDir)AddressUtil;$(SolutionDir)secp256k1lib;$(SolutionDir)CmdParse;$(SolutionDir)cudaDeviceContext;C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v9.2\include;$(SolutionDir)cudaUtil;$(SolutionDir)Logger;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>

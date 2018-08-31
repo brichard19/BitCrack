@@ -47,7 +47,7 @@ std::string Logger::formatLog(int logLevel, std::string msg)
 
 	std::string prefix = "[" + dateTime + "] [" + LogLevel::toString(logLevel) + "] ";
 
-	int prefixLen = prefix.length();
+	size_t prefixLen = prefix.length();
 
 	std::string padding(prefixLen, ' ');
 

@@ -42,7 +42,7 @@ private:
 
 	cudaError_t allocateChainBuf(unsigned int count);
 
-	cudaError_t initializePublicKeys(unsigned int count);
+	cudaError_t initializePublicKeys(size_t count);
 
 	cudaError_t initializeBasePoints();
 

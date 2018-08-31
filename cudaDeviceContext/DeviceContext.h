@@ -9,10 +9,6 @@ typedef struct {
 	int blocks;
 	int threads;
 	int points;
-
-	unsigned int *x;
-	unsigned int *y;
-
 }KernelParams;
 
 typedef struct {

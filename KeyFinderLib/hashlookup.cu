@@ -83,7 +83,7 @@ cudaError_t CudaHashLookup::setTargetConstantMemory(const std::vector<struct has
 Returns the optimal bloom filter size in bits given the probability of false-positives and the
 number of hash functions
 */
-unsigned int CudaHashLookup::getOptimalBloomFilterBits(double p, int k, size_t n)
+unsigned int CudaHashLookup::getOptimalBloomFilterBits(double p, size_t n)
 {
 	double m = 3.6 * ceil((n * log(p)) / log(1 / pow(2, log(2))));
 
@@ -118,20 +118,6 @@ void CudaHashLookup::initializeBloomFilter64(const std::vector<struct hash160> &
 
 		undoRMD160FinalRound(targets[k].h, hash);
 
-		//unsigned int h2[5];
-
-		//h2[0] = hash[0] ^ hash[1];
-		//h2[1] = hash[1] ^ hash[2];
-		//h2[2] = hash[2] ^ hash[3];
-		//h2[3] = hash[3] ^ hash[4];
-		//h2[4] = hash[4] ^ hash[0];
-
-		//idx[0] = ((unsigned long long)hash[0] << 32 | hash[1]) & mask;
-		//idx[1] = ((unsigned long long)hash[2] << 32 | hash[3]) & mask;
-		//idx[2] = ((unsigned long long)hash[4] << 32 | h2[0]) & mask;
-		//idx[3] = ((unsigned long long)h2[1] << 32 | h2[2]) & mask;
-		//idx[4] = ((unsigned long long)h2[3] << 32 | h2[4]) & mask;
-
 		idx[0] = ((unsigned long long)hash[0] << 32 | hash[1]) & mask;
 		idx[1] = ((unsigned long long)hash[2] << 32 | hash[3]) & mask;
 		idx[2] = ((unsigned long long)(hash[0]^hash[1]) << 32 | (hash[1]^hash[2])) & mask;
@@ -150,7 +136,7 @@ Populates the bloom filter with the target hashes
 */
 cudaError_t CudaHashLookup::setTargetBloomFilter(const std::vector<struct hash160> &targets)
 {
-	unsigned int bloomFilterBits = getOptimalBloomFilterBits(1.0e-9, 5, targets.size());
+	unsigned int bloomFilterBits = getOptimalBloomFilterBits(1.0e-9, targets.size());
 
 	unsigned long long bloomFilterSizeWords = (unsigned long long)1 << (bloomFilterBits - 5);
 	unsigned long long bloomFilterBytes = (unsigned long long)1 << (bloomFilterBits - 3);

@@ -69,7 +69,11 @@ int cuda::getDeviceCount()
 {
 	int count = 0;
 
-	cudaGetDeviceCount(&count);
+	cudaError_t err = cudaGetDeviceCount(&count);
+
+    if(err) {
+        throw cuda::CudaException(err);
+    }
 
 	return count;
 }

@@ -166,9 +166,9 @@ void KeyFinder::setTargetsOnDevice()
 	cudaError_t err = _targetLookup.setTargets(targets);
 
 	if(err) {
-		std::string cudaErrorString(cudaGetErrorString(err));
+        std::string errStr = cudaGetErrorString(err);
 
-		throw KeyFinderException();
+        throw KeyFinderException(errStr);
 	}
 }
 
@@ -344,8 +344,8 @@ void KeyFinder::getResults(std::vector<KeyFinderResult> &r)
 		minerResult.thread = rPtr->thread;
 		minerResult.index = rPtr->idx;
 		minerResult.compressed = rPtr->compressed;
-		for(int i = 0; i < 5; i++) {
-			minerResult.hash[i] = rPtr->digest[i];
+		for(int j = 0; j < 5; j++) {
+			minerResult.hash[j] = rPtr->digest[j];
 		}
 		minerResult.p = secp256k1::ecpoint(secp256k1::uint256(rPtr->x, secp256k1::uint256::BigEndian), secp256k1::uint256(rPtr->y, secp256k1::uint256::BigEndian));
 
