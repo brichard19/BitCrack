@@ -6,9 +6,9 @@ Currently this project is CUDA only, but I would love to bring it to other archi
 
 ## Build dependencies
 
-Visual Studio 2015
+Visual Studio 2017
 
-CUDA Toolkit
+CUDA Toolkit 9.2
 
 
 ## Using the tools
