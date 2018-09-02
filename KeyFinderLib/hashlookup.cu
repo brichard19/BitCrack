@@ -246,9 +246,9 @@ __device__ bool checkBloomFilter(const unsigned int hash[5])
 	unsigned int *bloomFilter = _BLOOM_FILTER[0];
 
 	for(int i = 0; i < 5; i++) {
-		unsigned int idx = hash[i] & _BLOOM_FILTER_MASK[0];
+        unsigned int idx = hash[i] & mask;
 
-		unsigned int f = bloomFilter[idx / 32] & mask;
+        unsigned int f = bloomFilter[idx / 32];
 
 		if((f & (0x01 << (idx % 32))) == 0) {
 			foundMatch = false;
