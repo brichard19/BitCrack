@@ -33,7 +33,11 @@ cuda::CudaDeviceInfo cuda::getDeviceInfo(int device)
 		cores = 8;
 		break;
 	case 2:
-		cores = devInfo.minor == 0 ? 32 : 48;
+        if(devInfo.minor == 0) {
+            cores = 32;
+        } else {
+            cores = 48;
+        }
 		break;
 	case 3:
 		cores = 192;
@@ -42,9 +46,18 @@ cuda::CudaDeviceInfo cuda::getDeviceInfo(int device)
 		cores = 128;
 		break;
 	case 6:
+        if(devInfo.minor == 1 || devInfo.minor == 2) {
+            cores = 128;
+        } else {
+            cores = 64;
+        }
+        break;
 	case 7:
 		cores = 64;
 		break;
+    default:
+        cores = 8;
+        break;
 	}
 	devInfo.cores = cores;
 
