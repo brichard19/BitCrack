@@ -97,6 +97,7 @@
     <ClInclude Include="hashlookup.cuh" />
     <ClInclude Include="hashlookup.h" />
     <ClInclude Include="KeyFinder.h" />
+    <ClInclude Include="KeyFinderDevice.h" />
     <ClInclude Include="KeyFinderShared.h" />
   </ItemGroup>
   <ItemGroup>

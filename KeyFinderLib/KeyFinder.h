@@ -9,24 +9,9 @@
 #include "hashlookup.h"
 #include "ec.h"
 
+#include "KeyFinderDevice.h"
+
 class CudaDeviceContext;
-
-struct KeyFinderResult {
-	int thread;
-	int block;
-	int index;
-	bool compressed;
-
-	secp256k1::ecpoint p;
-	unsigned int hash[5];
-};
-
-typedef struct {
-	std::string address;
-	secp256k1::ecpoint publicKey;
-	secp256k1::uint256 privateKey;
-	bool compressed;
-}KeyFinderResultInfo;
 
 
 
