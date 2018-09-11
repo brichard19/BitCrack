@@ -15,13 +15,19 @@ void printDeviceInfo(const cuda::CudaDeviceInfo &info)
 
 int main(int argc, char **argv)
 {
-	std::vector<cuda::CudaDeviceInfo> devices = cuda::getDevices();
+	try {
+		std::vector<cuda::CudaDeviceInfo> devices = cuda::getDevices();
 
-	printf("Found %d devices\n\n", (int)devices.size());
+		printf("Found %d devices\n\n", (int)devices.size());
 
-	for(int i = 0; i < (int)devices.size(); i++) {
-		printDeviceInfo(devices[i]);
-		printf("\n");
+		for(int i = 0; i < (int)devices.size(); i++) {
+			printDeviceInfo(devices[i]);
+			printf("\n");
+		}
+	} catch(cuda::CudaException &ex) {
+		printf("Error querying devices: %s\n", ex.msg.c_str());
+
+		return 1;
 	}
 
 	return 0;
