@@ -1,7 +1,8 @@
+#include <stdio.h>
 #include <time.h>
 
 #include "Logger.h"
-#include "Util.h"
+#include "util.h"
 
 bool LogLevel::isValid(int level)
 {

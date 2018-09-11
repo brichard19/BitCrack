@@ -1,6 +1,6 @@
 
 CUR_DIR=$(shell pwd)
-DIRS=util AddressUtil CmdParse CryptoUtil KeyFinderLib cudaDeviceContext cudaMath cudaUtil secp256k1lib
+DIRS=util AddressUtil CmdParse CryptoUtil KeyFinderLib cudaDeviceContext cudaMath cudaUtil secp256k1lib Logger
 
 INCLUDE = $(foreach d, $(DIRS), -I$(CUR_DIR)/$d)
 
@@ -16,7 +16,7 @@ CXXFLAGS=-O2
 COMPUTE_CAP=30
 NVCC=nvcc
 NVCCFLAGS=-gencode=arch=compute_${COMPUTE_CAP},code=\"sm_${COMPUTE_CAP}\" -Xptxas="-v" -Xcompiler "${CXXFLAGS}"
-CUDA_HOME=/usr/local/cuda-7.5
+CUDA_HOME=/usr/local/cuda-9.2
 CUDA_LIB=${CUDA_HOME}/lib64
 CUDA_INCLUDE=${CUDA_HOME}/include
 CUDA_MATH=$(CUR_DIR)/cudaMath
@@ -35,8 +35,7 @@ export CUDA_LIB
 export CUDA_INCLUDE
 export CUDA_MATH
 
-
-all:	dir_addressutil dir_cmdparse dir_cryptoutil dir_keyfinderlib dir_keyfinder dir_cudadevicecontext dir_cudautil dir_secp256k1lib dir_util dir_cudainfo
+all:	dir_addressutil dir_cmdparse dir_cryptoutil dir_keyfinderlib dir_keyfinder dir_cudadevicecontext dir_cudautil dir_secp256k1lib dir_util dir_cudainfo dir_logger
 
 dir_addressutil:	dir_util dir_secp256k1lib dir_cryptoutil
 	make --directory AddressUtil
@@ -47,7 +46,7 @@ dir_cmdparse:
 dir_cryptoutil:
 	make --directory CryptoUtil
 
-dir_keyfinderlib:	dir_util dir_secp256k1lib dir_cryptoutil dir_addressutil dir_cudautil dir_cudadevicecontext dir_cudautil
+dir_keyfinderlib:	dir_util dir_secp256k1lib dir_cryptoutil dir_addressutil dir_cudautil dir_cudadevicecontext dir_cudautil dir_logger
 	make --directory KeyFinderLib
 
 dir_keyfinder:	dir_keyfinderlib
@@ -68,6 +67,9 @@ dir_util:
 dir_cudainfo:
 	make --directory cudaInfo
 
+dir_logger:
+	make --directory Logger
+
 clean:
 	make --directory AddressUtil clean
 	make --directory CmdParse clean
@@ -79,6 +81,7 @@ clean:
 	make --directory secp256k1lib clean
 	make --directory util clean
 	make --directory cudaInfo clean
+	make --directory Logger clean
 
 	rm -rf ${LIBDIR}
 	rm -rf ${BINDIR}
