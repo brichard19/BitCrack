@@ -52,7 +52,7 @@ cudaError_t CudaHashLookup::setTargetConstantMemory(const std::vector<struct has
 {
 	size_t count = targets.size();
 
-	for(auto i = 0; i < count; i++) {
+	for(size_t i = 0; i < count; i++) {
 		unsigned int h[5];
 
 		undoRMD160FinalRound(targets[i].h, h);

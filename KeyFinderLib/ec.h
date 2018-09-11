@@ -69,7 +69,7 @@ public:
 
 	cudaError_t init(int blocks, int threads, int pointsPerThread, const std::vector<secp256k1::uint256> &privateKeys);
 
-	bool CudaDeviceKeys::selfTest(const std::vector<secp256k1::uint256> &privateKeys);
+	bool selfTest(const std::vector<secp256k1::uint256> &privateKeys);
 
 	cudaError_t doStep();
 
