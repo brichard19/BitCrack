@@ -215,7 +215,7 @@ namespace util {
 		return true;
 	}
 
-    	std::string format(const char *formatStr, double value)
+    std::string format(const char *formatStr, double value)
 	{
 		char buf[100] = { 0 };
 
@@ -233,7 +233,7 @@ namespace util {
 		return std::string(buf);
 	}
 
-    	std::string format(size_t value)
+    std::string format(size_t value)
 	{
 		char buf[100] = { 0 };
 
@@ -247,15 +247,6 @@ namespace util {
 		char buf[100] = { 0 };
 
 		sprintf(buf, "%d", value);
-
-		return std::string(buf);
-	}
-
-	std::string format(unsigned long long value)
-	{
-		char buf[100] = { 0 };
-
-		sprintf(buf, "%lld", value);
 
 		return std::string(buf);
 	}

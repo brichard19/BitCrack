@@ -18,6 +18,7 @@
 #include "Logger.h"
 
 #include "ec.h"
+#include "cudaUtil.h"
 
 void KeyFinder::defaultResultCallback(KeyFinderResultInfo result)
 {
@@ -377,11 +378,15 @@ void KeyFinder::run()
 
 		KernelParams params = _devCtx->getKernelParams();
 
-		if(_iterCount < 2 && _startExponent.cmp(pointsPerIteration) <= 0) {
-			callKeyFinderKernel(params, true, _compression);
-		} else {
-			callKeyFinderKernel(params, false, _compression);
-		}
+        try {
+            if(_iterCount < 2 && _startExponent.cmp(pointsPerIteration) <= 0) {
+                callKeyFinderKernel(params, true, _compression);
+            } else {
+                callKeyFinderKernel(params, false, _compression);
+            }
+        } catch(cuda::CudaException &ex) {
+            throw KeyFinderException(ex.msg);
+        }
         
 		// Update status
 		unsigned int t = timer.getTime();

@@ -34,7 +34,6 @@ std::string format(const char *formatStr, double value);
 std::string format(unsigned int value);
 std::string format(size_t value);
 std::string format(int value);
-std::string format(unsigned long long);
 
 }
 
