@@ -65,9 +65,9 @@ void statusCallback(KeyFinderStatusInfo info)
 
 	std::string timeStr = "[" + util::formatSeconds((unsigned int)(info.totalTime / 1000)) + "]";
 
-	std::string usedMemStr = util::format((info.deviceMemory - info.freeMemory) / (unsigned long long)(1024 * 1024));
+	std::string usedMemStr = util::format((info.deviceMemory - info.freeMemory) /(1024 * 1024));
 
-	std::string totalMemStr = util::format(info.deviceMemory / (unsigned long long)(1024 * 1024));
+	std::string totalMemStr = util::format(info.deviceMemory / (1024 * 1024));
 
 	std::string targetStr = util::format(info.targets) + " target";
 	if(info.targets > 1) {

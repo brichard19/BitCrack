@@ -224,7 +224,7 @@ namespace util {
 		return std::string(buf);
 	}
 
-	std::string format(unsigned int value)
+	std::string format(uint32_t value)
 	{
 		char buf[100] = { 0 };
 
@@ -233,11 +233,11 @@ namespace util {
 		return std::string(buf);
 	}
 
-    std::string format(size_t value)
+    std::string format(uint64_t value)
 	{
 		char buf[100] = { 0 };
 
-		sprintf(buf, "%lld", (unsigned long long)value);
+		sprintf(buf, "%lld", (uint64_t)value);
 
 		return std::string(buf);
 	}

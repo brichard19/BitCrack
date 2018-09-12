@@ -32,11 +32,11 @@ typedef struct {
 typedef struct {
 	int device;
 	double speed;
-	unsigned long long total;
-	unsigned long long totalTime;
+	uint64_t total;
+	uint64_t totalTime;
 	std::string deviceName;
-	unsigned long long freeMemory;
-	unsigned long long deviceMemory;
+	uint64_t freeMemory;
+	uint64_t deviceMemory;
 	size_t targets;
 }KeyFinderStatusInfo;
 

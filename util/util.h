@@ -3,6 +3,7 @@
 
 #include <string>
 #include <vector>
+#include <stdint.h>
 
 namespace util {
 
@@ -31,8 +32,8 @@ bool readLinesFromStream(std::istream &in, std::vector<std::string> &lines);
 bool readLinesFromStream(const std::string &fileName, std::vector<std::string> &lines);
 
 std::string format(const char *formatStr, double value);
-std::string format(unsigned int value);
-std::string format(size_t value);
+std::string format(uint32_t value);
+std::string format(uint64_t value);
 std::string format(int value);
 
 }
