@@ -147,7 +147,7 @@ private:
 	int _device;
 
 	secp256k1::uint256 _startExponent;
-	unsigned long long _range;
+	uint64_t _range;
 
 	// Exponent/point pairs
 	std::vector<secp256k1::uint256> _exponents;

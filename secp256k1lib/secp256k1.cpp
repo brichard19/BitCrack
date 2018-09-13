@@ -14,7 +14,7 @@ static crypto::Rng _rng;
 
 static inline void addc(unsigned int a, unsigned int b, unsigned int carryIn, unsigned int &sum, int &carryOut)
 {
-	unsigned long long sum64 = (unsigned long long)a + b + carryIn;
+	uint64_t sum64 = (uint64_t)a + b + carryIn;
 
 	sum = (unsigned int)sum64;
 	carryOut = (int)(sum64 >> 32) & 1;
@@ -23,7 +23,7 @@ static inline void addc(unsigned int a, unsigned int b, unsigned int carryIn, un
 
 static inline void subc(unsigned int a, unsigned int b, unsigned int borrowIn, unsigned int &diff, int &borrowOut)
 {
-	unsigned long long diff64 = (unsigned long long)a - b - borrowIn;
+	uint64_t diff64 = (uint64_t)a - b - borrowIn;
 
 	diff = (unsigned int)diff64;
 	borrowOut = (int)((diff64 >> 32) & 1);
@@ -102,7 +102,7 @@ static void multiply(const unsigned int *x, int xLen, const unsigned int *y, int
 
 		for(j = 0; j < yLen; j++) {
 
-			unsigned long long product = (unsigned long long)x[i] * y[j];
+			uint64_t product = (uint64_t)x[i] * y[j];
 
 			// Take the existing sum and add it to the product plus the high word from the
 			// previous multiplication. Since we are adding to a larger datatype, the compiler
@@ -232,7 +232,7 @@ uint256 uint256::add(unsigned int val) const
 	return result;
 }
 
-uint256 uint256::add(unsigned long long val) const
+uint256 uint256::add(uint64_t val) const
 {
 	uint256 result(val);
 

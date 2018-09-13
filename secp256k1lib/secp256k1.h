@@ -2,6 +2,7 @@
 #define _HOST_SECP256K1_H
 
 #include<stdio.h>
+#include<stdint.h>
 #include<string.h>
 #include<string>
 #include<vector>
@@ -76,7 +77,7 @@ namespace secp256k1 {
 			this->v[0] = x;
 		}
 
-		uint256(unsigned long long x)
+		uint256(uint64_t x)
 		{
 			memset(this->v, 0, sizeof(this->v));
 			this->v[0] = (unsigned int)x;
@@ -134,7 +135,7 @@ namespace secp256k1 {
 
 		uint256 add(unsigned int val) const;
 
-		uint256 add(unsigned long long val) const;
+		uint256 add(uint64_t val) const;
 
 		uint256 sub(int val) const;
 
