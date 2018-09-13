@@ -51,7 +51,7 @@ namespace util {
 #endif
     }
 
-	std::string formatThousands(unsigned long long x)
+	std::string formatThousands(uint64_t x)
 	{
 		char buf[32] = "";
 
@@ -83,14 +83,14 @@ namespace util {
 		return result;
 	}
 
-	unsigned int parseUInt32(std::string s)
+	uint32_t parseUInt32(std::string s)
 	{
-		return (unsigned int)parseUInt64(s);
+		return (uint32_t)parseUInt64(s);
 	}
 
-	unsigned long long parseUInt64(std::string s)
+	uint64_t parseUInt64(std::string s)
 	{
-		unsigned long long val = 0;
+		uint64_t val = 0;
 		bool isHex = false;
 
 		if(s[0] == '0' && s[1] == 'x') {

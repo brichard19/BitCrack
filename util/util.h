@@ -21,11 +21,11 @@ public:
 unsigned int getSystemTime();
 void sleep(int seconds);
 
-std::string formatThousands(unsigned long long x);
+std::string formatThousands(uint64_t x);
 std::string formatSeconds(unsigned int seconds);
 
-unsigned int parseUInt32(std::string s);
-unsigned long long parseUInt64(std::string s);
+uint32_t parseUInt32(std::string s);
+uint64_t parseUInt64(std::string s);
 bool isHex(const std::string &s);
 bool appendToFile(const std::string &fileName, const std::string &s);
 bool readLinesFromStream(std::istream &in, std::vector<std::string> &lines);

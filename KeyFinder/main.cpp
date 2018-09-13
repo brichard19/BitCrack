@@ -162,7 +162,7 @@ int main(int argc, char **argv)
 	
 	std::vector<std::string> targetList;
 	secp256k1::uint256 start(1);
-	unsigned long long range = 0;
+	uint64_t range = 0;
     int deviceCount = 0;
 
     try {

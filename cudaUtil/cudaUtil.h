@@ -15,7 +15,7 @@ namespace cuda {
 		int minor;
 		int mpCount;
 		int cores;
-		unsigned long long mem;
+		uint64_t mem;
 		std::string name;
 
 	}CudaDeviceInfo;

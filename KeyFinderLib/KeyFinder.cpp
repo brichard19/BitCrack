@@ -30,13 +30,17 @@ void KeyFinder::defaultStatusCallback(KeyFinderStatusInfo status)
 	// Do nothing
 }
 
-KeyFinder::KeyFinder(int device, const secp256k1::uint256 &start, unsigned long long range, int compression, int blocks, int threads, int pointsPerThread)
+KeyFinder::KeyFinder(int device, const secp256k1::uint256 &start, uint64_t range, int compression, int blocks, int threads, int pointsPerThread)
 {
 	_devCtx = NULL;
 	_total = 0;
 	_statusInterval = 1000;
 	_device = device;
 
+
+    if(threads > 1024) {
+        throw KeyFinderException("The maximum number of threads is 1024 per block");
+    }
 
 	if(threads <= 0 || threads % 32 != 0) {
 		throw KeyFinderException("The number of threads must be a multiple of 32");
@@ -173,6 +177,15 @@ void KeyFinder::setTargetsOnDevice()
 	}
 }
 
+void KeyFinder::cudaCall(cudaError_t err)
+{
+    if(err) {
+        std::string errStr = cudaGetErrorString(err);
+
+        throw KeyFinderException(errStr);
+    }
+}
+
 void KeyFinder::init()
 {
 	DeviceParameters params;
@@ -186,37 +199,30 @@ void KeyFinder::init()
 
 	Logger::log(LogLevel::Info, "Initializing " + _devCtx->getDeviceName());
 
-	_devCtx->init();
+    try {
+        _devCtx->init();
+    } catch(DeviceContextException &ex) {
+        throw KeyFinderException(ex.msg);
+    }
 
-    cudaSetDeviceFlags(cudaDeviceScheduleBlockingSync);
-	cudaDeviceSetCacheConfig(cudaFuncCachePreferL1);
+    cudaCall(cudaSetDeviceFlags(cudaDeviceScheduleBlockingSync));
+
+    cudaCall(cudaDeviceSetCacheConfig(cudaFuncCachePreferL1));
 
 	// Copy points to device
 	generateStartingPoints();
 
 	setTargetsOnDevice();
 
-	allocateChainBuf(_numThreads * _numBlocks * _pointsPerThread);
+    cudaCall(allocateChainBuf(_numThreads * _numBlocks * _pointsPerThread));
 
 	// Set the incrementor
 	secp256k1::ecpoint g = secp256k1::G();
 	secp256k1::ecpoint p = secp256k1::multiplyPoint(secp256k1::uint256(_numThreads * _numBlocks * _pointsPerThread), g);
 
-	cudaError_t err = _resultList.init(sizeof(KeyFinderDeviceResult), 16);
+    cudaCall(_resultList.init(sizeof(KeyFinderDeviceResult), 16));
 
-	if(err) {
-		std::string cudaErrorString(cudaGetErrorString(err));
-
-		throw KeyFinderException("Error initializing device: " + cudaErrorString);
-	}
-
-	err = setIncrementorPoint(p.x, p.y);
-
-	if(err) {
-		std::string cudaErrorString(cudaGetErrorString(err));
-
-		throw KeyFinderException("Error initializing device: " + cudaErrorString);
-	}
+    cudaCall(setIncrementorPoint(p.x, p.y));
 }
 
 
@@ -226,39 +232,40 @@ void KeyFinder::generateStartingPoints()
 	_startingPoints.clear();
 	_iterCount = 0;
 
-	unsigned long long totalPoints = _pointsPerThread * _numThreads * _numBlocks;
-	unsigned long long totalMemory = totalPoints * 40;
+	uint64_t totalPoints = _pointsPerThread * _numThreads * _numBlocks;
+	uint64_t totalMemory = totalPoints * 40;
 
 	Logger::log(LogLevel::Info, "Generating " + util::formatThousands(totalPoints) + " starting points (" + util::format("%.1f", (double)totalMemory / (double)(1024 * 1024)) + "MB)");
 
 	// Generate key pairs for k, k+1, k+2 ... k + <total points in parallel - 1>
 	secp256k1::uint256 privKey = _startExponent;
 
-	for(unsigned long long i = 0; i < totalPoints; i++) {
+	for(uint64_t i = 0; i < totalPoints; i++) {
 		_exponents.push_back(privKey.add(i));
 	}
 
-	_deviceKeys.init(_numBlocks, _numThreads, _pointsPerThread, _exponents);
+    cudaCall(_deviceKeys.init(_numBlocks, _numThreads, _pointsPerThread, _exponents));
 
 	// Show progress in 10% increments
 	double pct = 10.0;
 	for(int i = 1; i <= 256; i++) {
-		_deviceKeys.doStep();
+        cudaCall(_deviceKeys.doStep());
+
 		if(((double)i / 256.0) * 100.0 >= pct) {
 			Logger::log(LogLevel::Info, util::format("%.1f%%", pct));
 			pct += 10.0;
 		}
 	}
 
-#ifdef _DEBUG
-	try {
-        Logger::log(LogLevel::Debug, "Verifying points on device. This will take a while...");
-		_deviceKeys.selfTest(_exponents);
-	} catch(std::string &e) {
-		Logger::log(LogLevel::Debug, e);
-		exit(1);
-	}
-#endif
+//#ifdef _DEBUG
+//	try {
+//        Logger::log(LogLevel::Debug, "Verifying points on device. This will take a while...");
+//		_deviceKeys.selfTest(_exponents);
+//	} catch(std::string &e) {
+//		Logger::log(LogLevel::Debug, e);
+//		exit(1);
+//	}
+//#endif
 
 	Logger::log(LogLevel::Info, "Done");
 
@@ -360,7 +367,7 @@ void KeyFinder::getResults(std::vector<KeyFinderResult> &r)
 
 void KeyFinder::run()
 {
-	unsigned int pointsPerIteration = _numBlocks * _numThreads * _pointsPerThread;
+	uint64_t pointsPerIteration = _numBlocks * _numThreads * _pointsPerThread;
 
 	_running = true;
 
@@ -368,7 +375,7 @@ void KeyFinder::run()
 
 	timer.start();
 
-	unsigned long long prevIterCount = 0;
+	uint64_t prevIterCount = 0;
 
 	_totalTime = 0;
 
@@ -395,7 +402,7 @@ void KeyFinder::run()
 
 			KeyFinderStatusInfo info;
 
-			unsigned long long count = (_iterCount - prevIterCount) * pointsPerIteration;
+			uint64_t count = (_iterCount - prevIterCount) * pointsPerIteration;
 
 			_total += count;
 
@@ -444,7 +451,7 @@ void KeyFinder::run()
 					secp256k1::uint256 exp = _exponents[index];
 					secp256k1::ecpoint publicKey = results[i].p;
 
-					unsigned long long offset = (unsigned long long)_numBlocks * _numThreads * _pointsPerThread * _iterCount;
+					uint64_t offset = (uint64_t)_numBlocks * _numThreads * _pointsPerThread * _iterCount;
 					exp = secp256k1::addModN(exp, secp256k1::uint256(offset));
 
 					if(!verifyKey(exp, publicKey, results[i].hash, results[i].compressed)) {

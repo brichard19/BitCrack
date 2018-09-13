@@ -1,6 +1,7 @@
 #ifndef _KEY_FINDER_H
 #define _KEY_FINDER_H
 
+#include <stdint.h>
 #include <vector>
 #include <set>
 #include "secp256k1.h"
@@ -134,8 +135,8 @@ private:
 
 	CudaDeviceContext *_devCtx;
 
-	unsigned long long _iterCount;
-	unsigned long long _total;
+	uint64_t _iterCount;
+	uint64_t _total;
 	unsigned int _totalTime;
 
 
@@ -176,6 +177,8 @@ private:
 	bool isTargetInList(const unsigned int value[5]);
 	void setTargetsOnDevice();
 
+    void cudaCall(cudaError_t err);
+
 public:
 	class Compression {
 	public:
@@ -186,7 +189,7 @@ public:
 		};
 	};
 
-	KeyFinder(int device, const secp256k1::uint256 &start, unsigned long long range, int compression, int blocks = 0, int threads = 0, int pointsPerThread = 0);
+	KeyFinder(int device, const secp256k1::uint256 &start, uint64_t range, int compression, int blocks = 0, int threads = 0, int pointsPerThread = 0);
 
 	~KeyFinder();
 
