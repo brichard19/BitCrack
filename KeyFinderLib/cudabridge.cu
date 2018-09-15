@@ -17,10 +17,19 @@ void callKeyFinderKernel(KernelParams &params, bool useDouble, int compression)
 
 void waitForKernel()
 {
-	// Wait for kernel to complete
-	cudaError_t err = cudaDeviceSynchronize();
+    // Check for kernel launch error
+    cudaError_t err = cudaGetLastError();
+
+    if(err != cudaSuccess) {
+        printf("Run time error\n");
+        throw cuda::CudaException(err);
+    }
+ 
+    // Wait for kernel to complete
+    err = cudaDeviceSynchronize();
 	fflush(stdout);
 	if(err != cudaSuccess) {
-		throw CudaException(err);
+        printf("Kernel error\n");
+		throw cuda::CudaException(err);
 	}
 }

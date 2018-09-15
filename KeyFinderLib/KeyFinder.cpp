@@ -391,7 +391,8 @@ void KeyFinder::run()
             } else {
                 callKeyFinderKernel(params, false, _compression);
             }
-        } catch(cuda::CudaException &ex) {
+        } catch(cuda::CudaException ex) {
+            printf("Caught cudaException\n");
             throw KeyFinderException(ex.msg);
         }
         
