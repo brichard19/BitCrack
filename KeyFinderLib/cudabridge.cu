@@ -21,7 +21,6 @@ void waitForKernel()
     cudaError_t err = cudaGetLastError();
 
     if(err != cudaSuccess) {
-        printf("Run time error\n");
         throw cuda::CudaException(err);
     }
  
@@ -29,7 +28,6 @@ void waitForKernel()
     err = cudaDeviceSynchronize();
 	fflush(stdout);
 	if(err != cudaSuccess) {
-        printf("Kernel error\n");
 		throw cuda::CudaException(err);
 	}
 }
