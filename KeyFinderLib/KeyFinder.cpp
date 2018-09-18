@@ -126,6 +126,7 @@ void KeyFinder::setTargets(std::string targetsFile)
 	std::string line;
 	Logger::log(LogLevel::Info, "Loading addresses from '" + targetsFile + "'");
 	while(std::getline(inFile, line)) {
+		util::removeNewline(line);
 		if(line.length() > 0) {
 			if(!Address::verifyAddress(line)) {
 				Logger::log(LogLevel::Error, "Invalid address '" + line + "'");
