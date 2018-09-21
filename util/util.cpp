@@ -250,4 +250,26 @@ namespace util {
 
 		return std::string(buf);
 	}
+
+	void removeNewline(std::string &s)
+	{
+		int len = s.length();
+
+		int toRemove = 0;
+
+		if(len >= 2) {
+			if(s[len - 2] == '\r' || s[len - 2] == '\n') {
+				toRemove++;
+			}
+		}
+		if(len >= 1) {
+			if(s[len - 1] == '\r' || s[len - 1] == '\n') {
+				toRemove++;
+			}
+		}
+
+		if(toRemove) {
+			s.erase(len - toRemove);
+		}
+	}
 }

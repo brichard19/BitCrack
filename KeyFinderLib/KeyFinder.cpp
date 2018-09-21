@@ -126,6 +126,7 @@ void KeyFinder::setTargets(std::string targetsFile)
 	std::string line;
 	Logger::log(LogLevel::Info, "Loading addresses from '" + targetsFile + "'");
 	while(std::getline(inFile, line)) {
+		util::removeNewline(line);
 		if(line.length() > 0) {
 			if(!Address::verifyAddress(line)) {
 				Logger::log(LogLevel::Error, "Invalid address '" + line + "'");
@@ -391,7 +392,8 @@ void KeyFinder::run()
             } else {
                 callKeyFinderKernel(params, false, _compression);
             }
-        } catch(cuda::CudaException &ex) {
+        } catch(cuda::CudaException ex) {
+            printf("Caught cudaException\n");
             throw KeyFinderException(ex.msg);
         }
         

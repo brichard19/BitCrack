@@ -35,6 +35,7 @@ std::string format(const char *formatStr, double value);
 std::string format(uint32_t value);
 std::string format(uint64_t value);
 std::string format(int value);
+void removeNewline(std::string &s);
 
 }
 

@@ -6,29 +6,8 @@
 #include<string>
 
 #include "DeviceContext.h"
+#include "cudaUtil.h"
 
-
-class CudaException {
-
-public:
-
-	std::string msg;
-
-	int errCode;
-
-	CudaException(const std::string &msg)
-	{
-		this->msg = msg;
-	}
-
-	CudaException(cudaError_t cudaError)
-	{
-		errCode = cudaError;
-
-		this->msg = std::string(cudaGetErrorString(cudaError));
-	}
-
-};
 
 void callKeyFinderKernel(KernelParams &params, bool useDouble, int compression);
 
