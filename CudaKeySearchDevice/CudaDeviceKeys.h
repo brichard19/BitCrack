@@ -23,7 +23,6 @@ private:
 
 	unsigned int *_devY;
 
-
 	unsigned int *_devPrivate;
 
 	unsigned int *_devChain;

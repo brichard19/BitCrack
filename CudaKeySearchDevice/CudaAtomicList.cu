@@ -1,13 +1,13 @@
-#include "atomiclist.h"
-#include "atomiclist.cuh"
+#include "CudaAtomicList.h"
+#include "CudaAtomicList.cuh"
 
 #include <stdio.h>
 
 #include <cuda.h>
 #include <cuda_runtime.h>
 
-__constant__ void *_LIST_BUF[1];
-__constant__ unsigned int *_LIST_SIZE[1];
+static __constant__ void *_LIST_BUF[1];
+static __constant__ unsigned int *_LIST_SIZE[1];
 
 
 __device__ void atomicListAdd(void *info, unsigned int size)

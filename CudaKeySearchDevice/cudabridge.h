@@ -4,12 +4,11 @@
 #include<cuda.h>
 #include<cuda_runtime.h>
 #include<string>
-
-#include "DeviceContext.h"
 #include "cudaUtil.h"
+#include "secp256k1.h"
 
 
-void callKeyFinderKernel(KernelParams &params, bool useDouble, int compression);
+void callKeyFinderKernel(int blocks, int threads, int points, bool useDouble, int compression);
 
 void waitForKernel();
 

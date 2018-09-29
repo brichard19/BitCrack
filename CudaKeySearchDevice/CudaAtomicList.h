@@ -3,6 +3,10 @@
 
 #include <cuda_runtime.h>
 
+/**
+ A list that multiple device threads can append items to. Items can be
+ read and removed by the host
+ */
 class CudaAtomicList {
 
 private:
@@ -43,7 +47,7 @@ public:
 
 	void clear();
 
-	void cleanup();
+    void cleanup();
 
 };
 

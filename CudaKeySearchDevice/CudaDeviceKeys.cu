@@ -2,8 +2,8 @@
 #include <cuda_runtime.h>
 #include <device_launch_parameters.h>
 
-#include "ec.h"
-#include "ec.cuh"
+#include "CudaDeviceKeys.h"
+#include "CudaDeviceKeys.cuh"
 #include "secp256k1.cuh"
 
 

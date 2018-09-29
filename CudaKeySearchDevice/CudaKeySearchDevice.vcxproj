@@ -10,9 +10,34 @@
       <Platform>x64</Platform>
     </ProjectConfiguration>
   </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="CudaKeySearchDevice.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="CudaAtomicList.cuh" />
+    <ClInclude Include="CudaAtomicList.h" />
+    <ClInclude Include="cudabridge.h" />
+    <ClInclude Include="CudaKeySearchDevice.h" />
+    <ClInclude Include="CudaDeviceKeys.cuh" />
+    <ClInclude Include="CudaDeviceKeys.h" />
+    <ClInclude Include="CudaHashLookup.cuh" />
+    <ClInclude Include="CudaHashLookup.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <CudaCompile Include="CudaAtomicList.cu" />
+    <CudaCompile Include="cudabridge.cu" />
+    <CudaCompile Include="CudaKeySearchDevice.cu" />
+    <CudaCompile Include="CudaDeviceKeys.cu" />
+    <CudaCompile Include="CudaHashLookup.cu" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Logger\Logger.vcxproj">
+      <Project>{150af404-1f80-4a13-855b-4383c4a3326f}</Project>
+    </ProjectReference>
+  </ItemGroup>
   <PropertyGroup Label="Globals">
-    <ProjectGuid>{53EE0C03-4419-4767-A91B-7FC7D4B3D2AA}</ProjectGuid>
-    <RootNamespace>KeyFinderLib</RootNamespace>
+    <ProjectGuid>{CCA3D02C-5E5A-4A24-B34B-5961DFA93946}</ProjectGuid>
+    <RootNamespace>CudaKeySearchDevice</RootNamespace>
     <WindowsTargetPlatformVersion>10.0.17134.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
@@ -47,8 +72,9 @@
     <ClCompile>
       <WarningLevel>Level4</WarningLevel>
       <Optimization>Disabled</Optimization>
-      <PreprocessorDefinitions>WIN32;WIN64;_CRT_SECURE_NO_WARNINGS;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>$(SolutionDir)cudaUtil;$(SolutionDir)secp256k1lib;$(SolutionDir)AddressUtil;$(SolutionDir)Logger;$(SolutionDir)util;$(SolutionDir)cudaMath;$(SolutionDir)KeySearchDevice;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;WIN64;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalUsingDirectories>%(AdditionalUsingDirectories)</AdditionalUsingDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)\secp256k1lib;$(SolutionDir)\KeyFinderLib;$(SolutionDir)\Logger;$(SolutionDir)\Util;$(SolutionDir)\CudaMath;$(SolutionDir)\cudaUtil;C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v9.2\include;$(SolutionDir)\AddressUtil</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -66,8 +92,9 @@
       <Optimization>MaxSpeed</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <PreprocessorDefinitions>WIN32;WIN64;_CRT_SECURE_NO_WARNINGS;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>$(SolutionDir)cudaUtil;$(SolutionDir)secp256k1lib;$(SolutionDir)AddressUtil;$(SolutionDir)Logger;$(SolutionDir)util;$(SolutionDir)cudaMath;$(SolutionDir)KeySearchDevice;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;WIN64;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalUsingDirectories>%(AdditionalUsingDirectories)</AdditionalUsingDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)\secp256k1lib;$(SolutionDir)\KeyFinderLib;$(SolutionDir)\Logger;$(SolutionDir)\Util;$(SolutionDir)\CudaMath;$(SolutionDir)\cudaUtil;C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v9.2\include;$(SolutionDir)\AddressUtil</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -81,14 +108,6 @@
       <GenerateRelocatableDeviceCode>true</GenerateRelocatableDeviceCode>
     </CudaCompile>
   </ItemDefinitionGroup>
-  <ItemGroup>
-    <ClInclude Include="KeyFinder.h" />
-    <ClInclude Include="KeySearchDevice.h" />
-    <ClInclude Include="KeySearchTypes.h" />
-  </ItemGroup>
-  <ItemGroup>
-    <ClCompile Include="KeyFinder.cpp" />
-  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
     <Import Project="$(VCTargetsPath)\BuildCustomizations\CUDA 9.2.targets" />

@@ -10,12 +10,14 @@
 #include "cudaUtil.h"
 #include "Logger.h"
 
+#include "CudaKeySearchDevice.h"
+
 static std::string _outputFile = "";
 
 /**
 * Callback to display the private key
 */
-void resultCallback(KeyFinderResultInfo info)
+void resultCallback(KeySearchResult info)
 {
 	if(_outputFile.length() != 0) {
 		Logger::log(LogLevel::Info, "Found key for address '" + info.address + "'. Written to '" + _outputFile + "'");
@@ -51,7 +53,7 @@ void resultCallback(KeyFinderResultInfo info)
 /**
 Callback to display progress
 */
-void statusCallback(KeyFinderStatusInfo info)
+void statusCallback(KeySearchStatus info)
 {
 	std::string speedStr;
 
@@ -126,11 +128,11 @@ DeviceParameters findDefaultParameters(int device)
 static std::string getCompressionString(int mode)
 {
 	switch(mode) {
-	case KeyFinder::Compression::BOTH:
+	case PointCompressionType::BOTH:
 		return "both";
-	case KeyFinder::Compression::UNCOMPRESSED:
+	case PointCompressionType::UNCOMPRESSED:
 		return "uncompressed";
-	case KeyFinder::Compression::COMPRESSED:
+	case PointCompressionType::COMPRESSED:
 		return "compressed";
 	}
 
@@ -152,7 +154,7 @@ int main(int argc, char **argv)
 	int threads = 0;
 	int blocks = 0;
 	int pointsPerThread = 0;
-	int compression = KeyFinder::Compression::COMPRESSED;
+	int compression = PointCompressionType::COMPRESSED;
 	std::string targetFile = "";
 
 	std::string outputFile = "";
@@ -275,11 +277,11 @@ int main(int argc, char **argv)
 	
 	// Check option for compressed, uncompressed, or both
 	if(optCompressed && optUncompressed) {
-		compression = KeyFinder::Compression::BOTH;
+		compression = PointCompressionType::BOTH;
 	} else if(optCompressed) {
-		compression = KeyFinder::Compression::COMPRESSED;
+		compression = PointCompressionType::COMPRESSED;
 	} else if(optUncompressed) {
-		compression = KeyFinder::Compression::UNCOMPRESSED;
+		compression = PointCompressionType::UNCOMPRESSED;
 	}
 
 	cuda::CudaDeviceInfo devInfo;
@@ -296,12 +298,16 @@ int main(int argc, char **argv)
 	Logger::log(LogLevel::Info, "Starting at: " + start.toString());
 
 	try {
-		KeyFinder f(device, start, range, compression, blocks, threads, pointsPerThread);
+        CudaKeySearchDevice *d = NULL;
+        
+        d = new CudaKeySearchDevice(device, blocks, threads, pointsPerThread);
+        KeyFinder f(start, range, compression, d);
 
 		f.setResultCallback(resultCallback);
 		f.setStatusInterval(1800);
 		f.setStatusCallback(statusCallback);
 
+        f.init();
 
 		if(!targetFile.empty()) {
 			f.setTargets(targetFile);
@@ -309,9 +315,11 @@ int main(int argc, char **argv)
 			f.setTargets(targetList);
 		}
 
-		f.init();
+		
 		f.run();
-	} catch(KeyFinderException ex) {
+
+        delete d;
+	} catch(KeySearchException ex) {
 		Logger::log(LogLevel::Info, "Error: " + ex.msg + " Exiting.");
 		return 1;
 	}

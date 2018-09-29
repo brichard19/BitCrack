@@ -253,7 +253,7 @@ namespace util {
 
 	void removeNewline(std::string &s)
 	{
-		int len = s.length();
+		size_t len = s.length();
 
 		int toRemove = 0;
 

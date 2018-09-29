@@ -3,12 +3,11 @@
 #include <math.h>
 #include <vector>
 
+#include "KeySearchDevice.h"
 
-#include "KeyFinderShared.h"
+#include "CudaHashLookup.h"
 
-#include "hashlookup.h"
-
-#include "hashlookup.cuh"
+#include "CudaHashLookup.cuh"
 
 #include "Logger.h"
 

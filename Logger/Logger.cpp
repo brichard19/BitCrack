@@ -24,7 +24,7 @@ std::string LogLevel::toString(int level)
 		case Error:
 			return "Error";
 		case Debug:
-			return "Debug:";
+			return "Debug";
 	}
 
 	return "";

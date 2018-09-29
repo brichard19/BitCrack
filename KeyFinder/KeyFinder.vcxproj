@@ -108,7 +108,7 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>$(SolutionDir)KeyFinderLib;$(SolutionDir)util;$(SolutionDir)AddressUtil;$(SolutionDir)secp256k1lib;$(SolutionDir)CmdParse;$(SolutionDir)cudaDeviceContext;C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v9.2\include;$(SolutionDir)cudaUtil;$(SolutionDir)Logger;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)KeyFinderLib;$(SolutionDir)util;$(SolutionDir)AddressUtil;$(SolutionDir)secp256k1lib;$(SolutionDir)CmdParse;$(SolutionDir)cudaDeviceContext;C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v9.2\include;$(SolutionDir)cudaUtil;$(SolutionDir)Logger;%(AdditionalIncludeDirectories);$(SolutionDir)\CudaKeySearchDevice</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -146,7 +146,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>$(SolutionDir)KeyFinderLib;$(SolutionDir)util;$(SolutionDir)AddressUtil;$(SolutionDir)secp256k1lib;$(SolutionDir)CmdParse;$(SolutionDir)cudaDeviceContext;C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v9.2\include;$(SolutionDir)cudaUtil;$(SolutionDir)Logger;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)KeyFinderLib;$(SolutionDir)util;$(SolutionDir)AddressUtil;$(SolutionDir)secp256k1lib;$(SolutionDir)CmdParse;$(SolutionDir)cudaDeviceContext;C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v9.2\include;$(SolutionDir)cudaUtil;$(SolutionDir)Logger;$(SolutionDir)\CudaKeySearchDevice;%(AdditionalIncludeDirectories);$(SolutionDir)\CudaKeySearchDevice</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -167,8 +167,8 @@
     <ProjectReference Include="..\CmdParse\CmdParse.vcxproj">
       <Project>{f7037134-28c5-4eb9-be5d-587e79a40628}</Project>
     </ProjectReference>
-    <ProjectReference Include="..\cudaDeviceContext\cudaDeviceContext.vcxproj">
-      <Project>{129c2b98-babf-4e50-b7d7-e885774df4a9}</Project>
+    <ProjectReference Include="..\CudaKeySearchDevice\CudaKeySearchDevice.vcxproj">
+      <Project>{cca3d02c-5e5a-4a24-b34b-5961dfa93946}</Project>
     </ProjectReference>
     <ProjectReference Include="..\cudaUtil\cudaUtil.vcxproj">
       <Project>{eadaaa54-e304-4656-8263-e5e688ff323d}</Project>

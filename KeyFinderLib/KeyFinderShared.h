@@ -20,14 +20,14 @@ struct KeyFinderDeviceResult {
 	unsigned int digest[5];
 };
 
-struct hash160 {
-
-	unsigned int h[5];
-
-	hash160(const unsigned int hash[5])
-	{
-		memcpy(h, hash, sizeof(unsigned int) * 5);
-	}
-};
+//typedef struct hash160 {
+//
+//	unsigned int h[5];
+//
+//	hash160(const unsigned int hash[5])
+//	{
+//		memcpy(h, hash, sizeof(unsigned int) * 5);
+//	}
+//}hash160;
 
 #endif
