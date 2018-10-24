@@ -7,10 +7,19 @@
 #include "util.h"
 #include "secp256k1.h"
 #include "CmdParse.h"
-#include "cudaUtil.h"
 #include "Logger.h"
 
+#include "DeviceManager.h"
+
+#ifdef BUILD_CUDA
 #include "CudaKeySearchDevice.h"
+#endif
+
+
+#ifdef BUILD_OPENCL
+#include "CLKeySearchDevice.h"
+#endif
+
 
 static std::string _outputFile = "";
 
@@ -93,7 +102,6 @@ void usage()
 	printf("-c, --compressed        Compressed points\n");
 	printf("-u, --uncompressed      Uncompressed points\n");
 	printf("-d, --device            The device to use\n");
-	printf("-b, --blocks            Number of blocks\n");
 	printf("-t, --threads           Threads per block\n");
 	printf("-p, --per-thread        Keys per thread\n");
 	printf("-s, --start             Staring key, in hex\n");
@@ -114,11 +122,9 @@ typedef struct {
 
 DeviceParameters findDefaultParameters(int device)
 {
-	cuda::CudaDeviceInfo devInfo = cuda::getDeviceInfo(device);
-
 	DeviceParameters p;
 	p.threads = 256;
-	p.blocks = devInfo.mpCount * 16;
+    p.blocks = 32;
 	p.pointsPerThread = 32;
 
 	return p;
@@ -148,11 +154,36 @@ bool readAddressesFromFile(const std::string &fileName, std::vector<std::string>
 	}
 }
 
+static KeySearchDevice *getDeviceContext(DeviceManager::DeviceInfo &device, int blocks, int threads, int pointsPerThread)
+{
+#ifdef BUILD_CUDA
+    if(device.type == DeviceManager::DeviceType::CUDA) {
+        return new CudaKeySearchDevice((int)device.physicalId, threads, pointsPerThread, blocks);
+    }
+#endif
+
+#ifdef BUILD_OPENCL
+    if(device.type == DeviceManager::DeviceType::OpenCL) {
+        return new CLKeySearchDevice(device.physicalId, threads, pointsPerThread, blocks);
+    }
+#endif
+
+    return NULL;
+}
+
+static void printDeviceList(const std::vector<DeviceManager::DeviceInfo> &devices)
+{
+    printf("ID  Name\n");
+    for(int i = 0; i < devices.size(); i++) {
+        printf("%2d  %s\n", devices[i].id, devices[i].name.c_str());
+    }
+}
+
 int main(int argc, char **argv)
 {
 	int device = 0;
 	int threads = 0;
-	int blocks = 0;
+    int blocks = 0;
 	int pointsPerThread = 0;
 	int compression = PointCompressionType::COMPRESSED;
 	std::string targetFile = "";
@@ -161,20 +192,24 @@ int main(int argc, char **argv)
 
 	bool optCompressed = false;
 	bool optUncompressed = false;
-	
+    bool listDevices = false;
+
 	std::vector<std::string> targetList;
 	secp256k1::uint256 start(1);
 	uint64_t range = 0;
     int deviceCount = 0;
 
+    std::vector<DeviceManager::DeviceInfo> devices;
+
     try {
-        deviceCount = cuda::getDeviceCount();
-        if(deviceCount == 0) {
-            Logger::log(LogLevel::Error, "No CUDA devices available");
+        devices = DeviceManager::getDevices();
+
+        if(devices.size() == 0) {
+            Logger::log(LogLevel::Error, "No devices available");
             return 1;
         }
-    } catch(cuda::CudaException ex) {
-        Logger::log(LogLevel::Error, "Error detecting CUDA devices: " + ex.msg);
+    } catch(DeviceManager::DeviceManagerException ex) {
+        Logger::log(LogLevel::Error, "Error detecting devices: " + ex.msg);
         return 1;
     }
 
@@ -195,6 +230,7 @@ int main(int argc, char **argv)
 	parser.add("-u", "--uncompressed", false);
 	parser.add("-i", "--in", true);
 	parser.add("-o", "--out", true);
+    parser.add("-l", "--list-devices", false);
 
 	parser.parse(argc, argv);
 	std::vector<OptArg> args = parser.getArgs();
@@ -206,8 +242,8 @@ int main(int argc, char **argv)
 		try {
 			if(optArg.equals("-t", "--threads")) {
 				threads = util::parseUInt32(optArg.arg);
-			} else if(optArg.equals("-b", "--blocks")) {
-				blocks = util::parseUInt32(optArg.arg);
+            } else if(optArg.equals("-b", "--blocks")) {
+                blocks = util::parseUInt32(optArg.arg);
 			} else if(optArg.equals("-p", "--points")) {
 				pointsPerThread = util::parseUInt32(optArg.arg);
 			} else if(optArg.equals("-s", "--start")) {
@@ -229,17 +265,23 @@ int main(int argc, char **argv)
 				targetFile = optArg.arg;
 			} else if(optArg.equals("-o", "--out")) {
 				_outputFile = optArg.arg;
-			}
+            } else if(optArg.equals("-l", "--list-devices")) {
+                listDevices = true;
+            }
 		} catch(std::string err) {
 			Logger::log(LogLevel::Error, "Error " + opt + ": " + err);
 			return 1;
 		}
 	}
 
+    if(listDevices) {
+        printDeviceList(devices);
+        return 0;
+    }
 
 	// Verify device exists
-	if(device < 0 || device >= deviceCount) {
-		Logger::log(LogLevel::Error, "CUDA device " + util::format(device) + " does not exist");
+	if(device < 0 || device >= devices.size()) {
+		Logger::log(LogLevel::Error, "device " + util::format(device) + " does not exist");
 		return 1;
 	}
 
@@ -258,7 +300,7 @@ int main(int argc, char **argv)
 		}
 	}
 
-
+    /*
 	// Get device parameters (blocks, threads, points per thread)
 	DeviceParameters devParams = findDefaultParameters(device);
 
@@ -267,13 +309,9 @@ int main(int argc, char **argv)
 		threads = devParams.threads;
 	}
 
-	if(blocks == 0) {
-		blocks = devParams.blocks;
-	}
-
 	if(pointsPerThread == 0) {
 		pointsPerThread = devParams.pointsPerThread;
-	}
+	}*/
 	
 	// Check option for compressed, uncompressed, or both
 	if(optCompressed && optUncompressed) {
@@ -284,23 +322,25 @@ int main(int argc, char **argv)
 		compression = PointCompressionType::UNCOMPRESSED;
 	}
 
-	cuda::CudaDeviceInfo devInfo;
-	
-	// Initialize the device
-	try {
-		devInfo = cuda::getDeviceInfo(device);
-	} catch(cuda::CudaException &Ex) {
-		Logger::log(LogLevel::Error, "Cannot initialize device: " + Ex.msg);
-		return 1;
-	}
 
 	Logger::log(LogLevel::Info, "Compression: " + getCompressionString(compression));
 	Logger::log(LogLevel::Info, "Starting at: " + start.toString());
 
 	try {
+        
+        KeySearchDevice *d = getDeviceContext(devices[device], blocks, threads, pointsPerThread);
+
+        /*
+        if(devices[device].type == DeviceManager::DeviceType::CUDA) {
+            d = new CudaKeySearchDevice((int)devices[device].physicalId, threads, pointsPerThread, blocks);
+        } else {
+            d = new CLKeySearchDevice(devices[device].physicalId, threads, pointsPerThread, blocks);
+        }*/
+        /*
         CudaKeySearchDevice *d = NULL;
         
-        d = new CudaKeySearchDevice(device, blocks, threads, pointsPerThread);
+        d = new CudaKeySearchDevice(device, threads, pointsPerThread, blocks);
+        */
         KeyFinder f(start, range, compression, d);
 
 		f.setResultCallback(resultCallback);
@@ -315,7 +355,6 @@ int main(int argc, char **argv)
 			f.setTargets(targetList);
 		}
 
-		
 		f.run();
 
         delete d;

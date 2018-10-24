@@ -13,31 +13,46 @@ void CudaKeySearchDevice::cudaCall(cudaError_t err)
     }
 }
 
-CudaKeySearchDevice::CudaKeySearchDevice(int device, int blocks, int threads, int pointsPerThread)
+CudaKeySearchDevice::CudaKeySearchDevice(int device, int threads, int pointsPerThread, int blocks)
 {
-    if(threads > 1024) {
-        throw KeySearchException("The maximum number of threads is 1024 per block");
+    cuda::CudaDeviceInfo info;
+    try {
+        info = cuda::getDeviceInfo(device);
+    } catch(cuda::CudaException ex) {
+        throw KeySearchException(ex.msg);
     }
 
     if(threads <= 0 || threads % 32 != 0) {
         throw KeySearchException("The number of threads must be a multiple of 32");
     }
 
-    if(blocks <= 0) {
-        throw KeySearchException("At least 1 block required");
-    }
-
     if(pointsPerThread <= 0) {
         throw KeySearchException("At least 1 point per thread required");
+    }
+
+    // Specifying blocks on the commandline is depcreated but still supported. If there is no value for
+    // blocks, devide the threads evenly among the multi-processors
+    if(blocks == 0) {
+        if(threads % info.mpCount != 0) {
+            throw KeySearchException("The number of threads must be a multiple of " + util::format("%d", info.mpCount));
+        }
+
+        _threads = threads / info.mpCount;
+
+        _blocks = info.mpCount;
+
+        while(_threads > 512) {
+            _threads /= 2;
+            _blocks *= 2;
+        }
+    } else {
+        _threads = threads;
+        _blocks = blocks;
     }
 
     _iterations = 0;
 
     _device = device;
-
-    _blocks = blocks;
-
-    _threads = threads;
 
     _pointsPerThread = pointsPerThread;
 }
@@ -64,7 +79,6 @@ void CudaKeySearchDevice::init(const secp256k1::uint256 &start, int compression)
     // Block on kernel calls
     cudaCall(cudaSetDeviceFlags(cudaDeviceScheduleBlockingSync));
 
-    // 
     cudaCall(cudaDeviceSetCacheConfig(cudaFuncCachePreferL1));
 
     generateStartingPoints();

@@ -272,4 +272,9 @@ namespace util {
 			s.erase(len - toRemove);
 		}
 	}
+
+    unsigned int endian(unsigned int x)
+    {
+        return (x << 24) | ((x << 8) & 0x00ff0000) | ((x >> 8) & 0x0000ff00) | (x >> 24);
+    }
 }

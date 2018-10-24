@@ -36,7 +36,7 @@ std::string format(uint32_t value);
 std::string format(uint64_t value);
 std::string format(int value);
 void removeNewline(std::string &s);
-
+unsigned int endian(unsigned int x);
 }
 
 #endif

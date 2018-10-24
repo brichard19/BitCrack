@@ -67,7 +67,7 @@ private:
 
 public:
 
-    CudaKeySearchDevice(int device, int blocks, int threads, int pointsPerThread);
+    CudaKeySearchDevice(int device, int threads, int pointsPerThread, int blocks = 0);
 
     virtual void init(const secp256k1::uint256 &start, int compression);
 

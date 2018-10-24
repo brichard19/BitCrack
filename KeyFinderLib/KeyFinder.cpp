@@ -39,7 +39,6 @@ KeyFinder::KeyFinder(const secp256k1::uint256 &start, uint64_t range, int compre
 
 KeyFinder::~KeyFinder()
 {
-    delete _device;
 }
 
 void KeyFinder::setTargets(std::vector<std::string> &targets)

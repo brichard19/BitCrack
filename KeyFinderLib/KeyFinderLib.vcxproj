@@ -48,7 +48,7 @@
       <WarningLevel>Level4</WarningLevel>
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>WIN32;WIN64;_CRT_SECURE_NO_WARNINGS;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>$(SolutionDir)cudaUtil;$(SolutionDir)secp256k1lib;$(SolutionDir)AddressUtil;$(SolutionDir)Logger;$(SolutionDir)util;$(SolutionDir)cudaMath;$(SolutionDir)KeySearchDevice;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)cudaUtil;$(SolutionDir)secp256k1lib;$(SolutionDir)AddressUtil;$(SolutionDir)Logger;$(SolutionDir)util;$(SolutionDir)cudaMath;$(SolutionDir)KeySearchDevice;$(SolutionDir)clUtil;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -67,7 +67,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>WIN32;WIN64;_CRT_SECURE_NO_WARNINGS;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>$(SolutionDir)cudaUtil;$(SolutionDir)secp256k1lib;$(SolutionDir)AddressUtil;$(SolutionDir)Logger;$(SolutionDir)util;$(SolutionDir)cudaMath;$(SolutionDir)KeySearchDevice;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)cudaUtil;$(SolutionDir)secp256k1lib;$(SolutionDir)AddressUtil;$(SolutionDir)Logger;$(SolutionDir)util;$(SolutionDir)cudaMath;$(SolutionDir)KeySearchDevice;$(SolutionDir)clUtil;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>

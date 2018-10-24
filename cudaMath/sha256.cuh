@@ -65,15 +65,6 @@ __device__ __forceinline__ void round(unsigned int a, unsigned int b, unsigned i
 	h += s + MAJ(a, b, c) + (rotr(a, 2) ^ rotr(a, 13) ^ rotr(a, 22));
 }
 
-__device__ __forceinline__ void round(unsigned int a, unsigned int b, unsigned int c, unsigned int &d, unsigned e, unsigned int f, unsigned int g, unsigned int &h, unsigned int k)
-{
-	unsigned int s = CH(e, f, g) + (rotr(e, 6) ^ rotr(e, 11) ^ rotr(e, 25)) + k;
-
-	d += s + h;
-
-	h += s + MAJ(a, b, c) + (rotr(a, 2) ^ rotr(a, 13) ^ rotr(a, 22));
-}
-
 __device__ void sha256PublicKey(const unsigned int x[8], const unsigned int y[8], unsigned int digest[8])
 {
 	unsigned int a, b, c, d, e, f, g, h;
