@@ -31,7 +31,7 @@ typedef struct {
 
 bool isInList(unsigned int hash[5], __global unsigned int *targetList, size_t numTargets)
 {
-    int found = 0;
+    bool found = false;
 
     for(size_t i = 0; i < numTargets; i++) {
         int equal = 0;
@@ -43,7 +43,7 @@ bool isInList(unsigned int hash[5], __global unsigned int *targetList, size_t nu
         }
 
         if(equal == 5) {
-            found = 1;
+            found = true;
         }
     }
 
@@ -55,14 +55,7 @@ bool isInBloomFilter(unsigned int hash[5], __global unsigned int *targetList, ul
     bool foundMatch = true;
 
     unsigned int h5 = 0;
-    /*
-    if(get_local_id(0) == 0) {
-        for(int i = 0; i < 5; i++) {
-            printf("%.8x ", hash[i]);
-        }
-        printf("\n");
-    }
-    */
+
     for(int i = 0; i < 5; i++) {
         h5 += hash[i];
     }

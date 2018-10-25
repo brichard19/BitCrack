@@ -120,7 +120,7 @@ typedef struct {
 	int pointsPerThread;
 }DeviceParameters;
 
-DeviceParameters findDefaultParameters(int device)
+DeviceParameters getDefaultParameters(const DeviceManager::DeviceInfo &device)
 {
 	DeviceParameters p;
 	p.threads = 256;
@@ -300,19 +300,21 @@ int main(int argc, char **argv)
 		}
 	}
 
-    /*
-	// Get device parameters (blocks, threads, points per thread)
-	DeviceParameters devParams = findDefaultParameters(device);
+    // Set parameters
+    DeviceParameters defaultParameters = getDefaultParameters(devices[device]);
+    if(blocks == 0) {
+        blocks = defaultParameters.blocks;
+    }
 
-	// Apply defaults if none given
-	if(threads == 0) {
-		threads = devParams.threads;
-	}
+    if(threads == 0) {
+        threads = defaultParameters.threads;
+    }
 
-	if(pointsPerThread == 0) {
-		pointsPerThread = devParams.pointsPerThread;
-	}*/
-	
+    if(pointsPerThread == 0) {
+        pointsPerThread = defaultParameters.pointsPerThread;
+    }
+
+
 	// Check option for compressed, uncompressed, or both
 	if(optCompressed && optUncompressed) {
 		compression = PointCompressionType::BOTH;
@@ -322,7 +324,6 @@ int main(int argc, char **argv)
 		compression = PointCompressionType::UNCOMPRESSED;
 	}
 
-
 	Logger::log(LogLevel::Info, "Compression: " + getCompressionString(compression));
 	Logger::log(LogLevel::Info, "Starting at: " + start.toString());
 
@@ -330,17 +331,6 @@ int main(int argc, char **argv)
         
         KeySearchDevice *d = getDeviceContext(devices[device], blocks, threads, pointsPerThread);
 
-        /*
-        if(devices[device].type == DeviceManager::DeviceType::CUDA) {
-            d = new CudaKeySearchDevice((int)devices[device].physicalId, threads, pointsPerThread, blocks);
-        } else {
-            d = new CLKeySearchDevice(devices[device].physicalId, threads, pointsPerThread, blocks);
-        }*/
-        /*
-        CudaKeySearchDevice *d = NULL;
-        
-        d = new CudaKeySearchDevice(device, threads, pointsPerThread, blocks);
-        */
         KeyFinder f(start, range, compression, d);
 
 		f.setResultCallback(resultCallback);

@@ -83,6 +83,15 @@ CLKeySearchDevice::~CLKeySearchDevice()
     delete _clContext;
 }
 
+uint64_t CLKeySearchDevice::getOptimalBloomFilterMask(double p, size_t n)
+{
+    double m = 3.6 * ceil((n * log(p)) / log(1 / pow(2, log(2))));
+
+    unsigned int bits = ceil(log(m) / log(2));
+
+    return ((uint64_t)1 << bits) - 1;
+}
+
 void CLKeySearchDevice::initializeBloomFilter(const std::vector<struct hash160> &targets, uint64_t mask)
 {
     size_t sizeInWords = (mask + 1) / 32;
@@ -195,49 +204,53 @@ void CLKeySearchDevice::init(const secp256k1::uint256 &start, int compression)
 
 void CLKeySearchDevice::doStep()
 {
-    uint64_t numKeys = _blocks * _threads * _pointsPerThread;
-    unsigned int numTargets = _targetList.size();
+    try {
+        uint64_t numKeys = _blocks * _threads * _pointsPerThread;
+        unsigned int numTargets = _targetList.size();
 
-    if(_iterations < 2 && _start.cmp(numKeys) <= 0) {
+        if(_iterations < 2 && _start.cmp(numKeys) <= 0) {
 
-        _stepKernelWithDouble->call(
-            _blocks,
-            _threads,
-            _pointsPerThread,
-            _compression,
-            _chain,
-            _x,
-            _y,
-            _xInc,
-            _yInc,
-            _deviceTargetList.ptr,
-            _deviceTargetList.size,
-            _deviceTargetList.mask,
-            _deviceResults,
-            _deviceResultsCount);
+            _stepKernelWithDouble->call(
+                _blocks,
+                _threads,
+                _pointsPerThread,
+                _compression,
+                _chain,
+                _x,
+                _y,
+                _xInc,
+                _yInc,
+                _deviceTargetList.ptr,
+                _deviceTargetList.size,
+                _deviceTargetList.mask,
+                _deviceResults,
+                _deviceResultsCount);
 
-    } else {
-        _stepKernel->call(
-            _blocks,
-            _threads,
-            _pointsPerThread,
-            _compression,
-            _chain,
-            _x,
-            _y,
-            _xInc,
-            _yInc,
-            _deviceTargetList.ptr,
-            _deviceTargetList.size,
-            _deviceTargetList.mask,
-            _deviceResults,
-            _deviceResultsCount);
+        } else {
+            _stepKernel->call(
+                _blocks,
+                _threads,
+                _pointsPerThread,
+                _compression,
+                _chain,
+                _x,
+                _y,
+                _xInc,
+                _yInc,
+                _deviceTargetList.ptr,
+                _deviceTargetList.size,
+                _deviceTargetList.mask,
+                _deviceResults,
+                _deviceResultsCount);
+        }
+        fflush(stdout);
+
+        getResultsInternal();
+
+        _iterations++;
+    } catch(cl::CLException ex) {
+        throw KeySearchException(ex.msg);
     }
-    fflush(stdout);
-
-    getResultsInternal();
-
-    _iterations++;
 }
 
 void CLKeySearchDevice::setTargetsList()
@@ -254,13 +267,14 @@ void CLKeySearchDevice::setTargetsList()
         _clContext->copyHostToDevice(h, _targets, i * 5 * sizeof(unsigned int), 5 * sizeof(unsigned int));
     }
 
+    _targetMemSize = count * 5 * sizeof(unsigned int);
     _deviceTargetList.ptr = _targets;
     _deviceTargetList.size = count;
 }
 
 void CLKeySearchDevice::setBloomFilter()
 {
-    uint64_t bloomFilterMask = 0xffffff;
+    uint64_t bloomFilterMask = getOptimalBloomFilterMask(1.0e-9, _targetList.size());
 
     initializeBloomFilter(_targetList, bloomFilterMask);
 }
@@ -281,14 +295,18 @@ void CLKeySearchDevice::setTargetsInternal()
 
 void CLKeySearchDevice::setTargets(const std::set<KeySearchTarget> &targets)
 {
-    _targetList.clear();
+    try {
+        _targetList.clear();
 
-    for(std::set<KeySearchTarget>::iterator i = targets.begin(); i != targets.end(); ++i) {
-        hash160 h(i->value);
-        _targetList.push_back(h);
+        for(std::set<KeySearchTarget>::iterator i = targets.begin(); i != targets.end(); ++i) {
+            hash160 h(i->value);
+            _targetList.push_back(h);
+        }
+
+        setTargetsInternal();
+    } catch(cl::CLException ex) {
+        throw KeySearchException(ex.msg);
     }
-
-    setTargetsInternal();
 }
 
 size_t CLKeySearchDevice::getResults(std::vector<KeySearchResult> &results)
@@ -314,7 +332,7 @@ std::string CLKeySearchDevice::getDeviceName()
 
 void CLKeySearchDevice::getMemoryInfo(uint64_t &freeMem, uint64_t &totalMem)
 {
-    freeMem = 0;
+    freeMem = _globalMemSize - _targetMemSize - _pointsMemSize;
     totalMem = _globalMemSize;
 }
 
@@ -554,7 +572,7 @@ void CLKeySearchDevice::generateStartingPoints()
 
     initializeBasePoints();
 
-    _pointsMemSize = totalPoints * 32;
+    _pointsMemSize = totalPoints * sizeof(unsigned int) * 16 + _pointsPerThread * sizeof(unsigned int) * 8;
 
     Logger::log(LogLevel::Info, "Generating " + util::formatThousands(totalPoints) + " starting points (" + util::format("%.1f", (double)totalMemory / (double)(1024 * 1024)) + "MB)");
 

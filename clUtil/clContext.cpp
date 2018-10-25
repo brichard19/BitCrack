@@ -105,7 +105,7 @@ std::string cl::CLProgram::loadSource(std::string srcFile)
 {
     std::ifstream f(srcFile);
     if(!f.good()) {
-        throw CLException(CL_BUILD_PROGRAM_FAILURE, srcFile + " not found");
+        throw CLException(CL_BUILD_PROGRAM_FAILURE, "'" + srcFile + "' not found");
     }
 
     std::stringstream buf;
@@ -145,8 +145,6 @@ cl::CLProgram::~CLProgram()
 {
     clReleaseProgram(_prog);
 }
-
-
 
 
 cl::CLKernel::CLKernel(cl::CLProgram &prog, std::string entry) : _prog(prog)

@@ -102,6 +102,8 @@ private:
 
     void initializeBloomFilter(const std::vector<struct hash160> &targets, uint64_t mask);
 
+    uint64_t getOptimalBloomFilterMask(double p, size_t n);
+
 public:
 
     CLKeySearchDevice(uint64_t device, int threads, int pointsPerThread, int blocks = 0);
