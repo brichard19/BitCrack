@@ -47,6 +47,7 @@ CLKeySearchDevice::CLKeySearchDevice(uint64_t device, int threads, int pointsPer
     try {
         // Create the context
         _clContext = new cl::CLContext(_device);
+        Logger::log(LogLevel::Info, "Compiling 'KeySearch.cl'...");
         _clProgram = new cl::CLProgram(*_clContext, "KeySearch.cl");
 
         // Load the kernels
@@ -206,7 +207,6 @@ void CLKeySearchDevice::doStep()
 {
     try {
         uint64_t numKeys = _blocks * _threads * _pointsPerThread;
-        unsigned int numTargets = _targetList.size();
 
         if(_iterations < 2 && _start.cmp(numKeys) <= 0) {
 
@@ -311,8 +311,8 @@ void CLKeySearchDevice::setTargets(const std::set<KeySearchTarget> &targets)
 
 size_t CLKeySearchDevice::getResults(std::vector<KeySearchResult> &results)
 {
-    int count = _results.size();
-    for(int i = 0; i < count; i++) {
+    size_t count = _results.size();
+    for(size_t i = 0; i < count; i++) {
         results.push_back(_results[i]);
     }
     _results.clear();
