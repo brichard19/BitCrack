@@ -1,3 +1,4 @@
+#include <cmath>
 #include "Logger.h"
 #include "util.h"
 #include "CLKeySearchDevice.h"
@@ -86,9 +87,9 @@ CLKeySearchDevice::~CLKeySearchDevice()
 
 uint64_t CLKeySearchDevice::getOptimalBloomFilterMask(double p, size_t n)
 {
-    double m = 3.6 * ceil((n * log(p)) / log(1 / pow(2, log(2))));
+    double m = 3.6 * ceil((n * std::log(p)) / std::log(1 / std::pow(2, std::log(2))));
 
-    unsigned int bits = ceil(log(m) / log(2));
+    unsigned int bits = std::ceil(std::log(m) / std::log(2));
 
     return ((uint64_t)1 << bits) - 1;
 }

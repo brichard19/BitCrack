@@ -1,6 +1,8 @@
 #ifndef _DEVICE_MANAGER_H
 #define _DEVICE_MANAGER_H
 
+#include <stdint.h>
+#include <string>
 #include <vector>
 
 namespace DeviceManager {

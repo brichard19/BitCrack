@@ -5,7 +5,7 @@
 #endif
 
 #ifdef BUILD_OPENCL
-#include "clUtil.h"
+#include "clutil.h"
 #endif
 
 std::vector<DeviceManager::DeviceInfo> DeviceManager::getDevices()
