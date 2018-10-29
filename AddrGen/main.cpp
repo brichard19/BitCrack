@@ -65,7 +65,11 @@ int main(int argc, char **argv)
                 return 1;
             }
         }
-	}
+    } else {
+        for(int i = 0; i < count; i++) {
+            keys.push_back(secp256k1::generatePrivateKey());
+        }
+    }
 
     for(int i = 0; i < keys.size(); i++) {
         secp256k1::uint256 k = keys[i];
