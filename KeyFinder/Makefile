@@ -10,6 +10,7 @@ ifeq ($(BUILD_OPENCL),1)
 	${CXX} -DBUILD_OPENCL -o clKeyFinder.bin ${CPPSRC} ${INCLUDE} -I${OPENCL_INCLUDE} ${CXXFLAGS} ${LIBS} -L${OPENCL_LIB} -lkeyfinder -laddressutil -lsecp256k1 -lcryptoutil -lsecp256k1 -lCLKeySearchDevice -lclutil -lOpenCL -llogger -lutil -lcmdparse
 	mkdir -p $(BINDIR)
 	cp clKeyFinder.bin $(BINDIR)/clBitCrack
+	cp ../CLKeySearchDevice/*.cl $(BINDIR)
 endif
 
 clean:
