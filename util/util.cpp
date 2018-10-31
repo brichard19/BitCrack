@@ -8,10 +8,12 @@
 
 #ifdef _WIN32
 #include<windows.h>
+#include<shlwapi.h>
 #else
 #include<unistd.h>
 #include<sys/stat.h>
 #include<sys/time.h>
+#include<libgen.h>
 #endif
 
 namespace util {
@@ -277,4 +279,25 @@ namespace util {
     {
         return (x << 24) | ((x << 8) & 0x00ff0000) | ((x >> 8) & 0x0000ff00) | (x >> 24);
     }
+
+#ifdef _WIN32
+    std::string getExeDirectory()
+    {
+        char dir[512] = {0};
+
+        GetModuleFileNameA(GetModuleHandle(NULL), dir, sizeof(dir));
+        PathRemoveFileSpecA(dir);
+
+        return std::string(dir) + "\\";
+    }
+#else
+    std::string getExeDirectory()
+    {
+        char buf[512] = {0};
+
+        readlink("/proc/self/exe", buf, sizeof(buf));
+
+        return std::string(dirname(buf)) + "/";
+    }
+#endif
 }

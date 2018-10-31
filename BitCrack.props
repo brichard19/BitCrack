@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ImportGroup Label="PropertySheets" />
+  <PropertyGroup Label="UserMacros">
+    <OPENCL_INCLUDE>C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v9.2\include</OPENCL_INCLUDE>
+    <OPENCL_LIB>C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v9.2\lib\x64</OPENCL_LIB>
+  </PropertyGroup>
+  <PropertyGroup />
+  <ItemDefinitionGroup />
+  <ItemGroup>
+    <BuildMacro Include="OPENCL_INCLUDE">
+      <Value>$(OPENCL_INCLUDE)</Value>
+      <EnvironmentVariable>true</EnvironmentVariable>
+    </BuildMacro>
+    <BuildMacro Include="OPENCL_LIB">
+      <Value>$(OPENCL_LIB)</Value>
+      <EnvironmentVariable>true</EnvironmentVariable>
+    </BuildMacro>
+  </ItemGroup>
+</Project>

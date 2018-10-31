@@ -49,7 +49,7 @@ CLKeySearchDevice::CLKeySearchDevice(uint64_t device, int threads, int pointsPer
         // Create the context
         _clContext = new cl::CLContext(_device);
         Logger::log(LogLevel::Info, "Compiling 'KeySearch.cl'...");
-        _clProgram = new cl::CLProgram(*_clContext, "KeySearch.cl");
+        _clProgram = new cl::CLProgram(*_clContext, util::getExeDirectory() + "KeySearch.cl");
 
         // Load the kernels
         _initKeysKernel = new cl::CLKernel(*_clProgram, "multiplyStepKernel");
