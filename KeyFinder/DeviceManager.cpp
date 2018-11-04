@@ -25,6 +25,7 @@ std::vector<DeviceManager::DeviceInfo> DeviceManager::getDevices()
             device.type = DeviceType::CUDA;
             device.id = deviceId;
             device.physicalId = cudaDevices[i].id;
+            device.memory = cudaDevices[i].mem;
 
             devices.push_back(device);
 
@@ -46,6 +47,7 @@ std::vector<DeviceManager::DeviceInfo> DeviceManager::getDevices()
             device.type = DeviceType::OpenCL;
             device.id = deviceId;
             device.physicalId = clDevices[i].id;
+            device.memory = clDevices[i].mem;
 
             devices.push_back(device);
             deviceId++;

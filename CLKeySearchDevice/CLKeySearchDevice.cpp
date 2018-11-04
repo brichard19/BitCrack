@@ -3,6 +3,9 @@
 #include "util.h"
 #include "CLKeySearchDevice.h"
 
+// Defined in bitcrack_cl.cpp which gets build in the pre-build event
+extern char _bitcrack_cl[];
+
 typedef struct {
     int thread;
     int block;
@@ -48,8 +51,9 @@ CLKeySearchDevice::CLKeySearchDevice(uint64_t device, int threads, int pointsPer
     try {
         // Create the context
         _clContext = new cl::CLContext(_device);
-        Logger::log(LogLevel::Info, "Compiling 'KeySearch.cl'...");
-        _clProgram = new cl::CLProgram(*_clContext, util::getExeDirectory() + "KeySearch.cl");
+        Logger::log(LogLevel::Info, "Compiling OpenCL kernels...");
+        //_clProgram = new cl::CLProgram(*_clContext, util::getExeDirectory() + "KeySearch.cl");
+        _clProgram = new cl::CLProgram(*_clContext, _bitcrack_cl);
 
         // Load the kernels
         _initKeysKernel = new cl::CLKernel(*_clProgram, "multiplyStepKernel");

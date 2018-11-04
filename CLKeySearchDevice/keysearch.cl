@@ -1,18 +1,6 @@
-#include "sha256.cl"
-#include "ripemd160.cl"
-#include "secp256k1.cl"
-
 #define COMPRESSED 0
 #define UNCOMPRESSED 1
 #define BOTH 2
-
-/*
-typedef struct {
-    ulong mask;
-    ulong size;
-    unsigned int *ptr;
-}CLTargetList;
-*/
 
 unsigned int endian(unsigned int x)
 {

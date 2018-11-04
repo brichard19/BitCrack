@@ -11,7 +11,7 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "util", "util\util.vcxproj",
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "AddressUtil", "AddressUtil\AddressUtil.vcxproj", "{34042455-D274-432D-9134-C9EA41FD1B54}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "KeyFinder", "KeyFinder\KeyFinder.vcxproj", "{D77642A9-365C-420C-A726-469649D2927E}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "cuKeyFinder", "KeyFinder\KeyFinder.vcxproj", "{D77642A9-365C-420C-A726-469649D2927E}"
 	ProjectSection(ProjectDependencies) = postProject
 		{53EE0C03-4419-4767-A91B-7FC7D4B3D2AA} = {53EE0C03-4419-4767-A91B-7FC7D4B3D2AA}
 		{CCA3D02C-5E5A-4A24-B34B-5961DFA93946} = {CCA3D02C-5E5A-4A24-B34B-5961DFA93946}
@@ -64,6 +64,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "clKeyFinder", "clKeyFinder\
 		{93B89BF6-32B9-4EBA-AA44-BCFEC4836B76} = {93B89BF6-32B9-4EBA-AA44-BCFEC4836B76}
 		{BFF4B5FE-C2C5-4384-8941-CD6CB29E78C6} = {BFF4B5FE-C2C5-4384-8941-CD6CB29E78C6}
 	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "embedcl", "embedcl\embedcl.vcxproj", "{8DA841AA-42FF-40AA-8F12-BC654DF39FEF}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -193,6 +195,14 @@ Global
 		{36400E8D-3D04-430C-90A4-FC989E460B3C}.Release|x64.Build.0 = Release|x64
 		{36400E8D-3D04-430C-90A4-FC989E460B3C}.Release|x86.ActiveCfg = Release|Win32
 		{36400E8D-3D04-430C-90A4-FC989E460B3C}.Release|x86.Build.0 = Release|Win32
+		{8DA841AA-42FF-40AA-8F12-BC654DF39FEF}.Debug|x64.ActiveCfg = Debug|x64
+		{8DA841AA-42FF-40AA-8F12-BC654DF39FEF}.Debug|x64.Build.0 = Debug|x64
+		{8DA841AA-42FF-40AA-8F12-BC654DF39FEF}.Debug|x86.ActiveCfg = Debug|Win32
+		{8DA841AA-42FF-40AA-8F12-BC654DF39FEF}.Debug|x86.Build.0 = Debug|Win32
+		{8DA841AA-42FF-40AA-8F12-BC654DF39FEF}.Release|x64.ActiveCfg = Release|x64
+		{8DA841AA-42FF-40AA-8F12-BC654DF39FEF}.Release|x64.Build.0 = Release|x64
+		{8DA841AA-42FF-40AA-8F12-BC654DF39FEF}.Release|x86.ActiveCfg = Release|Win32
+		{8DA841AA-42FF-40AA-8F12-BC654DF39FEF}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

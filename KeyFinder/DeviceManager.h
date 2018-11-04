@@ -32,6 +32,12 @@ typedef struct {
     int id;
     uint64_t physicalId;
     std::string name;
+
+    uint64_t memory;
+
+    // CUDA device info
+    int cudaMajor;
+    int cudaMinor;
 }DeviceInfo;
 
 std::vector<DeviceInfo> getDevices();

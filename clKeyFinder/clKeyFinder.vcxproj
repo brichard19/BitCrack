@@ -76,10 +76,12 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <TargetName>clBitCrack</TargetName>
     <CustomBuildAfterTargets>Build</CustomBuildAfterTargets>
+    <PostBuildEventUseInBuild>false</PostBuildEventUseInBuild>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <TargetName>clBitCrack</TargetName>
     <CustomBuildAfterTargets>Build</CustomBuildAfterTargets>
+    <PostBuildEventUseInBuild>false</PostBuildEventUseInBuild>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
@@ -106,10 +108,12 @@
       <TreatOutputAsContent>true</TreatOutputAsContent>
     </CustomBuildStep>
     <PostBuildEvent>
-      <Command>xcopy /Y "$(SolutionDir)\CLKeySearchDevice\*.cl" .\ &amp;&amp; xcopy /Y "$(SolutionDir)\CLKeySearchDevice\*.cl" $(OutDir)</Command>
+      <Command>
+      </Command>
     </PostBuildEvent>
     <PostBuildEvent>
-      <Message>Copy .cl files</Message>
+      <Message>
+      </Message>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
@@ -163,10 +167,12 @@
       <TreatOutputAsContent>true</TreatOutputAsContent>
     </CustomBuildStep>
     <PostBuildEvent>
-      <Command>xcopy /Y "$(SolutionDir)\CLKeySearchDevice\*.cl" .\ &amp;&amp; xcopy /Y "$(SolutionDir)\CLKeySearchDevice\*.cl" $(OutDir)</Command>
+      <Command>
+      </Command>
     </PostBuildEvent>
     <PostBuildEvent>
-      <Message>Copy .cl files</Message>
+      <Message>
+      </Message>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>

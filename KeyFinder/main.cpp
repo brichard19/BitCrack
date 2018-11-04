@@ -108,6 +108,7 @@ void usage()
 	printf("-r, --range             Number of keys to search\n");
 	printf("-i, --in                Specify file containing addresses, one per line\n");
 	printf("-o, --out               Specify file where results are written\n");
+    printf("-l, --list-devices      List available devices\n");
 }
 
 
@@ -173,9 +174,11 @@ static KeySearchDevice *getDeviceContext(DeviceManager::DeviceInfo &device, int 
 
 static void printDeviceList(const std::vector<DeviceManager::DeviceInfo> &devices)
 {
-    printf("ID  Name\n");
     for(int i = 0; i < devices.size(); i++) {
-        printf("%2d  %s\n", devices[i].id, devices[i].name.c_str());
+        printf("ID:     %d\n", devices[i].id);
+        printf("Name:   %s\n", devices[i].name.c_str());
+        printf("Memory: %lldMB\n", devices[i].memory / (1024 * 1024));
+        printf("\n");
     }
 }
 

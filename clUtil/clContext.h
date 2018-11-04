@@ -46,6 +46,8 @@ private:
 
 public:
     CLProgram(CLContext &ctx, std::string src);
+    CLProgram(CLContext &ctx, const char *src);
+
     ~CLProgram();
 
     cl_program getProgram();

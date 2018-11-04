@@ -101,6 +101,31 @@ cl::CLProgram::CLProgram(cl::CLContext &ctx, std::string srcFile) : _ctx(ctx)
     clCall(err);
 }
 
+cl::CLProgram::CLProgram(cl::CLContext &ctx, const char *src) : _ctx(ctx)
+{
+    size_t len = strlen(src);
+    cl_int err;
+
+    _prog = clCreateProgramWithSource(ctx.getContext(), 1, &src, &len, &err);
+    clCall(err);
+
+    err = clBuildProgram(_prog, 0, NULL, NULL, NULL, NULL);
+
+    if(err == CL_BUILD_PROGRAM_FAILURE) {
+        size_t logSize;
+        clGetProgramBuildInfo(_prog, ctx.getDevice(), CL_PROGRAM_BUILD_LOG, 0, NULL, &logSize);
+
+        char *log = new char[logSize];
+        clGetProgramBuildInfo(_prog, ctx.getDevice(), CL_PROGRAM_BUILD_LOG, logSize, log, NULL);
+
+        _buildLog = std::string(log, logSize);
+        delete[] log;
+
+        throw CLException(err, _buildLog);
+    }
+    clCall(err);
+}
+
 std::string cl::CLProgram::loadSource(std::string srcFile)
 {
     std::ifstream f(srcFile);
