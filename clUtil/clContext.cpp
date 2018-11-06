@@ -1,6 +1,7 @@
 #include <fstream>
 #include <string>
 #include <sstream>
+#include <cstring>
 
 #include "clContext.h"
 
