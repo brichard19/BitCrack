@@ -42,7 +42,7 @@ export OPENCL_INCLUDE
 export BUILD_OPENCL
 export BUILD_CUDA
 
-TARGETS=dir_addressutil dir_cmdparse dir_cryptoutil dir_keyfinderlib dir_keyfinder dir_cudautil dir_secp256k1lib dir_util dir_logger
+TARGETS=dir_addressutil dir_cmdparse dir_cryptoutil dir_keyfinderlib dir_keyfinder dir_secp256k1lib dir_util dir_logger
 
 ifeq ($(BUILD_CUDA),1)
 	TARGETS:=${TARGETS} dir_cudaKeySearchDevice dir_cudautil

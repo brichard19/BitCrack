@@ -78,16 +78,6 @@ bool checkHash(unsigned int hash[5], __global unsigned int *targetList, size_t n
 }
 
 
-void printInt(unsigned int *x)
-{
-    if(get_local_id(0) == 0) {
-        for(int i = 0; i < 8; i++) {
-            printf("%.8x ", x[i]);
-        }
-        printf("\n");
-    }
-}
-
 void doRMD160FinalRound(const unsigned int hIn[5], unsigned int hOut[5])
 {
     const unsigned int iv[5] = {
