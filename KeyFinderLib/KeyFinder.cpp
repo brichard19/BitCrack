@@ -18,7 +18,7 @@ void KeyFinder::defaultStatusCallback(KeySearchStatus status)
 	// Do nothing
 }
 
-KeyFinder::KeyFinder(const secp256k1::uint256 &start, uint64_t range, int compression, KeySearchDevice* device)
+KeyFinder::KeyFinder(const secp256k1::uint256 &startKey, const secp256k1::uint256 &endKey, int compression, KeySearchDevice* device)
 {
 	_total = 0;
 	_statusInterval = 1000;
@@ -26,9 +26,11 @@ KeyFinder::KeyFinder(const secp256k1::uint256 &start, uint64_t range, int compre
 
 	_compression = compression;
 
-	_startExponent = start;
+    _startKey = startKey;
 
-	_range = range;
+    _endKey = endKey;
+
+    _range = (startKey - endKey).toUint64();
 
 	_statusCallback = NULL;
 
@@ -132,7 +134,7 @@ void KeyFinder::init()
 {
 	Logger::log(LogLevel::Info, "Initializing " + _device->getDeviceName());
 
-    _device->init(_startExponent, _compression);
+    _device->init(_startKey, _compression);
 }
 
 
@@ -157,7 +159,7 @@ bool KeyFinder::isTargetInList(const unsigned int hash[5])
 
 void KeyFinder::run()
 {
-    uint64_t pointsPerIteration = _device->keysPerIteration();
+    uint64_t pointsPerIteration = _device->keysPerStep();
 
 	_running = true;
 
@@ -237,4 +239,9 @@ void KeyFinder::run()
 			_running = false;
 		}
 	}
+}
+
+secp256k1::uint256 KeyFinder::getNextKey()
+{
+    return _startKey + secp256k1::uint256(_iterCount * _device->keysPerStep());
 }

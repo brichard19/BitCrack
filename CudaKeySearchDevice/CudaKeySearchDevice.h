@@ -77,7 +77,7 @@ public:
 
     virtual size_t getResults(std::vector<KeySearchResult> &results);
 
-    virtual uint32_t keysPerIteration();
+    virtual uint64_t keysPerStep();
 
     virtual std::string getDeviceName();
 

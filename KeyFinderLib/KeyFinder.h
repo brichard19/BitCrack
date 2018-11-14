@@ -25,7 +25,9 @@ private:
 	uint64_t _total;
 	unsigned int _totalTime;
 
-	secp256k1::uint256 _startExponent;
+    secp256k1::uint256 _startKey;
+    secp256k1::uint256 _endKey;
+
 	uint64_t _range;
 
 	// Each index of each thread gets a flag to indicate if it found a valid hash
@@ -44,7 +46,7 @@ private:
 
 public:
 
-    KeyFinder(const secp256k1::uint256 &start, uint64_t range, int compression, KeySearchDevice* device);
+    KeyFinder(const secp256k1::uint256 &startKey, const secp256k1::uint256 &endKey, int compression, KeySearchDevice* device);
 
 	~KeyFinder();
 
@@ -58,6 +60,8 @@ public:
 
 	void setTargets(std::string targetFile);
 	void setTargets(std::vector<std::string> &targets);
+
+    secp256k1::uint256 getNextKey();
 };
 
 #endif

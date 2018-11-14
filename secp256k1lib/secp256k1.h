@@ -15,7 +15,7 @@ namespace secp256k1 {
 		static const int BigEndian = 1;
 		static const int LittleEndian = 2;
 
-		unsigned int v[8];
+		uint32_t v[8];
 
 		uint256()
 		{
@@ -114,6 +114,16 @@ namespace secp256k1 {
 			return true;
 		}
 
+        uint256 operator+(const uint256 &x) const
+        {
+            return add(x);
+        }
+
+        uint256 operator-(const uint256 &x) const
+        {
+            return sub(x);
+        }
+
 		void exportWords(unsigned int *buf, int len, int endian = LittleEndian) const
 		{
 			if(endian == LittleEndian) {
@@ -138,6 +148,8 @@ namespace secp256k1 {
 		uint256 add(uint64_t val) const;
 
 		uint256 sub(int val) const;
+
+        uint256 sub(const uint256 &val) const;
 
 		uint256 add(const uint256 &val) const;
 
@@ -227,6 +239,10 @@ namespace secp256k1 {
 
 		std::string toString(int base = 16);
 
+        uint64_t toUint64()
+        {
+            return ((uint64_t)this->v[1] << 32) | v[0];
+        }
 	};
 
 	const unsigned int _POINT_AT_INFINITY_WORDS[8] = { 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF };

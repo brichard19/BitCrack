@@ -123,7 +123,7 @@ public:
     virtual size_t getResults(std::vector<KeySearchResult> &results);
 
     // The number of keys searched at each step
-    virtual uint32_t keysPerIteration();
+    virtual uint64_t keysPerStep();
 
     // The name of the device
     virtual std::string getDeviceName();

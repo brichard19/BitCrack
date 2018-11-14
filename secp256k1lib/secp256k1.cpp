@@ -259,6 +259,15 @@ uint256 uint256::add(const uint256 &val) const
 	return result;
 }
 
+uint256 uint256::sub(const uint256 &val) const
+{
+    uint256 result;
+
+    ::sub(this->v, val.v, result.v, 8);
+
+    return result;
+}
+
 static bool isOne(const uint256 &x)
 {
 	if(x.v[0] != 1) {

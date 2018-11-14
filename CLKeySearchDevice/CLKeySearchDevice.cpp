@@ -325,7 +325,7 @@ size_t CLKeySearchDevice::getResults(std::vector<KeySearchResult> &results)
     return count;
 }
 
-uint32_t CLKeySearchDevice::keysPerIteration()
+uint64_t CLKeySearchDevice::keysPerStep()
 {
     return _threads * _blocks * _pointsPerThread;
 }
@@ -404,7 +404,7 @@ void CLKeySearchDevice::getResultsInternal()
 
         unsigned int actualCount = 0;
 
-        for(int i = 0; i < numResults; i++) {
+        for(unsigned int i = 0; i < numResults; i++) {
 
             // might be false-positive
             if(!isTargetInList(ptr[i].digest)) {

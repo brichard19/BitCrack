@@ -20,19 +20,46 @@
 #include "CLKeySearchDevice.h"
 #endif
 
+typedef struct {
 
-static std::string _outputFile = "";
+    // Start at lowest private key
+    secp256k1::uint256 startKey = 1;
+
+    // End at highest private key
+    secp256k1::uint256 endKey = secp256k1::N;
+
+    unsigned int interval = 1800;
+
+    unsigned int threads = 0;
+    unsigned int blocks = 0;
+    unsigned int pointsPerThread = 0;
+    int compression = PointCompressionType::COMPRESSED;
+
+    std::vector<std::string> targets;
+    std::string targetsFile = "";
+
+    std::string checkpointFile = "";
+
+    DeviceManager::DeviceInfo device;
+
+    std::string resultsFile = "";
+
+}RunConfig;
+
+static RunConfig _config;
+
+
 
 /**
 * Callback to display the private key
 */
 void resultCallback(KeySearchResult info)
 {
-	if(_outputFile.length() != 0) {
-		Logger::log(LogLevel::Info, "Found key for address '" + info.address + "'. Written to '" + _outputFile + "'");
+	if(_config.resultsFile.length() != 0) {
+		Logger::log(LogLevel::Info, "Found key for address '" + info.address + "'. Written to '" + _config.resultsFile + "'");
 
 		std::string s = info.address + " " + info.privateKey.toString(16) + " " + info.publicKey.toString(info.compressed);
-		util::appendToFile(_outputFile, s);
+		util::appendToFile(_config.resultsFile, s);
 
 		return;
 	}
@@ -92,6 +119,7 @@ void statusCallback(KeySearchStatus info)
 	printf("\r%s %s/%sMB | %s %s %s %s", devName.c_str(), usedMemStr.c_str(), totalMemStr.c_str(), targetStr.c_str(), speedStr.c_str(), totalStr.c_str(), timeStr.c_str());
 }
 
+
 void usage()
 {
 	printf("[OPTIONS] [TARGETS]\n");
@@ -105,7 +133,7 @@ void usage()
 	printf("-t, --threads           Threads per block\n");
 	printf("-p, --per-thread        Keys per thread\n");
 	printf("-s, --start             Staring key, in hex\n");
-	printf("-r, --range             Number of keys to search\n");
+	//printf("-r, --range             Number of keys to search\n");
 	printf("-i, --in                Specify file containing addresses, one per line\n");
 	printf("-o, --out               Specify file where results are written\n");
     printf("-l, --list-devices      List available devices\n");
@@ -182,28 +210,54 @@ static void printDeviceList(const std::vector<DeviceManager::DeviceInfo> &device
     }
 }
 
+int run(RunConfig &config)
+{
+    Logger::log(LogLevel::Info, "Compression: " + getCompressionString(config.compression));
+    Logger::log(LogLevel::Info, "Starting at: " + config.startKey.toString());
+
+    try {
+
+        KeySearchDevice *d = getDeviceContext(config.device, config.blocks, config.threads, config.pointsPerThread);
+
+        KeyFinder f(config.startKey, config.endKey, config.compression, d);
+
+        f.setResultCallback(resultCallback);
+        f.setStatusInterval(1800);
+        f.setStatusCallback(statusCallback);
+
+        f.init();
+
+        if(!config.targetsFile.empty()) {
+            f.setTargets(config.targetsFile);
+        } else {
+            f.setTargets(config.targets);
+        }
+
+        f.run();
+
+        delete d;
+    } catch(KeySearchException ex) {
+        Logger::log(LogLevel::Info, "Error: " + ex.msg + " Exiting.");
+        return 1;
+    }
+
+    return 0;
+}
+
+
 int main(int argc, char **argv)
 {
 	int device = 0;
-	int threads = 0;
-    int blocks = 0;
-	int pointsPerThread = 0;
-	int compression = PointCompressionType::COMPRESSED;
-	std::string targetFile = "";
-
-	std::string outputFile = "";
-
 	bool optCompressed = false;
 	bool optUncompressed = false;
     bool listDevices = false;
 
-	std::vector<std::string> targetList;
-	secp256k1::uint256 start(1);
-	uint64_t range = 0;
+	//uint64_t range = 0;
     int deviceCount = 0;
 
     std::vector<DeviceManager::DeviceInfo> devices;
 
+    // Check for supported devices
     try {
         devices = DeviceManager::getDevices();
 
@@ -216,6 +270,7 @@ int main(int argc, char **argv)
         return 1;
     }
 
+    // Check for arguments
 	if(argc == 1) {
 		usage();
 		return 0;
@@ -244,20 +299,20 @@ int main(int argc, char **argv)
 
 		try {
 			if(optArg.equals("-t", "--threads")) {
-				threads = util::parseUInt32(optArg.arg);
+				_config.threads = util::parseUInt32(optArg.arg);
             } else if(optArg.equals("-b", "--blocks")) {
-                blocks = util::parseUInt32(optArg.arg);
+                _config.blocks = util::parseUInt32(optArg.arg);
 			} else if(optArg.equals("-p", "--points")) {
-				pointsPerThread = util::parseUInt32(optArg.arg);
+				_config.pointsPerThread = util::parseUInt32(optArg.arg);
 			} else if(optArg.equals("-s", "--start")) {
-				start = secp256k1::uint256(optArg.arg);
-				if(start.cmp(secp256k1::N) >= 0) {
+				_config.startKey = secp256k1::uint256(optArg.arg);
+				if(_config.startKey.cmp(secp256k1::N) >= 0) {
 					throw std::string("argument is out of range");
 				}
-			} else if(optArg.equals("-r", "--range")) {
+			}/* else if(optArg.equals("-r", "--range")) {
 				range = util::parseUInt64(optArg.arg);
-			} else if(optArg.equals("-p", "--per-thread")) {
-				pointsPerThread = util::parseUInt32(optArg.arg);
+			}*/ else if(optArg.equals("-p", "--per-thread")) {
+				_config.pointsPerThread = util::parseUInt32(optArg.arg);
 			} else if(optArg.equals("-d", "--device")) {
 				device = util::parseUInt32(optArg.arg);
 			} else if(optArg.equals("-c", "--compressed")) {
@@ -265,9 +320,9 @@ int main(int argc, char **argv)
 			} else if(optArg.equals("-u", "--uncompressed")) {
 				optUncompressed = true;
 			} else if(optArg.equals("-i", "--in")) {
-				targetFile = optArg.arg;
+				_config.targetsFile = optArg.arg;
 			} else if(optArg.equals("-o", "--out")) {
-				_outputFile = optArg.arg;
+				_config.resultsFile = optArg.arg;
             } else if(optArg.equals("-l", "--list-devices")) {
                 listDevices = true;
             }
@@ -292,69 +347,41 @@ int main(int argc, char **argv)
 	std::vector<std::string> ops = parser.getOperands();
 
 	if(ops.size() == 0) {
-		if(targetFile.length() == 0) {
+		if(_config.targetsFile.length() == 0) {
 			Logger::log(LogLevel::Error, "Missing arguments");
 			usage();
 			return 1;
 		}
 	} else {
 		for(unsigned int i = 0; i < ops.size(); i++) {
-			targetList.push_back(ops[i]);
+			_config.targets.push_back(ops[i]);
 		}
 	}
 
     // Set parameters
     DeviceParameters defaultParameters = getDefaultParameters(devices[device]);
-    if(blocks == 0) {
-        blocks = defaultParameters.blocks;
+    if(_config.blocks == 0) {
+        _config.blocks = defaultParameters.blocks;
     }
 
-    if(threads == 0) {
-        threads = defaultParameters.threads;
+    if(_config.threads == 0) {
+        _config.threads = defaultParameters.threads;
     }
 
-    if(pointsPerThread == 0) {
-        pointsPerThread = defaultParameters.pointsPerThread;
+    if(_config.pointsPerThread == 0) {
+        _config.pointsPerThread = defaultParameters.pointsPerThread;
     }
 
 
 	// Check option for compressed, uncompressed, or both
 	if(optCompressed && optUncompressed) {
-		compression = PointCompressionType::BOTH;
+		_config.compression = PointCompressionType::BOTH;
 	} else if(optCompressed) {
-		compression = PointCompressionType::COMPRESSED;
+		_config.compression = PointCompressionType::COMPRESSED;
 	} else if(optUncompressed) {
-		compression = PointCompressionType::UNCOMPRESSED;
+		_config.compression = PointCompressionType::UNCOMPRESSED;
 	}
 
-	Logger::log(LogLevel::Info, "Compression: " + getCompressionString(compression));
-	Logger::log(LogLevel::Info, "Starting at: " + start.toString());
 
-	try {
-        
-        KeySearchDevice *d = getDeviceContext(devices[device], blocks, threads, pointsPerThread);
-
-        KeyFinder f(start, range, compression, d);
-
-		f.setResultCallback(resultCallback);
-		f.setStatusInterval(1800);
-		f.setStatusCallback(statusCallback);
-
-        f.init();
-
-		if(!targetFile.empty()) {
-			f.setTargets(targetFile);
-		} else {
-			f.setTargets(targetList);
-		}
-
-		f.run();
-
-        delete d;
-	} catch(KeySearchException ex) {
-		Logger::log(LogLevel::Info, "Error: " + ex.msg + " Exiting.");
-		return 1;
-	}
-
-	return 0;
+    return run(_config);
 }

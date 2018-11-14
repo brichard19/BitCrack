@@ -161,7 +161,7 @@ void CudaKeySearchDevice::doStep()
     _iterations++;
 }
 
-uint32_t CudaKeySearchDevice::keysPerIteration()
+uint64_t CudaKeySearchDevice::keysPerStep()
 {
     return _blocks * _threads * _pointsPerThread;
 }
