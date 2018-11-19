@@ -18,7 +18,7 @@ void KeyFinder::defaultStatusCallback(KeySearchStatus status)
 	// Do nothing
 }
 
-KeyFinder::KeyFinder(const secp256k1::uint256 &startKey, const secp256k1::uint256 &endKey, int compression, KeySearchDevice* device)
+KeyFinder::KeyFinder(const secp256k1::uint256 &startKey, const secp256k1::uint256 &endKey, int compression, KeySearchDevice* device, uint64_t stride)
 {
 	_total = 0;
 	_statusInterval = 1000;
@@ -37,6 +37,8 @@ KeyFinder::KeyFinder(const secp256k1::uint256 &startKey, const secp256k1::uint25
 	_resultCallback = NULL;
 
     _iterCount = 0;
+
+    _stride = stride;
 }
 
 KeyFinder::~KeyFinder()
@@ -83,6 +85,8 @@ void KeyFinder::setTargets(std::string targetsFile)
 	Logger::log(LogLevel::Info, "Loading addresses from '" + targetsFile + "'");
 	while(std::getline(inFile, line)) {
 		util::removeNewline(line);
+        line = util::trim(line);
+
 		if(line.length() > 0) {
 			if(!Address::verifyAddress(line)) {
 				Logger::log(LogLevel::Error, "Invalid address '" + line + "'");
@@ -134,7 +138,7 @@ void KeyFinder::init()
 {
 	Logger::log(LogLevel::Info, "Initializing " + _device->getDeviceName());
 
-    _device->init(_startKey, _compression);
+    _device->init(_startKey, _compression, _stride);
 }
 
 
@@ -177,7 +181,7 @@ void KeyFinder::run()
         _iterCount++;
 
 		// Update status
-		unsigned int t = timer.getTime();
+		uint64_t t = timer.getTime();
 
 		if(t >= _statusInterval) {
 
@@ -205,6 +209,7 @@ void KeyFinder::run()
 			info.deviceMemory = totalMem;
 			info.deviceName = _device->getDeviceName();
 			info.targets = _targets.size();
+            info.nextKey = getNextKey();
 
 			_statusCallback(info);
 
@@ -234,10 +239,16 @@ void KeyFinder::run()
 			}
 		}
 
+        if(_targets.size() == 0) {
+            Logger::log(LogLevel::Info, "No targets remaining");
+            _running = false;
+        }
+
 		// Stop if we searched the entire range, or have no targets left
-		if((_range > 0 && _iterCount * pointsPerIteration >= _range) || _targets.size() == 0) {
-			_running = false;
-		}
+        if(_device->getNextKey().cmp(_endKey) >= 0) {
+            Logger::log(LogLevel::Info, "Reached end of keyspace");
+            _running = false;
+        }
 	}
 }
 

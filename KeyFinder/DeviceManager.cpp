@@ -26,7 +26,7 @@ std::vector<DeviceManager::DeviceInfo> DeviceManager::getDevices()
             device.id = deviceId;
             device.physicalId = cudaDevices[i].id;
             device.memory = cudaDevices[i].mem;
-
+            device.computeUnits = cudaDevices[i].mpCount;
             devices.push_back(device);
 
             deviceId++;
@@ -48,7 +48,7 @@ std::vector<DeviceManager::DeviceInfo> DeviceManager::getDevices()
             device.id = deviceId;
             device.physicalId = clDevices[i].id;
             device.memory = clDevices[i].mem;
-
+            device.computeUnits = clDevices[i].cores;
             devices.push_back(device);
             deviceId++;
         }

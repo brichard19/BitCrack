@@ -39,7 +39,7 @@ class KeySearchDevice {
 public:
 
     // Initialize the device
-    virtual void init(const secp256k1::uint256 &start, int compression) = 0;
+    virtual void init(const secp256k1::uint256 &start, int compression, uint64_t stride) = 0;
 
     // Perform one iteration
     virtual void doStep() = 0;
@@ -58,6 +58,8 @@ public:
 
     // Memory information for this device
     virtual void getMemoryInfo(uint64_t &freeMem, uint64_t &totalMem) = 0;
+
+    virtual secp256k1::uint256 getNextKey() = 0;
 };
 
 #endif

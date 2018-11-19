@@ -19,11 +19,12 @@ private:
 
 	std::set<KeySearchTarget> _targets;
 
-	unsigned int _statusInterval;
+	uint64_t _statusInterval;
 
+    uint64_t _stride = 1;
 	uint64_t _iterCount;
 	uint64_t _total;
-	unsigned int _totalTime;
+	uint64_t _totalTime;
 
     secp256k1::uint256 _startKey;
     secp256k1::uint256 _endKey;
@@ -46,7 +47,7 @@ private:
 
 public:
 
-    KeyFinder(const secp256k1::uint256 &startKey, const secp256k1::uint256 &endKey, int compression, KeySearchDevice* device);
+    KeyFinder(const secp256k1::uint256 &startKey, const secp256k1::uint256 &endKey, int compression, KeySearchDevice* device, uint64_t stride);
 
 	~KeyFinder();
 

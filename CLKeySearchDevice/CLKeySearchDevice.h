@@ -6,9 +6,9 @@
 
 typedef struct CLTargetList_
 {
-    cl_ulong mask;
-    cl_ulong size;
-    cl_mem ptr;
+    cl_ulong mask = 0;
+    cl_ulong size = 0;
+    cl_mem ptr = 0;
 }CLTargetList;
 
 class CLKeySearchDevice : public KeySearchDevice {
@@ -40,9 +40,11 @@ private:
 
     cl_device_id _device;
 
-    int _compression;
+    int _compression = PointCompressionType::COMPRESSED;
 
     uint64_t _iterations;
+
+    uint64_t _stride = 1;
 
     std::string _deviceName;
 
@@ -86,7 +88,7 @@ private:
 
     void selfTest();
 
-    bool _useBloomFilter;
+    bool _useBloomFilter = false;
 
     void setTargetsInternal();
     void setTargetsList();
@@ -111,7 +113,7 @@ public:
 
 
     // Initialize the device
-    virtual void init(const secp256k1::uint256 &start, int compression);
+    virtual void init(const secp256k1::uint256 &start, int compression, uint64_t stride);
 
     // Perform one iteration
     virtual void doStep();
@@ -130,6 +132,8 @@ public:
 
     // Memory information for this device
     virtual void getMemoryInfo(uint64_t &freeMem, uint64_t &totalMem);
+
+    virtual secp256k1::uint256 getNextKey();
 };
 
 #endif

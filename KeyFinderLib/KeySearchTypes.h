@@ -3,6 +3,7 @@
 
 #include<stdint.h>
 #include<string>
+#include "secp256k1.h"
 
 namespace PointCompressionType {
     enum Value {
@@ -32,6 +33,7 @@ typedef struct {
     uint64_t freeMemory;
     uint64_t deviceMemory;
     size_t targets;
+    secp256k1::uint256 nextKey;
 }KeySearchStatus;
 
 

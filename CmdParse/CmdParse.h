@@ -13,7 +13,7 @@ public:
 
 	bool equals(std::string shortForm, std::string longForm = "")
 	{
-		return option == shortForm || option == longForm;
+		return (shortForm.length() > 0 && option == shortForm) || option == longForm;
 	}
 };
 

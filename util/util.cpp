@@ -3,12 +3,12 @@
 #include<fstream>
 #include<vector>
 #include<set>
+#include<algorithm>
 
 #include"util.h"
 
 #ifdef _WIN32
 #include<windows.h>
-#include<shlwapi.h>
 #else
 #include<unistd.h>
 #include<sys/stat.h>
@@ -18,14 +18,14 @@
 
 namespace util {
 
-    unsigned int getSystemTime()
+    uint64_t getSystemTime()
     {
 #ifdef _WIN32
-        return GetTickCount();
+        return GetTickCount64();
 #else
         struct timeval t;
         gettimeofday(&t, NULL);
-        return t.tv_sec * 1000 + t.tv_usec / 1000;
+        return (uint64_t)t.tv_sec * 1000 + t.tv_usec / 1000;
 #endif
     }
 
@@ -39,7 +39,7 @@ namespace util {
         _startTime = getSystemTime();
     }
 
-    unsigned int Timer::getTime()
+    uint64_t Timer::getTime()
     {
         return getSystemTime() - _startTime;
     }
@@ -280,24 +280,19 @@ namespace util {
         return (x << 24) | ((x << 8) & 0x00ff0000) | ((x >> 8) & 0x0000ff00) | (x >> 24);
     }
 
-#ifdef _WIN32
-    std::string getExeDirectory()
+    std::string toLower(const std::string &s)
     {
-        char dir[512] = {0};
+        std::string lowerCase = s;
+        std::transform(lowerCase.begin(), lowerCase.end(), lowerCase.begin(), ::tolower);
 
-        GetModuleFileNameA(GetModuleHandle(NULL), dir, sizeof(dir));
-        PathRemoveFileSpecA(dir);
-
-        return std::string(dir) + "\\";
+        return lowerCase;
     }
-#else
-    std::string getExeDirectory()
+
+    std::string trim(const std::string &s, char c)
     {
-        char buf[512] = {0};
+        size_t left = s.find_first_not_of(c);
+        size_t right = s.find_last_not_of(c);
 
-        readlink("/proc/self/exe", buf, sizeof(buf));
-
-        return std::string(dirname(buf)) + "/";
+        return s.substr(left, right - left + 1);
     }
-#endif
 }

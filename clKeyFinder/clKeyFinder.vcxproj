@@ -176,6 +176,7 @@
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="..\KeyFinder\ConfigFile.cpp" />
     <ClCompile Include="..\KeyFinder\DeviceManager.cpp" />
     <ClCompile Include="..\KeyFinder\main.cpp" />
   </ItemGroup>
@@ -206,6 +207,7 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\KeyFinder\ConfigFile.h" />
     <ClInclude Include="..\KeyFinder\DeviceManager.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

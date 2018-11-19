@@ -142,6 +142,19 @@ uint256 uint256::mul(const uint256 &x) const
 	return uint256(product);
 }
 
+uint256 uint256::mul(uint64_t i) const
+{
+    unsigned int product[16] = {0};
+    unsigned int x[2];
+
+    x[0] = (unsigned int)i;
+    x[1] = (unsigned int)(i >> 32);
+
+    multiply(x, 2, this->v, 8, product);
+
+    return uint256(product);
+}
+
 uint256 uint256::mul(int i) const
 {
 	unsigned int product[16] = { 0 };
@@ -151,28 +164,22 @@ uint256 uint256::mul(int i) const
 	return uint256(product);
 }
 
-uint256 uint256::div(int val) const
+uint256 uint256::mul(uint32_t i) const
 {
-	//uint256 sum;
+    unsigned int product[16] = {0};
 
-	//unsigned int mask = 0x80000000;
+    multiply((unsigned int *)&i, 1, this->v, 8, product);
 
-	//for(int i = 31; i >= 0; i--) {
-	//	if(val & mask) {
-	//		uint256 k = *this;
-	//		uint256 shifted = rightShift(k, i);
-	//		sum = sum.add(shifted);
-	//	}
-	//	mask >>= 1;
-	//}
+    return uint256(product);
+}
 
-	//return sum;
-
+uint256 uint256::div(uint32_t val) const
+{
 	uint256 t = *this;
 	uint256 quotient;
 
 	// Shift divisor left until MSB is 1
-	unsigned int kWords[8] = { 0 };
+	uint32_t kWords[8] = { 0 };
 	kWords[7] = val;
 
 	int shiftCount = 7 * 32;
@@ -201,7 +208,8 @@ uint256 uint256::div(int val) const
 	return quotient;
 }
 
-uint256 uint256::mod(int val) const
+
+uint256 uint256::mod(uint32_t val) const
 {
 	uint256 quotient = this->div(val);
 

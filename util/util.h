@@ -10,15 +10,15 @@ namespace util {
 class Timer {
 
 private:
-    unsigned int _startTime;
+    uint64_t _startTime;
 
 public:
     Timer();
     void start();
-    unsigned int getTime();
+    uint64_t getTime();
 };
 
-unsigned int getSystemTime();
+uint64_t getSystemTime();
 void sleep(int seconds);
 
 std::string formatThousands(uint64_t x);
@@ -38,7 +38,9 @@ std::string format(int value);
 void removeNewline(std::string &s);
 unsigned int endian(unsigned int x);
 
-std::string getExeDirectory();
+std::string toLower(const std::string &s);
+std::string trim(const std::string &s, char c=' ');
+
 }
 
 #endif

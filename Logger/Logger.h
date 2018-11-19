@@ -8,7 +8,8 @@ namespace LogLevel {
 	enum Level {
 		Info = 1,
 		Error = 2,
-		Debug = 4
+		Debug = 4,
+        Warning = 8
 	};
 
 	bool isValid(int level);

@@ -30,14 +30,17 @@ public:
 typedef struct {
     int type;
     int id;
+
+    // General device info
     uint64_t physicalId;
     std::string name;
-
     uint64_t memory;
+    int computeUnits;
 
     // CUDA device info
     int cudaMajor;
     int cudaMinor;
+    int cudaCores;
 }DeviceInfo;
 
 std::vector<DeviceInfo> getDevices();

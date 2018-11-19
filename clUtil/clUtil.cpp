@@ -32,7 +32,7 @@ std::vector<cl::CLDeviceInfo> cl::getDevices()
         }
 
         cl_device_id* devices = new cl_device_id[deviceCount];
-        clGetDeviceIDs(platforms[i], CL_DEVICE_TYPE_GPU, deviceCount, devices, NULL);
+        clGetDeviceIDs(platforms[i], CL_DEVICE_TYPE_ALL, deviceCount, devices, NULL);
 
         for(cl_uint j = 0; j < deviceCount; j++) {
             char buf[256] = {0};
