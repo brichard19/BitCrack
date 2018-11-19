@@ -479,7 +479,7 @@ int main(int argc, char **argv)
 	parser.add("-o", "--out", true);
 
     parser.add("", "--list-devices", false);
-    parser.add("-k", "--keyspace", true);
+    parser.add("", "--keyspace", true);
     parser.add("", "--continue", true);
     parser.add("", "--share", true);
     parser.add("", "--stride", true);
@@ -538,7 +538,7 @@ int main(int argc, char **argv)
                 _config.startKey = start;
                 _config.nextKey = start;
                 _config.endKey = end;
-            } else if(optArg.equals("-s", "--share")) {
+            } else if(optArg.equals("", "--share")) {
                 if(!parseShare(optArg.arg, shareIdx, numShares)) {
                     throw std::string("Invalid argument");
                 }
