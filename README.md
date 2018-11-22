@@ -32,14 +32,16 @@ Options:
 -t, --threads THREADS
     Threads per block
 
--p, --per-thread NUMBER
+-p, --points NUMBER
     Each thread will process NUMBER keys at a time
 
--s, --start KEY
-    Start the search at KEY. KEY is any valid private key in hexadecimal format
+--keyspace KEYSPACE
+    Specify the range of keys to search, where KEYSPACE is in the format,
 
--r, --range RANGE
-    Number of keys to search
+	START:END start at key START, end at key END
+	START:+COUNT start at key START and end at key START + COUNT
+    :END start at key 1 and end at key END
+	:+COUNT start at key 1 and end at key 1 + COUNT
 
 -c, --compressed
     Search for compressed keys (default). Can be used with -u to also search uncompressed keys
@@ -47,14 +49,23 @@ Options:
 -u, --uncompressed
     Search for uncompressed keys, can be used with -c to search compressed keys
 
+--compression MODE
+    Specify the compression mode, where MODE is 'compressed' or 'uncompressed' or 'both'
+
 --list-devices
     List available devices
 
+--stride NUMBER
+    Increment by NUMBER
 
+--share M/N
+    Divide the keyspace into N equal sized shares, process the Mth share
+
+--continue FILE
+    Save/load progress from FILE
 ```
 
 #### Examples
-
 
 The simplest usage, the keyspace will begin at 0, and the CUDA parameters will be chosen automatically
 ```
@@ -66,10 +77,29 @@ Multiple keys can be searched at once with minimal impact to performance. Provid
 xxBitCrack.exe 1FshYsUh3mqgsG29XpZ23eLjWV8Ur3VwH 15JhYXn6Mx3oF4Y7PcTAv2wVVAuCFFQNiP 19EEC52krRUK1RkUAEZmQdjTyHT7Gp1TYT
 ```
 
-To start the search at a specific private key, use the `-s` option:
+To start the search at a specific private key, use the `--keyspace` option:
 
 ```
-xxBitCrack.exe -s 6BBF8CCF80F8E184D1D300EF2CE45F7260E56766519C977831678F0000000000 1FshYsUh3mqgsG29XpZ23eLjWV8Ur3VwH
+xxBitCrack.exe --keyspace 766519C977831678F0000000000 1FshYsUh3mqgsG29XpZ23eLjWV8Ur3VwH
+```
+
+The `--keyspace` option can also be used to search a specific range:
+
+```
+xxBitCrack.exe --keyspace 80000000:ffffffff 1FshYsUh3mqgsG29XpZ23eLjWV8Ur3VwH
+```
+
+To periodically save progress, the `--continue` option can be used. This is useful for recovering
+after an unexpected interruption:
+
+```
+xxBitCrack.exe --keyspace 80000000:ffffffff 1FshYsUh3mqgsG29XpZ23eLjWV8Ur3VwH
+...
+GeForce GT 640   224/1024MB | 1 target 10.33 MKey/s (1,244,659,712 total) [00:01:58]
+^C
+xxBitCrack.exe --keyspace 80000000:ffffffff 1FshYsUh3mqgsG29XpZ23eLjWV8Ur3VwH
+...
+GeForce GT 640   224/1024MB | 1 target 10.33 MKey/s (1,357,905,920 total) [00:02:12]
 ```
 
 
@@ -77,17 +107,6 @@ Use the `-b,` `-t` and `-p` options to specify the number of blocks, threads per
 ```
 xxBitCrack.exe -b 32 -t 256 -p 16 1FshYsUh3mqgsG29XpZ23eLjWV8Ur3VwH
 ```
-
-Use the `-r` or `--range` option to specify how many keys to search before stopping. For instance, to search up to 1 billion keys from the starting key:
-
-```
-xxBitCrack.exe -s 6BBF8CCF80F8E184D1D300EF2CE45F7260E56766519C977831678F0000000000 -r 1000000000
-```
-
-Note:
-
-Integer values can be specified in decimal (e.g. `123`) or in hexadecimal using the `0x` prefix or `h` suffix (e.g. `0x1234` or `1234h`)
-
 
 ### Choosing the right parameters for your device
 
@@ -101,7 +120,7 @@ There are 3 parameters that affect performance: blocks, threads per block, and k
 `threads:` The number of threads in a block. This must be a multiple of 32. The default is 256.
 
 `Keys per thread:` The number of keys each thread will process. The performance (keys per second)
-increases asymptotically with this value. The default is 32. Increasing this value will cause the
+increases asymptotically with this value. The default is256. Increasing this value will cause the
 kernel to run longer, but more keys will be processed.
 
 
@@ -124,6 +143,24 @@ Build the `cuKeyFinder` project for a CUDA build.
 
 Note: By default the NVIDIA OpenCL headers are used. You can set the header and library path for
 OpenCL in the `BitCrack.props` property sheet.
+
+Note: CUDA may give the build error,
+```
+unsupported Microsoft Visual Studio version! Only the versions 2012, 2013, 2015 and 2017 are supported!
+```
+
+To fix this, edit `C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v9.2\include\crt\host_config.h` as
+Administrator and change
+
+```
+#if _MSC_VER < 1600 || _MSC_VER > 1911
+```
+
+to
+
+```
+#if _MSC_VER < 1600 || _MSC_VER > 1916
+```
 
 ### Building in Linux
 
@@ -153,3 +190,7 @@ If you find this project useful and would like to support it, consider making a 
 **LTC**: `LfwqkJY7YDYQWqgR26cg2T1F38YyojD67J`
 
 **ETH**: `0xd28082CD48E1B279425346E8f6C651C45A9023c5`
+
+### Contact
+
+Send any questions or comments to bitcrack.project@gmail.com

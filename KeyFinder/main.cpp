@@ -1,7 +1,6 @@
 #include <stdio.h>
 #include <fstream>
 #include <iostream>
-#include <filesystem>
 
 #include "KeyFinder.h"
 #include "AddressUtil.h"
@@ -178,26 +177,30 @@ bool parseKeyspace(const std::string &s, secp256k1::uint256 &start, secp256k1::u
 
 void usage()
 {
-	printf("[OPTIONS] [TARGETS]\n");
-	printf("Where TARGETS is one or more addresses\n\n");
-
-	printf("Integer arguments can be in decimal (e.g. 123) or hex (e.g. 0x7B or 7Bh)\n\n");
+    printf("BitCrack OPTIONS [TARGETS]\n");
+    printf("Where TARGETS is one or more addresses\n\n");
 	
-	printf("-c, --compressed        Compressed points\n");
-	printf("-u, --uncompressed      Uncompressed points\n");
-	printf("-d, --device            The device to use\n");
-	printf("-t, --threads           Threads per block\n");
-	printf("-p, --per-thread        Keys per thread\n");
-	printf("-s, --start             Staring key, in hex\n");
-    printf("-k, --key               Specify range\n");
-    printf("                        START:END\n");
-    printf("                        START:+COUNT\n");
-    printf("                        :END\n"); 
-    printf("                        :+COUNT\n");
-	printf("-r, --range             Number of keys to search\n");
-	printf("-i, --in                Specify file containing addresses, one per line\n");
-	printf("-o, --out               Specify file where results are written\n");
+    printf("-c, --compressed        Use compressed points\n");
+    printf("-u, --uncompressed      Use Uncompressed points\n");
+    printf("--compression  MODE     Specify compression where MODE is\n");
+    printf("                          compressed or uncompressed or both\n");
+    printf("-d, --device ID         Use device ID\n");
+    printf("-b, --blocks N          N blocks\n");
+    printf("-t, --threads N         N threads per block\n");
+    printf("-p, --points N          N points per thread\n");
+    printf("-i, --in FILE           Read addresses from FILE, one per line\n");
+    printf("-o, --out FILE          Write keys to FILE\n");
     printf("-l, --list-devices      List available devices\n");
+    printf("--keyspace KEYSPACE     Specify the keyspace:\n");
+    printf("                          START:END\n");
+    printf("                          START:+COUNT\n");
+    printf("                          START\n");
+    printf("                          :END\n"); 
+    printf("                          :+COUNT\n");
+    printf("                        Where START, END, COUNT are in hex format\n");
+    printf("--stride N              Increment by N keys at a time\n");
+    printf("--share M/N             Divide the keyspace into N equal shares, process the Mth share\n");
+    printf("--continue FILE         Save/load progress from FILE\n");
 }
 
 
@@ -419,8 +422,17 @@ bool parseShare(const std::string &s, uint32_t &idx, uint32_t &total)
         return false;
     }
 
-    idx = util::parseUInt32(s.substr(0, pos));
-    total = util::parseUInt32(s.substr(pos + 1));
+    try {
+        idx = util::parseUInt32(s.substr(0, pos));
+    } catch(...) {
+        return false;
+    }
+
+    try {
+        total = util::parseUInt32(s.substr(pos + 1));
+    } catch(...) {
+        return false;
+    }
 
     if(idx == 0 || total == 0) {
         return false;
@@ -527,6 +539,10 @@ int main(int argc, char **argv)
                 if(start.cmp(secp256k1::N) > 0) {
                     throw std::string("argument is out of range");
                 }
+                if(start.isZero()) {
+                    throw std::string("argument is out of range");
+                }
+
                 if(end.cmp(secp256k1::N) > 0) {
                     throw std::string("argument is out of range");
                 }
@@ -567,6 +583,8 @@ int main(int argc, char **argv)
 	// Parse operands
 	std::vector<std::string> ops = parser.getOperands();
 
+    // If there are no operands, then we must be reading from a file, otherwise
+    // expect addresses on the commandline
 	if(ops.size() == 0) {
 		if(_config.targetsFile.length() == 0) {
 			Logger::log(LogLevel::Error, "Missing arguments");
@@ -575,10 +593,15 @@ int main(int argc, char **argv)
 		}
 	} else {
 		for(unsigned int i = 0; i < ops.size(); i++) {
+            if(!Address::verifyAddress(ops[i])) {
+                Logger::log(LogLevel::Error, "Invalid address '" + ops[i] + "'");
+                return 1;
+            }
 			_config.targets.push_back(ops[i]);
 		}
 	}
     
+    // Calculate where to start and end in the keyspace when the --share option is used
     if(optShares) {
         Logger::log(LogLevel::Info, "Share " + util::format(shareIdx) + " of " + util::format(numShares));
         secp256k1::uint256 numKeys = _config.endKey - _config.nextKey + 1;
