@@ -21,14 +21,17 @@
 #endif
 
 typedef struct {
-    // Start at lowest private key by default
+    // startKey is the first key. We store it so that if the --continue
+    // option is used, the correct progress is displayed. startKey and
+    // nextKey are only equal at the very beginning. nextKey gets saved
+    // in the checkpoint file.
     secp256k1::uint256 startKey = 1;
     secp256k1::uint256 nextKey = 1;
 
-    // End at highest private key
+    // The last key to be checked
     secp256k1::uint256 endKey = secp256k1::N - 1;
 
-    uint64_t interval = 1800;
+    uint64_t statusInterval = 1800;
     uint64_t checkpointInterval = 60000;
 
     unsigned int threads = 0;
@@ -390,7 +393,7 @@ int run()
         KeyFinder f(_config.nextKey, _config.endKey, _config.compression, d, _config.stride);
 
         f.setResultCallback(resultCallback);
-        f.setStatusInterval(1800);
+        f.setStatusInterval(_config.statusInterval);
         f.setStatusCallback(statusCallback);
 
         f.init();
