@@ -195,6 +195,8 @@ void CLKeySearchDevice::init(const secp256k1::uint256 &start, int compression, u
 
     _start = start;
 
+    _stride = stride;
+
     _compression = compression;
 
     allocateBuffers();
@@ -415,8 +417,7 @@ void CLKeySearchDevice::getResultsInternal()
             KeySearchResult minerResult;
 
             // Calculate the private key based on the number of iterations and the current thread
-            //secp256k1::uint256 offset((uint64_t)_blocks * _threads * _pointsPerThread * _iterations + getPrivateKeyOffset(ptr[i].thread, ptr[i].block, ptr[i].idx));
-            secp256k1::uint256 offset = (secp256k1::uint256((uint64_t)_blocks * _threads * _pointsPerThread * _iterations) + secp256k1::uint256(getPrivateKeyOffset(ptr[i].thread, ptr[i].block, ptr[i].idx))) * _stride;
+            secp256k1::uint256 offset = (secp256k1::uint256((uint64_t)_blocks * _threads * _pointsPerThread * _iterations) + secp256k1::uint256(getPrivateKeyOffset(ptr->thread, ptr->block, ptr->idx))) * _stride;
             secp256k1::uint256 privateKey = secp256k1::addModN(_start, offset);
 
             minerResult.privateKey = privateKey;
@@ -588,8 +589,11 @@ void CLKeySearchDevice::generateStartingPoints()
     // Generate key pairs for k, k+1, k+2 ... k + <total points in parallel - 1>
     secp256k1::uint256 privKey = _start;
 
-    for(uint64_t i = 0; i < totalPoints; i++) {
-        exponents.push_back(privKey.add(i));
+    exponents.push_back(privKey);
+
+    for(uint64_t i = 1; i < totalPoints; i++) {
+        privKey = privKey.add(_stride);
+        exponents.push_back(privKey);
     }
 
     unsigned int *privateKeys = new unsigned int[8 * totalPoints];

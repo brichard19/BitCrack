@@ -245,7 +245,7 @@ void CudaKeySearchDevice::getResultsInternal()
         KeySearchResult minerResult;
 
         // Calculate the private key based on the number of iterations and the current thread
-        secp256k1::uint256 offset = (secp256k1::uint256((uint64_t)_blocks * _threads * _pointsPerThread * _iterations) + secp256k1::uint256(getPrivateKeyOffset(rPtr->thread, rPtr->block, rPtr->idx)))* _stride;
+        secp256k1::uint256 offset = (secp256k1::uint256((uint64_t)_blocks * _threads * _pointsPerThread * _iterations) + secp256k1::uint256(getPrivateKeyOffset(rPtr->thread, rPtr->block, rPtr->idx))) * _stride;
         secp256k1::uint256 privateKey = secp256k1::addModN(_startExponent, offset);
 
         minerResult.privateKey = privateKey;
