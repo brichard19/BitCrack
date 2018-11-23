@@ -30,8 +30,6 @@ KeyFinder::KeyFinder(const secp256k1::uint256 &startKey, const secp256k1::uint25
 
     _endKey = endKey;
 
-    _range = (startKey - endKey).toUint64();
-
 	_statusCallback = NULL;
 
 	_resultCallback = NULL;
@@ -117,7 +115,7 @@ void KeyFinder::setStatusCallback(void(*callback)(KeySearchStatus))
 	_statusCallback = callback;
 }
 
-void KeyFinder::setStatusInterval(unsigned int interval)
+void KeyFinder::setStatusInterval(uint64_t interval)
 {
 	_statusInterval = interval;
 }

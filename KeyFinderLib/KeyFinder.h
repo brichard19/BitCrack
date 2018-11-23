@@ -29,8 +29,6 @@ private:
     secp256k1::uint256 _startKey;
     secp256k1::uint256 _endKey;
 
-	uint64_t _range;
-
 	// Each index of each thread gets a flag to indicate if it found a valid hash
 	bool _running;
 
@@ -57,7 +55,7 @@ public:
 
 	void setResultCallback(void(*callback)(KeySearchResult));
 	void setStatusCallback(void(*callback)(KeySearchStatus));
-	void setStatusInterval(unsigned int interval);
+	void setStatusInterval(uint64_t interval);
 
 	void setTargets(std::string targetFile);
 	void setTargets(std::vector<std::string> &targets);
