@@ -27,7 +27,7 @@ public:
 
     cl_mem malloc(size_t size, cl_mem_flags flags = CL_MEM_READ_WRITE);
     void free(cl_mem mem);
-    void memset(cl_mem mem, int value, size_t size);
+    void memset(cl_mem mem, unsigned char value, size_t size);
     void copyHostToDevice(const void *hostPtr, cl_mem devicePtr, size_t size);
     void copyHostToDevice(const void *hostPtr, cl_mem devicePtr, size_t offset, size_t size);
     void copyDeviceToHost(cl_mem devicePtr, void *hostPtr, size_t size);
