@@ -52,8 +52,7 @@ typedef struct {
 
     uint64_t totalkeys = 0;
     unsigned int elapsed = 0;
-    uint64_t stride = 1;
-
+    secp256k1::uint256 stride = 1;
 }RunConfig;
 
 static RunConfig _config;
@@ -309,7 +308,7 @@ void writeCheckpoint(secp256k1::uint256 nextKey)
     tmp << "compression=" << getCompressionString(_config.compression) << std::endl;
     tmp << "device=" << _config.device << std::endl;
     tmp << "elapsed=" << (_config.elapsed + util::getSystemTime() - _startTime) << std::endl;
-    tmp << "stride=" << (_config.stride);
+    tmp << "stride=" << _config.stride.toString();
     tmp.close();
 }
 
@@ -365,7 +364,7 @@ int run()
     Logger::log(LogLevel::Info, "Compression: " + getCompressionString(_config.compression));
     Logger::log(LogLevel::Info, "Starting at: " + _config.nextKey.toString());
     Logger::log(LogLevel::Info, "Ending at:   " + _config.endKey.toString());
-    Logger::log(LogLevel::Info, "Counting by: " + util::format(_config.stride));
+    Logger::log(LogLevel::Info, "Counting by: " + _config.stride.toString());
 
     try {
 
@@ -563,7 +562,19 @@ int main(int argc, char **argv)
                 }
                 optShares = true;
             } else if(optArg.equals("", "--stride")) {
-                _config.stride = util::parseUInt64(optArg.arg);
+                try {
+                    _config.stride = secp256k1::uint256(optArg.arg);
+                } catch(...) {
+                    throw std::string("invalid argument: : expected hex string");
+                }
+
+                if(_config.stride.cmp(secp256k1::N) >= 0) {
+                    throw std::string("argument is out of range");
+                }
+
+                if(_config.stride.cmp(0) == 0) {
+                    throw std::string("argument is out of range");
+                }
             }
 
 		} catch(std::string err) {

@@ -57,7 +57,7 @@ CudaKeySearchDevice::CudaKeySearchDevice(int device, int threads, int pointsPerT
     _pointsPerThread = pointsPerThread;
 }
 
-void CudaKeySearchDevice::init(const secp256k1::uint256 &start, int compression, uint64_t stride)
+void CudaKeySearchDevice::init(const secp256k1::uint256 &start, int compression, const secp256k1::uint256 &stride)
 {
     if(start.cmp(secp256k1::N) >= 0) {
         throw KeySearchException("Starting key is out of range");
@@ -89,7 +89,7 @@ void CudaKeySearchDevice::init(const secp256k1::uint256 &start, int compression,
 
     // Set the incrementor
     secp256k1::ecpoint g = secp256k1::G();
-    secp256k1::ecpoint p = secp256k1::multiplyPoint(secp256k1::uint256(_threads * _blocks * _pointsPerThread).mul(secp256k1::uint256(_stride)), g);
+    secp256k1::ecpoint p = secp256k1::multiplyPoint(secp256k1::uint256((uint64_t)_threads * _blocks * _pointsPerThread) * _stride, g);
 
     cudaCall(_resultList.init(sizeof(CudaDeviceResult), 16));
 

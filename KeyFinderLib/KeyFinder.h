@@ -21,7 +21,7 @@ private:
 
 	uint64_t _statusInterval;
 
-    uint64_t _stride = 1;
+    secp256k1::uint256 _stride = 1;
 	uint64_t _iterCount;
 	uint64_t _total;
 	uint64_t _totalTime;
@@ -45,7 +45,7 @@ private:
 
 public:
 
-    KeyFinder(const secp256k1::uint256 &startKey, const secp256k1::uint256 &endKey, int compression, KeySearchDevice* device, uint64_t stride);
+    KeyFinder(const secp256k1::uint256 &startKey, const secp256k1::uint256 &endKey, int compression, KeySearchDevice* device, const secp256k1::uint256 &stride);
 
 	~KeyFinder();
 

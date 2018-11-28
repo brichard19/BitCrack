@@ -52,7 +52,6 @@ CLKeySearchDevice::CLKeySearchDevice(uint64_t device, int threads, int pointsPer
         // Create the context
         _clContext = new cl::CLContext(_device);
         Logger::log(LogLevel::Info, "Compiling OpenCL kernels...");
-        //_clProgram = new cl::CLProgram(*_clContext, util::getExeDirectory() + "KeySearch.cl");
         _clProgram = new cl::CLProgram(*_clContext, _bitcrack_cl);
 
         // Load the kernels
@@ -187,7 +186,7 @@ void CLKeySearchDevice::setIncrementor(secp256k1::ecpoint &p)
     _clContext->copyHostToDevice(buf, _yInc, 8 * sizeof(unsigned int));
 }
 
-void CLKeySearchDevice::init(const secp256k1::uint256 &start, int compression, uint64_t stride)
+void CLKeySearchDevice::init(const secp256k1::uint256 &start, int compression, const secp256k1::uint256 &stride)
 {
     if(start.cmp(secp256k1::N) >= 0) {
         throw KeySearchException("Starting key is out of range");
@@ -199,15 +198,19 @@ void CLKeySearchDevice::init(const secp256k1::uint256 &start, int compression, u
 
     _compression = compression;
 
-    allocateBuffers();
+    try {
+        allocateBuffers();
 
-    generateStartingPoints();
+        generateStartingPoints();
 
-    // Set the incrementor
-    secp256k1::ecpoint g = secp256k1::G();
-    secp256k1::ecpoint p = secp256k1::multiplyPoint(secp256k1::uint256(_threads * _blocks * _pointsPerThread).mul(secp256k1::uint256(_stride)), g);
+        // Set the incrementor
+        secp256k1::ecpoint g = secp256k1::G();
+        secp256k1::ecpoint p = secp256k1::multiplyPoint(secp256k1::uint256((uint64_t)_threads * _blocks * _pointsPerThread) * _stride, g);
 
-    setIncrementor(p);
+        setIncrementor(p);
+    } catch(cl::CLException ex) {
+        throw KeySearchException(ex.msg);
+    }
 }
 
 void CLKeySearchDevice::doStep()

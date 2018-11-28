@@ -18,7 +18,7 @@ void KeyFinder::defaultStatusCallback(KeySearchStatus status)
 	// Do nothing
 }
 
-KeyFinder::KeyFinder(const secp256k1::uint256 &startKey, const secp256k1::uint256 &endKey, int compression, KeySearchDevice* device, uint64_t stride)
+KeyFinder::KeyFinder(const secp256k1::uint256 &startKey, const secp256k1::uint256 &endKey, int compression, KeySearchDevice* device, const secp256k1::uint256 &stride)
 {
 	_total = 0;
 	_statusInterval = 1000;

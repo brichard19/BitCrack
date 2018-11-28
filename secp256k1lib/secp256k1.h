@@ -33,7 +33,7 @@ namespace secp256k1 {
 
 			// 'h' suffix
 			if(t.length() >= 1 && t[t.length() - 1] == 'h') {
-				t = t.substr(0, t.length() - 2);
+				t = t.substr(0, t.length() - 1);
 			}
 			
 			if(t.length() == 0) {
@@ -125,6 +125,11 @@ namespace secp256k1 {
         }
 
         uint256 operator*(uint32_t x) const
+        {
+            return mul(x);
+        }
+
+        uint256 operator*(const uint256 &x) const
         {
             return mul(x);
         }

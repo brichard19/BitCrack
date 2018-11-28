@@ -42,9 +42,9 @@ private:
 
     int _compression = PointCompressionType::COMPRESSED;
 
-    uint64_t _iterations;
+    uint64_t _iterations = 0;
 
-    uint64_t _stride = 1;
+    secp256k1::uint256 _stride = 1;
 
     std::string _deviceName;
 
@@ -113,7 +113,7 @@ public:
 
 
     // Initialize the device
-    virtual void init(const secp256k1::uint256 &start, int compression, uint64_t stride);
+    virtual void init(const secp256k1::uint256 &start, int compression, const secp256k1::uint256 &stride);
 
     // Perform one iteration
     virtual void doStep();
