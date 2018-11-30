@@ -420,7 +420,7 @@ void CLKeySearchDevice::getResultsInternal()
             KeySearchResult minerResult;
 
             // Calculate the private key based on the number of iterations and the current thread
-            secp256k1::uint256 offset = (secp256k1::uint256((uint64_t)_blocks * _threads * _pointsPerThread * _iterations) + secp256k1::uint256(getPrivateKeyOffset(ptr->thread, ptr->block, ptr->idx))) * _stride;
+            secp256k1::uint256 offset = (secp256k1::uint256((uint64_t)_blocks * _threads * _pointsPerThread * _iterations) + secp256k1::uint256(getPrivateKeyOffset(ptr[i].thread, ptr[i].block, ptr[i].idx))) * _stride;
             secp256k1::uint256 privateKey = secp256k1::addModN(_start, offset);
 
             minerResult.privateKey = privateKey;
