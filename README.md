@@ -7,8 +7,10 @@ A tool for brute-forcing Bitcoin private keys. The main purpose of this project 
 
 #### Usage
 
+
 Use `cuBitCrack.exe` for CUDA devices and `clBitCrack.exe` for OpenCL devices.
 
+Note: **clBitCrack.exe is still EXPERIMENTAL**, as users have reported critial bugs when running on AMD and Intel devices.
 
 ```
 xxBitCrack.exe [OPTIONS] [TARGETS]
