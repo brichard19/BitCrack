@@ -18,6 +18,7 @@ CudaKeySearchDevice::CudaKeySearchDevice(int device, int threads, int pointsPerT
     cuda::CudaDeviceInfo info;
     try {
         info = cuda::getDeviceInfo(device);
+        _deviceName = info.name;
     } catch(cuda::CudaException ex) {
         throw KeySearchException(ex.msg);
     }
@@ -68,13 +69,6 @@ void CudaKeySearchDevice::init(const secp256k1::uint256 &start, int compression,
     _compression = compression;
 
     _stride = stride;
-
-    try {
-        cuda::CudaDeviceInfo info = cuda::getDeviceInfo(_device);
-        _deviceName = info.name;
-    } catch(cuda::CudaException ex) {
-        throw KeySearchException(ex.msg);
-    }
 
     cudaCall(cudaSetDevice(_device));
 
