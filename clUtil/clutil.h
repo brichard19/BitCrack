@@ -9,7 +9,7 @@ namespace cl {
     std::string getErrorString(cl_int err);
 
     typedef struct {
-        uint64_t id;
+        cl_device_id id;
         int cores;
         uint64_t mem;
         std::string name;
@@ -29,7 +29,7 @@ namespace cl {
 
         CLException(cl_int err, std::string msg)
         {
-            this->error = error;
+            this->error = err;
             this->msg = msg;
         }
     };
