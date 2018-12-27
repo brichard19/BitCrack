@@ -29,7 +29,7 @@ std::vector<cl::CLDeviceInfo> cl::getDevices()
     for(cl_uint i = 0; i < platformCount; i++) {
         
         cl_uint deviceCount = 0;
-        clCall(clGetDeviceIDs(platforms[i], CL_DEVICE_TYPE_GPU, 0, NULL, &deviceCount));
+        clCall(clGetDeviceIDs(platforms[i], CL_DEVICE_TYPE_ALL, 0, NULL, &deviceCount));
 
         if(deviceCount == 0) {
             continue;
