@@ -127,5 +127,6 @@ clean:
 	make --directory CLKeySearchDevice clean
 	make --directory CudaKeySearchDevice clean
 	make --directory embedcl clean
+	make --directory CLUnitTests clean
 	rm -rf ${LIBDIR}
 	rm -rf ${BINDIR}
