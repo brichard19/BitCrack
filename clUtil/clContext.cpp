@@ -72,7 +72,14 @@ void cl::CLContext::copyDeviceToHost(cl_mem devicePtr, void *hostPtr, size_t siz
 
 void cl::CLContext::memset(cl_mem devicePtr, unsigned char value, size_t size)
 {
+#if CL_TARGET_OPENCL_VERSION >= 120
     clCall(clEnqueueFillBuffer(_queue, devicePtr, &value, sizeof(unsigned char), 0, size, NULL, NULL, NULL));
+#else
+    unsigned char *ptr = new unsigned char[size];
+    std::memset(ptr, value, size);
+    copyHostToDevice(ptr, devicePtr, 0, size)
+    delete[] ptr;
+#endif
 }
 
 cl::CLProgram::CLProgram(cl::CLContext &ctx, std::string srcFile) : _ctx(ctx)

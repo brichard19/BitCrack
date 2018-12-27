@@ -24,7 +24,7 @@ CUDA_MATH=$(CUR_DIR)/cudaMath
 # OpenCL variables
 OPENCL_LIB=${CUDA_LIB}
 OPENCL_INCLUDE=${CUDA_INCLUDE}
-
+OPENCL_VERSION=220
 
 export INCLUDE
 export LIBDIR
@@ -42,7 +42,7 @@ export OPENCL_INCLUDE
 export BUILD_OPENCL
 export BUILD_CUDA
 
-TARGETS=dir_addressutil dir_cmdparse dir_cryptoutil dir_keyfinderlib dir_keyfinder dir_secp256k1lib dir_util dir_logger
+TARGETS=dir_addressutil dir_cmdparse dir_cryptoutil dir_keyfinderlib dir_keyfinder dir_secp256k1lib dir_util dir_logger dir_addrgen
 
 ifeq ($(BUILD_CUDA),1)
 	TARGETS:=${TARGETS} dir_cudaKeySearchDevice dir_cudautil
@@ -50,6 +50,7 @@ endif
 
 ifeq ($(BUILD_OPENCL),1)
 	TARGETS:=${TARGETS} dir_embedcl dir_clKeySearchDevice dir_clutil
+	CXXFLAGS:=${CXXFLAGS} -DCL_TARGET_OPENCL_VERSION=${OPENCL_VERSION}
 endif
 
 all:	${TARGETS}
@@ -105,6 +106,9 @@ dir_cudainfo:
 
 dir_logger:
 	make --directory Logger
+
+dir_addrgen:	dir_cmdparse dir_addressutil dir_secp256k1lib
+	make --directory AddrGen
 
 clean:
 	make --directory AddressUtil clean
