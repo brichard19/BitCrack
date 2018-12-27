@@ -46,7 +46,7 @@ std::vector<DeviceManager::DeviceInfo> DeviceManager::getDevices()
             device.name = clDevices[i].name;
             device.type = DeviceType::OpenCL;
             device.id = deviceId;
-            device.physicalId = clDevices[i].id;
+            device.physicalId = (uint64_t)clDevices[i].id;
             device.memory = clDevices[i].mem;
             device.computeUnits = clDevices[i].cores;
             devices.push_back(device);
