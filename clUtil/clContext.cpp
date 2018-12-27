@@ -77,7 +77,7 @@ void cl::CLContext::memset(cl_mem devicePtr, unsigned char value, size_t size)
 #else
     unsigned char *ptr = new unsigned char[size];
     std::memset(ptr, value, size);
-    copyHostToDevice(ptr, devicePtr, 0, size)
+    copyHostToDevice(ptr, devicePtr, 0, size);
     delete[] ptr;
 #endif
 }

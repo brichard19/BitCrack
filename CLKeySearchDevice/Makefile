@@ -2,7 +2,7 @@ NAME=CLKeySearchDevice
 CPPSRC:=$(wildcard *.cpp)
 
 all:
-	cat sha256.cl secp256k1.cl ripemd160.cl keysearch.cl > bitcrack.cl
+	cat ../clMath/sha256.cl ../clMath/secp256k1.cl ../clMath/ripemd160.cl keysearch.cl > bitcrack.cl
 	${BINDIR}/embedcl bitcrack.cl bitcrack_cl.cpp _bitcrack_cl
 
 	for file in ${CPPSRC} bitcrack_cl.cpp; do\

@@ -61,7 +61,14 @@ int runTest(cl_device_id deviceId)
 
 int main(int argc, char **argv)
 {
-    std::vector<cl::CLDeviceInfo> devices = cl::getDevices();
+    std::vector<cl::CLDeviceInfo> devices;
+
+    try {
+        devices = cl::getDevices();
+    }catch(cl::CLException ex) {
+        std::cout << "Error: " << ex.msg << std::endl;
+        return 1;
+    }
 
     std::cout << "Found " << devices.size() << " devices" << std::endl;
 
