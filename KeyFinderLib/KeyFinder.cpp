@@ -237,13 +237,14 @@ void KeyFinder::run()
 			}
 		}
 
+        // Stop if there are no keys left
         if(_targets.size() == 0) {
             Logger::log(LogLevel::Info, "No targets remaining");
             _running = false;
         }
 
-		// Stop if we searched the entire range, or have no targets left
-        if(_device->getNextKey().cmp(_endKey) >= 0) {
+		// Stop if we searched the entire range
+        if(_device->getNextKey().cmp(_endKey) >= 0 || _device->getNextKey().cmp(_startKey) < 0) {
             Logger::log(LogLevel::Info, "Reached end of keyspace");
             _running = false;
         }
@@ -252,5 +253,5 @@ void KeyFinder::run()
 
 secp256k1::uint256 KeyFinder::getNextKey()
 {
-    return _startKey + secp256k1::uint256(_iterCount * _device->keysPerStep());
+    return _device->getNextKey();
 }
