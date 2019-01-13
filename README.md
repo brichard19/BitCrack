@@ -10,7 +10,12 @@ A tool for brute-forcing Bitcoin private keys. The main purpose of this project 
 
 Use `cuBitCrack.exe` for CUDA devices and `clBitCrack.exe` for OpenCL devices.
 
-Note: **clBitCrack.exe is still EXPERIMENTAL**, as users have reported critial bugs when running on AMD and Intel devices.
+### Note: **clBitCrack.exe is still EXPERIMENTAL**, as users have reported critial bugs when running on AMD and Intel devices.
+
+**Note for Intel users:**
+
+There is bug in Intel's OpenCL implementation which affects BitCrack. Details here: https://github.com/brichard19/BitCrack/issues/123
+
 
 ```
 xxBitCrack.exe [OPTIONS] [TARGETS]
