@@ -39,42 +39,39 @@ __constant unsigned int _N[8] = {
 
 
 // Add with carry
-#define addc(sum, a, b, carry)\
-{\
-    uint64_t sum64 = (uint64_t)a + b + carry;\
-    sum = (unsigned int)sum64;\
-    carry = (unsigned int)(sum64 >> 32) & 1;\
+unsigned int addc(unsigned int a, unsigned int b, unsigned int *carry)
+{
+    uint64_t sum64 = (uint64_t)a + (uint64_t)b + (uint64_t)*carry;
+    unsigned sum = (unsigned int)sum64;
+    *carry = (unsigned int)(sum64 >> 32) & 1;
+
+    return sum;
 }
 
 // Subtract with borrow
-#define subc(diff, a, b, borrow)\
-{\
-    uint64_t diff64 = (uint64_t)a - b - borrow;\
-    diff = (unsigned int)diff64;\
-    borrow = (unsigned int)((diff64 >> 32) & 1);\
-}
+unsigned int subc(unsigned int a, unsigned int b, unsigned int *borrow)
+{
+    uint64_t diff64 = (uint64_t)a - b - *borrow;
+    unsigned int diff = (unsigned int)diff64;
+    *borrow = (unsigned int)((diff64 >> 32) & 1);
 
-// 32 x 32 > 64 multiply
-#define mul(high, low, a, b)\
-{\
-    uint64_t prod64 = (uint64_t)a * b;\
-    low = (unsigned int)prod64;\
-    high = (unsigned int)(prod64 >> 32);\
+    return diff;
 }
 
 // 32 x 32 multiply-add
-#define madd(high, low, a, b, c)\
-{\
-    uint64_t mul64 = (uint64_t)a * b + c;\
-    low = (unsigned int)mul64;\
-    high = (unsigned int)(mul64 >> 32);\
+void madd(unsigned int *high, unsigned int *low, unsigned int a, unsigned int b, unsigned int c)
+{
+    uint64_t mul64 = (uint64_t)a * b + c;
+    *low = (unsigned int)mul64;
+    *high = (unsigned int)(mul64 >> 32);
 }
+
 
 unsigned int sub256(const unsigned int a[8], const unsigned int b[8], unsigned int c[8])
 {
-    int borrow = 0;
+    unsigned int borrow = 0;
     for(int i = 7; i >= 0; i--) {
-        subc(c[i], a[i], b[i], borrow);
+        c[i] = subc(a[i], b[i], &borrow);
     }
 
     return borrow;
@@ -130,10 +127,10 @@ void multiply256(const unsigned int x[8], const unsigned int y[8], unsigned int 
 
 unsigned int add256(const unsigned int a[8], const unsigned int b[8], unsigned int c[8])
 {
-    int carry = 0;
+    unsigned int carry = 0;
 
     for(int i = 7; i >= 0; i--) {
-        addc(c[i], a[i], b[i], carry);
+        c[i] = addc(a[i], b[i], &carry);
     }
 
     return carry;
@@ -161,15 +158,15 @@ void copyBigInt(const unsigned int src[8], unsigned int dest[8])
     }
 }
 
-bool equal(const unsigned int *a, const unsigned int *b)
+bool equal(const unsigned int a[8], const unsigned int b[8])
 {
-    bool eq = true;
-
     for(int i = 0; i < 8; i++) {
-        eq &= (a[i] == b[i]);
+        if(a[i] != b[i]) {
+            return false;
+        }
     }
 
-    return eq;
+    return true;
 }
 
 /**
@@ -220,10 +217,10 @@ void writeInt(__global unsigned int *ara, int idx, const unsigned int x[8])
 
 unsigned int addP(const unsigned int a[8], unsigned int c[8])
 {
-    int carry = 0;
+    unsigned int carry = 0;
 
     for(int i = 7; i >= 0; i--) {
-        addc(c[i], a[i], _P[i], carry);
+        c[i] = addc(a[i], _P[i], &carry);
     }
 
     return carry;
@@ -231,9 +228,9 @@ unsigned int addP(const unsigned int a[8], unsigned int c[8])
 
 unsigned int subP(const unsigned int a[8], unsigned int c[8])
 {
-    int borrow = 0;
+    unsigned int borrow = 0;
     for(int i = 7; i >= 0; i--) {
-        subc(c[i], a[i], _P[i], borrow);
+        c[i] = subc(a[i], _P[i], &borrow);
     }
 
     return borrow;
@@ -252,7 +249,7 @@ void subModP(const unsigned int a[8], const unsigned int b[8], unsigned int c[8]
 
 void addModP(const unsigned int a[8], const unsigned int b[8], unsigned int c[8])
 {
-    int carry = 0;
+    unsigned int carry = 0;
 
     carry = add256(a, b, c);
 
@@ -295,21 +292,21 @@ void mulModP(const unsigned int a[8], const unsigned int b[8], unsigned int c[8]
     // Add 2^32 * high to the low 256 bits (shift left 1 word and add)
     // Affects product[14] to product[6]
     for(int i = 7; i >= 0; i--) {
-        addc(product[i + 7], product[i + 7], high[i], carry);
+        product[i + 7] = addc(product[i + 7], high[i], &carry);
     }
-    addc(product[6], product[6], 0, carry);
+    product[6] = addc(product[6], 0, &carry);
 
     carry = 0;
 
     // Multiply high by 977 and add to low
     // Affects product[15] to product[5]
     for(int i = 7; i >= 0; i--) {
-        unsigned int t;
-        madd(hWord, t, high[i], 977, hWord);
-        addc(product[8 + i], product[8 + i], t, carry);
+        unsigned int t = 0;
+        madd(&hWord, &t, high[i], 977, hWord);
+        product[8 + i] = addc(product[8 + i], t, &carry);
     }
-    addc(product[7], product[7], hWord, carry);
-    addc(product[6], 0, 0, carry);
+    product[7] = addc(product[7], hWord, &carry);
+    product[6] = addc(0, 0, &carry);
 
     // Multiply high 2 words by 2^32 and add to low
     // Affects product[14] to product[7]
@@ -320,28 +317,28 @@ void mulModP(const unsigned int a[8], const unsigned int b[8], unsigned int c[8]
     product[7] = 0;
     product[6] = 0;
 
-    addc(product[14], product[14], high[7], carry);
-    addc(product[13], product[13], high[6], carry);
+    product[14] = addc(product[14], high[7], &carry);
+    product[13] = addc(product[13], high[6], &carry);
 
     // Propagate the carry
     for(int i = 12; i >= 7; i--) {
-        addc(product[i], product[i], 0, carry);
+        product[i] = addc(product[i], 0, &carry);
     }
 
     // Multiply top 2 words by 977 and add to low
     // Affects product[15] to product[7]
     carry = 0;
     hWord = 0;
-    unsigned int t;
-    madd(hWord, t, high[7], 977, hWord);
-    addc(product[15], product[15], t, carry);
-    madd(hWord, t, high[6], 977, hWord);
-    addc(product[14], product[14], t, carry);
-    addc(product[13], product[13], hWord, carry);
+    unsigned int t = 0;
+    madd(&hWord, &t, high[7], 977, hWord);
+    product[15] = addc(product[15], t, &carry);
+    madd(&hWord, &t, high[6], 977, hWord);
+    product[14] = addc(product[14], t, &carry);
+    product[13] = addc(product[13], hWord, &carry);
 
     // Propagate carry
     for(int i = 12; i >= 7; i--) {
-        addc(product[i], product[i], 0, carry);
+        product[i] = addc(product[i], 0, &carry);
     }
 
     // Reduce if >= P
@@ -409,7 +406,6 @@ void invModP(unsigned int value[8])
     mulModP_d(x, y);
     squareModP_d(x);
 
-
     // 0x2 - 0010
     //mulModP_d(x, y);
     squareModP_d(x);
@@ -430,8 +426,15 @@ void invModP(unsigned int value[8])
     mulModP_d(x, y);
     squareModP_d(x);
 
+
     // 0xfffff
-    for(int i = 0; i < 20; i++) {
+    // Strange behavior here: Incorrect results if in a single loop.
+    for(int i = 0; i < 19; i++) {
+        mulModP_d(x, y);
+        squareModP_d(x);
+    }
+    
+    for(int i = 0; i < 1; i++) {
         mulModP_d(x, y);
         squareModP_d(x);
     }

@@ -88,7 +88,18 @@ public:
         clCall(clSetKernelArg(_kernel, 1, sizeof(arg2), &arg2));
 
         clCall(clEnqueueNDRangeKernel(_prog.getContext().getQueue(), _kernel, 1, NULL, &blocks, &threads, 0, NULL, NULL));
-        clFinish(_prog.getContext().getQueue());
+        clCall(clFinish(_prog.getContext().getQueue()));
+    }
+
+    template<typename T1, typename T2, typename T3>
+    void call(size_t blocks, size_t threads, T1 arg1, T2 arg2, T3 arg3)
+    {
+        clCall(clSetKernelArg(_kernel, 0, sizeof(arg1), &arg1));
+        clCall(clSetKernelArg(_kernel, 1, sizeof(arg2), &arg2));
+        clCall(clSetKernelArg(_kernel, 2, sizeof(arg3), &arg3));
+
+        clCall(clEnqueueNDRangeKernel(_prog.getContext().getQueue(), _kernel, 1, NULL, &blocks, &threads, 0, NULL, NULL));
+        clCall(clFinish(_prog.getContext().getQueue()));
     }
 
     template<typename T1, typename T2, typename T3, typename T4, typename T5>

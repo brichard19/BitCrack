@@ -139,7 +139,9 @@ $(SolutionDir)\tools\embedcl.exe test.cl test.cpp _secp256k1_test_cl</Command>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <None Include="secp256k1test.cl" />
+    <CustomBuild Include="secp256k1test.cl">
+      <FileType>Document</FileType>
+    </CustomBuild>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp" />
