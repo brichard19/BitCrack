@@ -84,7 +84,6 @@ void madd977(unsigned int *high, unsigned int *low, unsigned int a, unsigned int
     unsigned int tmp = *low + c;
     unsigned int carry = tmp < *low ? 1 : 0;
     *low = tmp;
-    //*high = mad_hi(a, (unsigned int)977, carry);
     *high = mul_hi977(a) + carry;
 }
 
