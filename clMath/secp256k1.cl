@@ -41,9 +41,15 @@ __constant unsigned int _N[8] = {
 // Add with carry
 unsigned int addc(unsigned int a, unsigned int b, unsigned int *carry)
 {
-    uint64_t sum64 = (uint64_t)a + (uint64_t)b + (uint64_t)*carry;
-    unsigned sum = (unsigned int)sum64;
-    *carry = (unsigned int)(sum64 >> 32) & 1;
+    unsigned int sum = a + *carry;
+
+    unsigned int c1 = (sum < a) ? 1 : 0;
+
+    sum = sum + b;
+    
+    unsigned int c2 = (sum < b) ? 1 : 0;
+
+    *carry = c1 | c2;
 
     return sum;
 }
@@ -51,21 +57,32 @@ unsigned int addc(unsigned int a, unsigned int b, unsigned int *carry)
 // Subtract with borrow
 unsigned int subc(unsigned int a, unsigned int b, unsigned int *borrow)
 {
-    uint64_t diff64 = (uint64_t)a - b - *borrow;
-    unsigned int diff = (unsigned int)diff64;
-    *borrow = (unsigned int)((diff64 >> 32) & 1);
+    unsigned int diff = a - *borrow;
 
-    return diff;
+    *borrow = (diff > a) ? 1 : 0;
+
+    unsigned int diff2 = diff - b;
+
+    *borrow |= (diff2 > diff) ? 1 : 0;
+
+    return diff2;
 }
 
 // 32 x 32 multiply-add
 void madd(unsigned int *high, unsigned int *low, unsigned int a, unsigned int b, unsigned int c)
 {
-    uint64_t mul64 = (uint64_t)a * b + c;
-    *low = (unsigned int)mul64;
-    *high = (unsigned int)(mul64 >> 32);
+    *low = a * b;
+    unsigned int tmp = *low + c;
+    unsigned int carry = tmp < *low ? 1 : 0;
+    *low = tmp;
+    *high = mad_hi(a, b, carry);
 }
 
+void mull(unsigned int *high, unsigned int *low, unsigned int a, unsigned int b)
+{
+    *low = a * b;
+    *high = mul_hi(a, b);
+}
 
 unsigned int sub256(const unsigned int a[8], const unsigned int b[8], unsigned int c[8])
 {
@@ -269,6 +286,7 @@ void addModP(const unsigned int a[8], const unsigned int b[8], unsigned int c[8]
 }
 
 
+
 void mulModP(const unsigned int a[8], const unsigned int b[8], unsigned int c[8])
 {
     unsigned int product[16];
@@ -428,16 +446,16 @@ void invModP(unsigned int value[8])
 
 
     // 0xfffff
-    // Strange behavior here: Incorrect results if in a single loop.
+    // Strange behavior here: Incorrect results if in a single loop
     for(int i = 0; i < 19; i++) {
         mulModP_d(x, y);
         squareModP_d(x);
     }
-    
     for(int i = 0; i < 1; i++) {
         mulModP_d(x, y);
         squareModP_d(x);
     }
+
 
     // 0xe - 1110
     //mulModP_d(x, y);
@@ -454,6 +472,8 @@ void invModP(unsigned int value[8])
         mulModP_d(x, y);
         squareModP_d(x);
     }
+
+
     mulModP_d(x, y);
 
     copyBigInt(y, value);
