@@ -68,6 +68,38 @@ unsigned int subc(unsigned int a, unsigned int b, unsigned int *borrow)
     return diff2;
 }
 
+#ifdef DEVICE_VENDOR_INTEL
+unsigned int mul_hi977(unsigned int x)
+{
+    unsigned int high = x >> 16;
+    unsigned int low = x & 0xffff;
+
+    return (((low * 977) >> 16) + (high * 977)) >> 16;
+}
+
+// 32 x 32 multiply-add
+void madd977(unsigned int *high, unsigned int *low, unsigned int a, unsigned int c)
+{
+    *low = a * 977;
+    unsigned int tmp = *low + c;
+    unsigned int carry = tmp < *low ? 1 : 0;
+    *low = tmp;
+    //*high = mad_hi(a, (unsigned int)977, carry);
+    *high = mul_hi977(a) + carry;
+}
+
+#else
+// 32 x 32 multiply-add
+void madd977(unsigned int *high, unsigned int *low, unsigned int a, unsigned int c)
+{
+    *low = a * 977;
+    unsigned int tmp = *low + c;
+    unsigned int carry = tmp < *low ? 1 : 0;
+    *low = tmp;
+    *high = mad_hi(a, (unsigned int)977, carry);
+}
+#endif
+
 // 32 x 32 multiply-add
 void madd(unsigned int *high, unsigned int *low, unsigned int a, unsigned int b, unsigned int c)
 {
@@ -320,7 +352,7 @@ void mulModP(const unsigned int a[8], const unsigned int b[8], unsigned int c[8]
     // Affects product[15] to product[5]
     for(int i = 7; i >= 0; i--) {
         unsigned int t = 0;
-        madd(&hWord, &t, high[i], 977, hWord);
+        madd977(&hWord, &t, high[i], hWord);
         product[8 + i] = addc(product[8 + i], t, &carry);
     }
     product[7] = addc(product[7], hWord, &carry);
@@ -348,9 +380,9 @@ void mulModP(const unsigned int a[8], const unsigned int b[8], unsigned int c[8]
     carry = 0;
     hWord = 0;
     unsigned int t = 0;
-    madd(&hWord, &t, high[7], 977, hWord);
+    madd977(&hWord, &t, high[7], hWord);
     product[15] = addc(product[15], t, &carry);
-    madd(&hWord, &t, high[6], 977, hWord);
+    madd977(&hWord, &t, high[6], hWord);
     product[14] = addc(product[14], t, &carry);
     product[13] = addc(product[13], hWord, &carry);
 

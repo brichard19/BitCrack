@@ -1,4 +1,3 @@
-#include<CL/cl.h>
 #include "clutil.h"
 
 

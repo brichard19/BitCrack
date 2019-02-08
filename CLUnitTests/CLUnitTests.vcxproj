@@ -151,6 +151,9 @@ $(SolutionDir)\tools\embedcl.exe test.cl test.cpp _secp256k1_test_cl</Command>
     <ProjectReference Include="..\clUtil\clUtil.vcxproj">
       <Project>{d9a5823d-c472-40ac-b23a-21b1586ceeb0}</Project>
     </ProjectReference>
+    <ProjectReference Include="..\util\util.vcxproj">
+      <Project>{93b89bf6-32b9-4eba-aa44-bcfec4836b76}</Project>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

@@ -4,8 +4,7 @@
 #include <cstring>
 
 #include "clContext.h"
-
-
+#include "util.h"
 
 cl::CLContext::CLContext(cl_device_id device)
 {
@@ -82,17 +81,21 @@ void cl::CLContext::memset(cl_mem devicePtr, unsigned char value, size_t size)
 #endif
 }
 
-cl::CLProgram::CLProgram(cl::CLContext &ctx, std::string srcFile) : _ctx(ctx)
+cl::CLProgram::CLProgram(cl::CLContext &ctx, std::string srcFile, std::string options) : _ctx(ctx)
 {
     std::string src = loadSource(srcFile);
     const char *ptr = src.c_str();
     size_t len = src.length();
     cl_int err;
 
+    if(util::toLower(_ctx.getDeviceVendor()) == "intel") {
+        options += "-DVENDOR_INTEL";
+    }
+
     _prog = clCreateProgramWithSource(ctx.getContext(), 1, &ptr, &len, &err);
     clCall(err);
 
-    err = clBuildProgram(_prog, 0, NULL, NULL, NULL, NULL);
+    err = clBuildProgram(_prog, 0, NULL, options.c_str(), NULL, NULL);
 
     if(err == CL_BUILD_PROGRAM_FAILURE) {
         size_t logSize;
@@ -109,15 +112,19 @@ cl::CLProgram::CLProgram(cl::CLContext &ctx, std::string srcFile) : _ctx(ctx)
     clCall(err);
 }
 
-cl::CLProgram::CLProgram(cl::CLContext &ctx, const char *src) : _ctx(ctx)
+cl::CLProgram::CLProgram(cl::CLContext &ctx, const char *src, std::string options) : _ctx(ctx)
 {
     size_t len = strlen(src);
     cl_int err;
 
+    if(util::toLower(_ctx.getDeviceVendor()) == "intel") {
+        options += "-DVENDOR_INTEL";
+    }
+
     _prog = clCreateProgramWithSource(ctx.getContext(), 1, &src, &len, &err);
     clCall(err);
 
-    err = clBuildProgram(_prog, 0, NULL, NULL, NULL, NULL);
+    err = clBuildProgram(_prog, 0, NULL, options.c_str(), NULL, NULL);
 
     if(err == CL_BUILD_PROGRAM_FAILURE) {
         size_t logSize;
@@ -170,6 +177,15 @@ std::string cl::CLContext::getDeviceName()
     char name[128] = {0};
 
     clCall(clGetDeviceInfo(_device, CL_DEVICE_NAME, sizeof(name), name, NULL));
+
+    return std::string(name);
+}
+
+std::string cl::CLContext::getDeviceVendor()
+{
+    char name[128] = { 0 };
+
+    clCall(clGetDeviceInfo(_device, CL_DEVICE_VENDOR, sizeof(name), name, NULL));
 
     return std::string(name);
 }

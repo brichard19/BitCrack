@@ -2,7 +2,6 @@
 #define _CL_CONTEXT_H
 
 #include <string>
-#include <CL/cl.h>
 #include "clutil.h"
 
 namespace cl {
@@ -32,6 +31,7 @@ public:
     void copyHostToDevice(const void *hostPtr, cl_mem devicePtr, size_t offset, size_t size);
     void copyDeviceToHost(cl_mem devicePtr, void *hostPtr, size_t size);
     std::string getDeviceName();
+    std::string getDeviceVendor();
     uint64_t getGlobalMemorySize();
 };
 
@@ -45,8 +45,8 @@ private:
     std::string loadSource(std::string src);
 
 public:
-    CLProgram(CLContext &ctx, std::string src);
-    CLProgram(CLContext &ctx, const char *src);
+    CLProgram(CLContext &ctx, std::string src, std::string options = "");
+    CLProgram(CLContext &ctx, const char *src, std::string options = "");
 
     ~CLProgram();
 
