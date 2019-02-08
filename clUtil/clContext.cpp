@@ -88,8 +88,8 @@ cl::CLProgram::CLProgram(cl::CLContext &ctx, std::string srcFile, std::string op
     size_t len = src.length();
     cl_int err;
 
-    if(util::toLower(_ctx.getDeviceVendor()) == "intel") {
-        options += "-DVENDOR_INTEL";
+    if(util::toLower(_ctx.getDeviceVendor()).find("intel") != std::string::npos) {
+        options += "-DDEVICE_VENDOR_INTEL";
     }
 
     _prog = clCreateProgramWithSource(ctx.getContext(), 1, &ptr, &len, &err);
@@ -117,8 +117,8 @@ cl::CLProgram::CLProgram(cl::CLContext &ctx, const char *src, std::string option
     size_t len = strlen(src);
     cl_int err;
 
-    if(util::toLower(_ctx.getDeviceVendor()) == "intel") {
-        options += "-DVENDOR_INTEL";
+    if(util::toLower(_ctx.getDeviceVendor()).find("intel") != std::string::npos) {
+        options += "-DDEVICE_VENDOR_INTEL";
     }
 
     _prog = clCreateProgramWithSource(ctx.getContext(), 1, &src, &len, &err);
