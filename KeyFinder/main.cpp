@@ -495,7 +495,7 @@ int main(int argc, char **argv)
 	parser.add("-b", "--blocks", true);
 	parser.add("-p", "--per-thread", true);
 	parser.add("-d", "--device", true);
-	parser.add("-c", "--compressed", false);
+    parser.add("-c", "--compressed", false);
 	parser.add("-u", "--uncompressed", false);
     parser.add("-r", "--random-bits", true);
 	parser.add("", "--compression", true);
