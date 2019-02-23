@@ -49,7 +49,8 @@ ifeq ($(BUILD_CUDA),1)
 endif
 
 ifeq ($(BUILD_OPENCL),1)
-	TARGETS:=${TARGETS} dir_embedcl dir_clKeySearchDevice dir_clutil dir_clunittest
+	# dir_clunittest // pika: removed because of compile problems
+	TARGETS:=${TARGETS} dir_embedcl dir_clKeySearchDevice dir_clutil 
 	CXXFLAGS:=${CXXFLAGS} -DCL_TARGET_OPENCL_VERSION=${OPENCL_VERSION}
 endif
 

@@ -256,6 +256,19 @@ namespace secp256k1 {
 			return (this->v[n / 32] & (0x1 << (n % 32))) != 0;
 		}
 
+        int getBitRange()
+		{
+			int ret = 0;
+			for (int n=255; n>=0; n--) {
+				if (bit(n)) {
+					ret = n+1;
+					break;
+				}
+			}
+
+			return ret;
+		}
+
 		bool isEven()
 		{
 			return (this->v[0] & 1) == 0;
