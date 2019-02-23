@@ -1,5 +1,4 @@
 #include <cmath>
-#include <random>
 
 #include "Logger.h"
 #include "util.h"
@@ -593,46 +592,6 @@ int CLKeySearchDevice::getIndex(int block, int thread, int idx)
     return base + threadId;
 }
 
-secp256k1::uint256 getToBits(const secp256k1::uint256 &x, char target_bits)
-{
-    secp256k1::uint256 r;
-    //const int bitmask = target_bits & 0x1f;
-    int modded = (target_bits % 32);
-            
-    for (int i = 7; i >= 0; i--) {
-        if (target_bits > 256 - ((8 - i) * 32)) {
-            r.v[i] = x.v[i];
-        }
-        if (target_bits > 256 - ((8 - i) * 32) && target_bits < 256 - ((8 - (i+1)) * 32)) {
-            r.v[i] = r.v[i] & ((1ull<<modded)-1ull);
-        }
-    }
-
-    return r;
-}
-
-secp256k1::uint256 getRandomBits(char bitRange, bool forceExactRange = false)
-{
-    unsigned int tmp[8];
-    secp256k1::uint256 ret = 0;
-    
-    std::random_device rd;
-    std::mt19937 gen(rd());
-    
-    do {
-
-        for (int i=0; i<8; i++) {
-            tmp[i] = gen();
-        }
-
-        ret = secp256k1::uint256(tmp);
-        ret = getToBits(ret, bitRange);
-
-    } while (ret.getBitRange() != bitRange || !forceExactRange);
-
-    return ret;
-}
-
 void CLKeySearchDevice::generateStartingPoints()
 {
     uint64_t totalPoints = (uint64_t)_pointsPerThread * _threads * _blocks;
@@ -649,12 +608,14 @@ void CLKeySearchDevice::generateStartingPoints()
     // Generate key pairs for k, k+1, k+2 ... k + <total points in parallel - 1>
     secp256k1::uint256 privKey = _start;
 
-    exponents.push_back(privKey);
+    if (_randomBits == 0) {
+        exponents.push_back(privKey);
+    }
 
-    for(uint64_t i = 1; i < totalPoints; i++) {
+    for(uint64_t i = _randomBits == 0 ? 1 : 0; i < totalPoints; i++) {
 
         if (_randomBits != 0) {
-            privKey = getRandomBits(_randomBits, true);
+            privKey = secp256k1::getRandomBits(_randomBits, true);
         } else {
             privKey = privKey.add(_stride);    
         }

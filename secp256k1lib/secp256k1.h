@@ -6,6 +6,7 @@
 #include<string.h>
 #include<string>
 #include<vector>
+#include <random>
 
 namespace secp256k1 {
 
@@ -281,6 +282,9 @@ namespace secp256k1 {
             return ((uint64_t)this->v[1] << 32) | v[0];
         }
 	};
+
+	uint256 getToBits(const uint256 &x, char target_bits);
+	uint256 getRandomBits(char bitRange, bool forceExactRange = false);
 
 	const unsigned int _POINT_AT_INFINITY_WORDS[8] = { 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF };
 	const unsigned int _P_WORDS[8] = { 0xFFFFFC2F, 0xFFFFFFFE, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF };

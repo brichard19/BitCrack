@@ -41,6 +41,7 @@ private:
     cl_device_id _device;
 
     int _compression = PointCompressionType::COMPRESSED;
+    
     char _randomBits = 0;
 
     uint64_t _iterations = 0;
