@@ -615,7 +615,7 @@ void CLKeySearchDevice::generateStartingPoints()
     for(uint64_t i = _randomBits == 0 ? 1 : 0; i < totalPoints; i++) {
 
         if (_randomBits != 0) {
-            privKey = secp256k1::getRandomBits(_randomBits, true);
+            privKey = _start.add(secp256k1::getRandomBits(_randomBits, true));
         } else {
             privKey = privKey.add(_stride);    
         }
