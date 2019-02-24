@@ -53,7 +53,7 @@ typedef struct {
     uint64_t totalkeys = 0;
     unsigned int elapsed = 0;
     secp256k1::uint256 stride = 1;
-    int randomBits = 0;
+    bool randomMode = false;
 
 }RunConfig;
 
@@ -186,7 +186,7 @@ void usage()
 	
     printf("-c, --compressed        Use compressed points\n");
     printf("-u, --uncompressed      Use Uncompressed points\n");
-    printf("-r, --random-bits       Use random N bits for starting points\n");
+    printf("-r, --random            Use random values from keyspace\n");
     printf("--compression  MODE     Specify compression where MODE is\n");
     printf("                          compressed or uncompressed or both\n");
     printf("-d, --device ID         Use device ID\n");
@@ -370,8 +370,8 @@ int run()
     Logger::log(LogLevel::Info, "Starting at: " + _config.nextKey.toString());
     Logger::log(LogLevel::Info, "Ending at:   " + _config.endKey.toString());
     
-    if (_config.randomBits != 0) {
-        Logger::log(LogLevel::Info, "Generating random starting points in " + std::to_string(_config.randomBits) + " range.");
+    if (_config.randomMode) {
+        Logger::log(LogLevel::Info, "Generating random starting points");
     }
 
     Logger::log(LogLevel::Info, "Counting by: " + _config.stride.toString());
@@ -399,7 +399,7 @@ int run()
         // Get device context
         KeySearchDevice *d = getDeviceContext(_devices[_config.device], _config.blocks, _config.threads, _config.pointsPerThread);
 
-        KeyFinder f(_config.nextKey, _config.endKey, _config.compression, d, _config.stride, _config.randomBits);
+        KeyFinder f(_config.nextKey, _config.endKey, _config.compression, d, _config.stride, _config.randomMode);
 
         f.setResultCallback(resultCallback);
         f.setStatusInterval(_config.statusInterval);
@@ -498,7 +498,7 @@ int main(int argc, char **argv)
 	parser.add("-d", "--device", true);
     parser.add("-c", "--compressed", false);
 	parser.add("-u", "--uncompressed", false);
-    parser.add("-r", "--random-bits", true);
+    parser.add("-r", "--random", false);
 	parser.add("", "--compression", true);
 	parser.add("-i", "--in", true);
 	parser.add("-o", "--out", true);
@@ -532,8 +532,8 @@ int main(int argc, char **argv)
 				optCompressed = true;
             } else if(optArg.equals("-u", "--uncompressed")) {
                 optUncompressed = true;
-            } else if(optArg.equals("-r", "--random-bits")) {
-                _config.randomBits = util::parseUInt32(optArg.arg);
+            } else if(optArg.equals("-r", "--random")) {
+                _config.randomMode = true;
             } else if(optArg.equals("", "--compression")) {
                 _config.compression = parseCompressionString(optArg.arg);
 			} else if(optArg.equals("-i", "--in")) {

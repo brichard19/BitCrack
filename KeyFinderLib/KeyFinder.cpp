@@ -18,7 +18,7 @@ void KeyFinder::defaultStatusCallback(KeySearchStatus status)
 	// Do nothing
 }
 
-KeyFinder::KeyFinder(const secp256k1::uint256 &startKey, const secp256k1::uint256 &endKey, int compression, KeySearchDevice* device, const secp256k1::uint256 &stride, int randomBits)
+KeyFinder::KeyFinder(const secp256k1::uint256 &startKey, const secp256k1::uint256 &endKey, int compression, KeySearchDevice* device, const secp256k1::uint256 &stride, bool randomMode)
 {
 	_total = 0;
 	_statusInterval = 1000;
@@ -38,7 +38,7 @@ KeyFinder::KeyFinder(const secp256k1::uint256 &startKey, const secp256k1::uint25
 
     _stride = stride;
 
-    _randomBits = randomBits;
+    _randomMode = randomMode;
 }
 
 KeyFinder::~KeyFinder()
@@ -138,7 +138,7 @@ void KeyFinder::init()
 {
 	Logger::log(LogLevel::Info, "Initializing " + _device->getDeviceName());
 
-    _device->init(_startKey, _compression, _stride, _randomBits);
+    _device->init(_startKey, _endKey, _compression, _stride, _randomMode);
 }
 
 

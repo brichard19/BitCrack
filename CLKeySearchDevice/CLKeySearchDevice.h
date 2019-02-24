@@ -27,6 +27,7 @@ private:
     CLTargetList _deviceTargetList;
 
     secp256k1::uint256 _start;
+    secp256k1::uint256 _end;
     
     std::vector<hash160> _targetList;
 
@@ -42,7 +43,7 @@ private:
 
     int _compression = PointCompressionType::COMPRESSED;
     
-    int _randomBits = 0;
+    bool _randomMode = false;
 
     uint64_t _iterations = 0;
 
@@ -115,7 +116,7 @@ public:
 
 
     // Initialize the device
-    virtual void init(const secp256k1::uint256 &start, int compression, const secp256k1::uint256 &stride, int randomBits);
+    virtual void init(const secp256k1::uint256 &start, const secp256k1::uint256 &end, int compression, const secp256k1::uint256 &stride, bool randomMode);
 
     // Perform one iteration
     virtual void doStep();

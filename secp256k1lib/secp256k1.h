@@ -10,12 +10,29 @@
 
 namespace secp256k1 {
 
+	class Random
+	{
+		std::random_device rd;
+		
+	public:
+		std::mt19937 *gen;
+
+		Random()
+		{
+			this->gen = new std::mt19937(rd());
+		}
+
+		~Random() {
+			delete this->gen;
+		}
+	};
+
 	class uint256 {
 
 	public:
 		static const int BigEndian = 1;
 		static const int LittleEndian = 2;
-
+		
         uint32_t v[8] = { 0 };
 
 		uint256()
@@ -283,8 +300,8 @@ namespace secp256k1 {
         }
 	};
 
-	uint256 getToBits(const uint256 &x, int target_bits);
-	uint256 getRandomBits(int bitRange, bool forceExactRange = false);
+	static Random rnd;
+	uint256 getRandomRange(uint256 min, uint256 max);
 
 	const unsigned int _POINT_AT_INFINITY_WORDS[8] = { 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF };
 	const unsigned int _P_WORDS[8] = { 0xFFFFFC2F, 0xFFFFFFFE, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF };

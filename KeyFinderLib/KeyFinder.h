@@ -22,7 +22,7 @@ private:
 	uint64_t _statusInterval;
 
     secp256k1::uint256 _stride = 1;
-    int _randomBits = 0;
+    bool _randomMode = false;
 	uint64_t _iterCount;
 	uint64_t _total;
 	uint64_t _totalTime;
@@ -46,7 +46,7 @@ private:
 
 public:
 
-    KeyFinder(const secp256k1::uint256 &startKey, const secp256k1::uint256 &endKey, int compression, KeySearchDevice* device, const secp256k1::uint256 &stride, int randomBits);
+    KeyFinder(const secp256k1::uint256 &startKey, const secp256k1::uint256 &endKey, int compression, KeySearchDevice* device, const secp256k1::uint256 &stride, bool randomMode);
 
 	~KeyFinder();
 

@@ -42,6 +42,9 @@ Options:
 -p, --points NUMBER
     Each thread will process NUMBER keys at a time
 
+-r, --random
+    Each point will start in random KEYSPACE
+
 --keyspace KEYSPACE
     Specify the range of keys to search, where KEYSPACE is in the format,
 

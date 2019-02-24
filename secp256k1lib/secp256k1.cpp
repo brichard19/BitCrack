@@ -898,42 +898,28 @@ secp256k1::ecpoint secp256k1::parsePublicKey(const std::string &pubKeyString)
 	return p;
 }
 
-uint256 secp256k1::getToBits(const uint256 &x, int target_bits)
+uint256 secp256k1::getRandomRange(uint256 min, uint256 max)
 {
-	uint256 r;
-	//const int bitmask = target_bits & 0x1f;
-	int modded = (target_bits % 32);
+	uint256 ret = 0;
+	unsigned int tmp[8] = {0};
+	unsigned int _min, _max;
+
+	for (int i=0; i<8; i++) {
+		if (max.v[i] != 0) {
+			_min = min.v[i];
+			_max = max.v[i];
+
+			if (_min > _max) {
+				_min = 0;
+				_max = 0xFFFFFFFF;
+			}
 			
-	for (int i = 7; i >= 0; i--) {
-		if (target_bits > 256 - ((8 - i) * 32)) {
-			r.v[i] = x.v[i];
-		}
-		if (target_bits > 256 - ((8 - i) * 32) && target_bits < 256 - ((8 - (i+1)) * 32)) {
-			r.v[i] = r.v[i] & ((1ull<<modded)-1ull);
+			std::uniform_int_distribution<unsigned int> distr(_min, _max);
+			tmp[i] = distr(*rnd.gen);
+			
 		}
 	}
 
-	return r;
-}
-
-uint256 secp256k1::getRandomBits(int bitRange, bool forceExactRange)
-{
-	unsigned int tmp[8];
-	uint256 ret = 0;
-	
-	std::random_device rd;
-	std::mt19937 gen(rd());
-	
-	do {
-
-		for (int i=0; i<8; i++) {
-			tmp[i] = gen();
-		}
-
-		ret = uint256(tmp);
-		ret = getToBits(ret, bitRange);
-
-	} while (ret.getBitRange() != bitRange || !forceExactRange);
-
+	ret = uint256(tmp);
 	return ret;
 }
