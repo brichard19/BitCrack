@@ -620,7 +620,7 @@ void CLKeySearchDevice::generateStartingPoints()
             privKey = privKey.add(_stride);    
         }
     
-        if (i < 4) {
+        if (_randomBits != 0 && i < 3) {
             Logger::log(LogLevel::Info, "Starting point sample: " + privKey.toString() + " (" + std::to_string(privKey.getBitRange()) +" bit range)");
         }
         
