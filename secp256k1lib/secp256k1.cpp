@@ -905,11 +905,13 @@ uint256 secp256k1::getRandomRange(uint256 min, uint256 max)
 	unsigned int _min, _max;
 
 	for (int i=0; i<8; i++) {
-		if (max.v[i] != 0) {
+		
+		if (max.v[i] != 0 || (i<7 && max.v[i+1] != 0)) {
+
 			_min = min.v[i];
 			_max = max.v[i];
 
-			if (_min > _max) {
+			if (_min >= _max) {
 				_min = 0;
 				_max = 0xFFFFFFFF;
 			}
