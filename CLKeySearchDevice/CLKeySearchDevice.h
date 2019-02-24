@@ -109,6 +109,8 @@ private:
 
     uint64_t getOptimalBloomFilterMask(double p, size_t n);
 
+    std::vector<secp256k1::uint256> exponents;
+
 public:
 
     CLKeySearchDevice(uint64_t device, int threads, int pointsPerThread, int blocks = 0);

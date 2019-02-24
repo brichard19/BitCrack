@@ -115,7 +115,7 @@ void statusCallback(KeySearchStatus info)
 	} else {
 		speedStr = util::format("%.2f", info.speed) + " MKey/s";
 	}
-
+    
 	std::string totalStr = "(" + util::formatThousands(_config.totalkeys + info.total) + " total)";
 
 	std::string timeStr = "[" + util::formatSeconds((unsigned int)((_config.elapsed + info.totalTime) / 1000)) + "]";

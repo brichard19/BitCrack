@@ -432,14 +432,18 @@ void CLKeySearchDevice::getResultsInternal()
 
             // Calculate the private key based on the number of iterations and the current thread
             secp256k1::uint256 offset;
+            secp256k1::uint256 privateKey;
+
+            uint32_t privateKeyOffset = getPrivateKeyOffset(ptr[i].thread, ptr[i].block, ptr[i].idx);
 
             if (!_randomMode) {
-                offset = (secp256k1::uint256((uint64_t)_blocks * _threads * _pointsPerThread * _iterations) + secp256k1::uint256(getPrivateKeyOffset(ptr[i].thread, ptr[i].block, ptr[i].idx))) * _stride;
+                offset = (secp256k1::uint256((uint64_t)_blocks * _threads * _pointsPerThread * _iterations) + privateKeyOffset) * _stride;
+                privateKey = secp256k1::addModN(_start, offset); 
             } else {
                 offset = secp256k1::uint256(_iterations) * _stride;
+                privateKey = exponents[privateKeyOffset];
+                privateKey = secp256k1::addModN(privateKey, offset); 
             }
-
-            secp256k1::uint256 privateKey = secp256k1::addModN(_start, offset);
 
             minerResult.privateKey = privateKey;
             minerResult.compressed = ptr[i].compressed;
@@ -598,8 +602,6 @@ void CLKeySearchDevice::generateStartingPoints()
 {
     uint64_t totalPoints = (uint64_t)_pointsPerThread * _threads * _blocks;
     uint64_t totalMemory = totalPoints * 40;
-
-    std::vector<secp256k1::uint256> exponents;
 
     initializeBasePoints();
 

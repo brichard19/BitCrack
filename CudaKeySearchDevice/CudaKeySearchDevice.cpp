@@ -105,8 +105,6 @@ void CudaKeySearchDevice::generateStartingPoints()
     uint64_t totalPoints = (uint64_t)_pointsPerThread * _threads * _blocks;
     uint64_t totalMemory = totalPoints * 40;
 
-    std::vector<secp256k1::uint256> exponents;
-
     Logger::log(LogLevel::Info, "Generating " + util::formatThousands(totalPoints) + " starting points (" + util::format("%.1f", (double)totalMemory / (double)(1024 * 1024)) + "MB)");
 
     // Generate key pairs for k, k+1, k+2 ... k + <total points in parallel - 1>
@@ -261,14 +259,19 @@ void CudaKeySearchDevice::getResultsInternal()
 
         // Calculate the private key based on the number of iterations and the current thread
         secp256k1::uint256 offset;
+        secp256k1::uint256 privateKey;
+
+        uint32_t privateKeyOffset = getPrivateKeyOffset(rPtr->thread, rPtr->block, rPtr->idx);
+
         if (!_randomMode) {
-            offset = (secp256k1::uint256((uint64_t)_blocks * _threads * _pointsPerThread * _iterations) + secp256k1::uint256(getPrivateKeyOffset(rPtr->thread, rPtr->block, rPtr->idx))) * _stride;
+            offset = (secp256k1::uint256((uint64_t)_blocks * _threads * _pointsPerThread * _iterations) + privateKeyOffset) * _stride;
+            privateKey = secp256k1::addModN(_startExponent, offset); 
         } else {
             offset = secp256k1::uint256(_iterations) * _stride;
+            privateKey = exponents[privateKeyOffset];
+            privateKey = secp256k1::addModN(privateKey, offset); 
         }
-
-        secp256k1::uint256 privateKey = secp256k1::addModN(_startExponent, offset);
-
+        
         minerResult.privateKey = privateKey;
         minerResult.compressed = rPtr->compressed;
 
