@@ -661,6 +661,10 @@ void CLKeySearchDevice::generateStartingPoints()
     }
 
     Logger::log(LogLevel::Info, "Done");
+
+    if (!_randomMode) {
+        exponents.clear();
+    }
 }
 
 

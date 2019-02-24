@@ -144,6 +144,10 @@ void CudaKeySearchDevice::generateStartingPoints()
 
     Logger::log(LogLevel::Info, "Done");
 
+    if (!_randomMode) {
+        exponents.clear();
+    }
+    
     _deviceKeys.clearPrivateKeys();
 }
 
