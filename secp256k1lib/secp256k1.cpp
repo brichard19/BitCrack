@@ -900,25 +900,20 @@ secp256k1::ecpoint secp256k1::parsePublicKey(const std::string &pubKeyString)
 
 uint256 secp256k1::getRandomRange(uint256 min, uint256 max)
 {
-	unsigned int tmp[8] = {0};
-	unsigned int _min, _max;
+	uint256 result;
+	uint256 range = max.sub(min);
 
-	for (int i=0; i<8; i++) {
-		
-		if (max.v[i] != 0 || (i<7 && max.v[i+1] != 0)) {
-
-			_min = min.v[i];
-			_max = max.v[i];
-
-			if (_min >= _max) {
-				_min = 0;
-				_max = 0xFFFFFFFF;
+	unsigned char targetByteSize = range.getBitRange() / 8;
+	
+	for (int i = 0; i < 8; i++) {
+		if (targetByteSize > i*4) {
+			result.v[i] = rnd.getChunk();
+			if (targetByteSize > i*4 && targetByteSize < (i+1)*4) {
+				if (result.v[i] > range.v[i])
+					result.v[i] %= range.v[i];
 			}
-			
-			std::uniform_int_distribution<unsigned int> distr(_min, _max);
-			tmp[i] = distr(*rnd.gen);
 		}
 	}
-
-	return uint256(tmp);
+	
+	return result.add(min);
 }
