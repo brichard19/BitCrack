@@ -283,8 +283,8 @@ namespace secp256k1 {
         }
 	};
 
-	uint256 getToBits(const uint256 &x, char target_bits);
-	uint256 getRandomBits(char bitRange, bool forceExactRange = false);
+	uint256 getToBits(const uint256 &x, int target_bits);
+	uint256 getRandomBits(int bitRange, bool forceExactRange = false);
 
 	const unsigned int _POINT_AT_INFINITY_WORDS[8] = { 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF };
 	const unsigned int _P_WORDS[8] = { 0xFFFFFC2F, 0xFFFFFFFE, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF };

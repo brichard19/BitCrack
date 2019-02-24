@@ -187,7 +187,7 @@ void CLKeySearchDevice::setIncrementor(secp256k1::ecpoint &p)
     _clContext->copyHostToDevice(buf, _yInc, 8 * sizeof(unsigned int));
 }
 
-void CLKeySearchDevice::init(const secp256k1::uint256 &start, int compression, const secp256k1::uint256 &stride, char randomBits)
+void CLKeySearchDevice::init(const secp256k1::uint256 &start, int compression, const secp256k1::uint256 &stride, int randomBits)
 {
     if(start.cmp(secp256k1::N) >= 0) {
         throw KeySearchException("Starting key is out of range");

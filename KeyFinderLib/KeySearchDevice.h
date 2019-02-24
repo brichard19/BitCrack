@@ -39,7 +39,7 @@ class KeySearchDevice {
 public:
 
     // Initialize the device
-    virtual void init(const secp256k1::uint256 &start, int compression, const secp256k1::uint256 &stride, char randomBits) = 0;
+    virtual void init(const secp256k1::uint256 &start, int compression, const secp256k1::uint256 &stride, int randomBits) = 0;
 
     // Perform one iteration
     virtual void doStep() = 0;

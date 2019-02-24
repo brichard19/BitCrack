@@ -58,7 +58,7 @@ CudaKeySearchDevice::CudaKeySearchDevice(int device, int threads, int pointsPerT
     _pointsPerThread = pointsPerThread;
 }
 
-void CudaKeySearchDevice::init(const secp256k1::uint256 &start, int compression, const secp256k1::uint256 &stride, char randomBits)
+void CudaKeySearchDevice::init(const secp256k1::uint256 &start, int compression, const secp256k1::uint256 &stride, int randomBits)
 {
     if(start.cmp(secp256k1::N) >= 0) {
         throw KeySearchException("Starting key is out of range");
@@ -122,7 +122,7 @@ void CudaKeySearchDevice::generateStartingPoints()
             privKey = privKey.add(_stride);
         }
 
-        if (i < 3) {
+        if (i < 4) {
             Logger::log(LogLevel::Info, "Starting point sample: " + privKey.toString() + " (" + std::to_string(privKey.getBitRange()) +" bit range)");
         }
 

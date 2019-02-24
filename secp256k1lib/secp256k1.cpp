@@ -898,7 +898,7 @@ secp256k1::ecpoint secp256k1::parsePublicKey(const std::string &pubKeyString)
 	return p;
 }
 
-uint256 secp256k1::getToBits(const uint256 &x, char target_bits)
+uint256 secp256k1::getToBits(const uint256 &x, int target_bits)
 {
 	uint256 r;
 	//const int bitmask = target_bits & 0x1f;
@@ -916,7 +916,7 @@ uint256 secp256k1::getToBits(const uint256 &x, char target_bits)
 	return r;
 }
 
-uint256 secp256k1::getRandomBits(char bitRange, bool forceExactRange)
+uint256 secp256k1::getRandomBits(int bitRange, bool forceExactRange)
 {
 	unsigned int tmp[8];
 	uint256 ret = 0;

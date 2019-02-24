@@ -53,7 +53,7 @@ typedef struct {
     uint64_t totalkeys = 0;
     unsigned int elapsed = 0;
     secp256k1::uint256 stride = 1;
-    char randomBits = 0;
+    int randomBits = 0;
 
 }RunConfig;
 
