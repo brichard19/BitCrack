@@ -366,10 +366,11 @@ int run()
 
     Logger::log(LogLevel::Info, "Compression: " + getCompressionString(_config.compression));
 
-    if (_config.randomBits == 0) {
-        Logger::log(LogLevel::Info, "Starting at: " + _config.nextKey.toString());
-        Logger::log(LogLevel::Info, "Ending at:   " + _config.endKey.toString());
-    } else {
+    
+    Logger::log(LogLevel::Info, "Starting at: " + _config.nextKey.toString());
+    Logger::log(LogLevel::Info, "Ending at:   " + _config.endKey.toString());
+    
+    if (_config.randomBits != 0) {
         Logger::log(LogLevel::Info, "Generating random starting points in " + std::to_string(_config.randomBits) + " range.");
     }
 
