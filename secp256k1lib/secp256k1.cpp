@@ -904,16 +904,14 @@ uint256 secp256k1::getRandomRange(uint256 min, uint256 max)
 	uint256 range = max.sub(min);
 
 	unsigned char targetByteSize = range.getBitRange() / 8;
-	
+
 	for (int i = 0; i < 8; i++) {
 		if (targetByteSize > i*4) {
 			result.v[i] = rnd.getChunk();
-			if (targetByteSize > i*4 && targetByteSize < (i+1)*4) {
-				if (result.v[i] > range.v[i])
-					result.v[i] %= range.v[i];
+			if (targetByteSize > i*4 && targetByteSize <= (i+1)*4 && result.v[i] > range.v[i]) {
+				result.v[i] %= range.v[i];
 			}
 		}
 	}
-	
 	return result.add(min);
 }
