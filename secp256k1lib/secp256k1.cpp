@@ -903,12 +903,12 @@ uint256 secp256k1::getRandomRange(uint256 min, uint256 max)
 	uint256 result;
 	uint256 range = max.sub(min);
 
-	unsigned char targetByteSize = (range.getBitRange() + 8 - 1) / 8;
+	unsigned char targetByteSize = (range.getBitRange() + 31) / 32;
 
 	for (int i = 0; i < 8; i++) {
-		if (targetByteSize > i*4) {
+		if (targetByteSize > i) {
 			result.v[i] = rnd.getChunk();
-			if (targetByteSize > i*4 && targetByteSize <= (i+1)*4 && range.v[i] != 0 && result.v[i] > range.v[i]) {
+			if (targetByteSize > i && targetByteSize <= i+1 && range.v[i] != 0 && result.v[i] > range.v[i]) {
 				result.v[i] %= range.v[i];
 			}
 		}
