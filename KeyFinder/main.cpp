@@ -115,7 +115,7 @@ void statusCallback(KeySearchStatus info)
 	} else {
 		speedStr = util::format("%.2f", info.speed) + " MKey/s";
 	}
-    
+	
 	std::string totalStr = "(" + util::formatThousands(_config.totalkeys + info.total) + " total)";
 
 	std::string timeStr = "[" + util::formatSeconds((unsigned int)((_config.elapsed + info.totalTime) / 1000)) + "]";
@@ -461,7 +461,7 @@ int main(int argc, char **argv)
 {
 	bool optCompressed = false;
 	bool optUncompressed = false;
-	bool listDevices = false;
+    bool listDevices = false;
     bool optContinue = false;
     bool optShares = false;
     bool optThreads = false;
@@ -496,10 +496,10 @@ int main(int argc, char **argv)
 	parser.add("-b", "--blocks", true);
 	parser.add("-p", "--per-thread", true);
 	parser.add("-d", "--device", true);
-    parser.add("-c", "--compressed", false);
+	parser.add("-c", "--compressed", false);
 	parser.add("-u", "--uncompressed", false);
-    parser.add("-r", "--random", false);
 	parser.add("", "--compression", true);
+	parser.add("-r", "--random", false);
 	parser.add("-i", "--in", true);
 	parser.add("-o", "--out", true);
 

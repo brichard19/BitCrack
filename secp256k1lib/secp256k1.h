@@ -39,7 +39,6 @@ namespace secp256k1 {
 	public:
 		static const int BigEndian = 1;
 		static const int LittleEndian = 2;
-		
         uint32_t v[8] = { 0 };
 
 		uint256()

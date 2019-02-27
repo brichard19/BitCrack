@@ -295,5 +295,4 @@ namespace util {
 
         return s.substr(left, right - left + 1);
     }
-
 }
