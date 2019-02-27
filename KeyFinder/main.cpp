@@ -115,7 +115,6 @@ void statusCallback(KeySearchStatus info)
 	} else {
 		speedStr = util::format("%.2f", info.speed) + " MKey/s";
 	}
-	
 	std::string totalStr = "(" + util::formatThousands(_config.totalkeys + info.total) + " total)";
 
 	std::string timeStr = "[" + util::formatSeconds((unsigned int)((_config.elapsed + info.totalTime) / 1000)) + "]";
@@ -364,9 +363,7 @@ int run()
         return 1;
     }
 
-    Logger::log(LogLevel::Info, "Compression: " + getCompressionString(_config.compression));
-
-    
+    Logger::log(LogLevel::Info, "Compression: " + getCompressionString(_config.compression));    
     Logger::log(LogLevel::Info, "Starting at: " + _config.nextKey.toString());
     Logger::log(LogLevel::Info, "Ending at:   " + _config.endKey.toString());
     

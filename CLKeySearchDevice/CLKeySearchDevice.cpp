@@ -263,7 +263,6 @@ void CLKeySearchDevice::doStep()
                 _deviceResults,
                 _deviceResultsCount);
         }
-
         fflush(stdout);
 
         getResultsInternal();

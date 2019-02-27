@@ -13,10 +13,10 @@ CXX=g++
 CXXFLAGS=-O2 -std=c++11
 
 # CUDA variables
-COMPUTE_CAP=52
+COMPUTE_CAP=30
 NVCC=nvcc
 NVCCFLAGS=-std=c++11 -gencode=arch=compute_${COMPUTE_CAP},code=\"sm_${COMPUTE_CAP}\" -Xptxas="-v" -Xcompiler "${CXXFLAGS}"
-CUDA_HOME=/opt/cuda
+CUDA_HOME=/usr/local/cuda-9.2
 CUDA_LIB=${CUDA_HOME}/lib64
 CUDA_INCLUDE=${CUDA_HOME}/include
 CUDA_MATH=$(CUR_DIR)/cudaMath
