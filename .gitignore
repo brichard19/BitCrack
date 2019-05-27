@@ -3,6 +3,12 @@
 ##
 ## Get latest from https://github.com/github/gitignore/blob/master/VisualStudio.gitignore
 
+# These files are auto-generated during building and do
+# not need to be checked in
+CLKeySearchDevice/bitcrack.cl
+CLKeySearchDevice/bitcrack_cl.cpp
+
+
 # Linux build results
 *.o
 
