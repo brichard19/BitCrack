@@ -75,6 +75,7 @@ void CudaKeySearchDevice::init(const secp256k1::uint256 &start, int compression,
     // Block on kernel calls
     cudaCall(cudaSetDeviceFlags(cudaDeviceScheduleBlockingSync));
 
+    // Use a larger portion of shared memory for L1 cache
     cudaCall(cudaDeviceSetCacheConfig(cudaFuncCachePreferL1));
 
     generateStartingPoints();

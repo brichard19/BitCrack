@@ -53,6 +53,8 @@ typedef struct {
     uint64_t totalkeys = 0;
     unsigned int elapsed = 0;
     secp256k1::uint256 stride = 1;
+
+    bool follow = false;
 }RunConfig;
 
 static RunConfig _config;
@@ -129,7 +131,15 @@ void statusCallback(KeySearchStatus info)
 	std::string devName = info.deviceName.substr(0, 16);
 	devName += std::string(16 - devName.length(), ' ');
 
-	printf("\r%s %s/%sMB | %s %s %s %s", devName.c_str(), usedMemStr.c_str(), totalMemStr.c_str(), targetStr.c_str(), speedStr.c_str(), totalStr.c_str(), timeStr.c_str());
+    const char *formatStr = NULL;
+
+    if(_config.follow) {
+        formatStr = "%s %s/%sMB | %s %s %s %s\n";
+    } else {
+        formatStr = "\r%s %s / %sMB | %s %s %s %s";
+    }
+
+	printf(formatStr, devName.c_str(), usedMemStr.c_str(), totalMemStr.c_str(), targetStr.c_str(), speedStr.c_str(), totalStr.c_str(), timeStr.c_str());
 
     if(_config.checkpointFile.length() > 0) {
         uint64_t t = util::getSystemTime();
@@ -182,6 +192,7 @@ void usage()
     printf("BitCrack OPTIONS [TARGETS]\n");
     printf("Where TARGETS is one or more addresses\n\n");
 	
+    printf("--help                  Display this message\n");
     printf("-c, --compressed        Use compressed points\n");
     printf("-u, --uncompressed      Use Uncompressed points\n");
     printf("--compression  MODE     Specify compression where MODE is\n");
@@ -192,6 +203,7 @@ void usage()
     printf("-p, --points N          N points per thread\n");
     printf("-i, --in FILE           Read addresses from FILE, one per line\n");
     printf("-o, --out FILE          Write keys to FILE\n");
+    printf("-f, --follow            Follow text output\n");
     printf("--list-devices          List available devices\n");
     printf("--keyspace KEYSPACE     Specify the keyspace:\n");
     printf("                          START:END\n");
@@ -452,7 +464,6 @@ int main(int argc, char **argv)
 	bool optCompressed = false;
 	bool optUncompressed = false;
     bool listDevices = false;
-    bool optContinue = false;
     bool optShares = false;
     bool optThreads = false;
     bool optBlocks = false;
@@ -460,6 +471,14 @@ int main(int argc, char **argv)
 
     uint32_t shareIdx = 0;
     uint32_t numShares = 0;
+
+    // Catch --help first
+    for(int i = 1; i < argc; i++) {
+        if(std::string(argv[i]) == "--help") {
+            usage();
+            return 0;
+        }
+    }
 
     // Check for supported devices
     try {
@@ -480,6 +499,7 @@ int main(int argc, char **argv)
 		return 0;
 	}
 
+
 	CmdParse parser;
 	parser.add("-d", "--device", true);
 	parser.add("-t", "--threads", true);
@@ -491,15 +511,21 @@ int main(int argc, char **argv)
     parser.add("", "--compression", true);
 	parser.add("-i", "--in", true);
 	parser.add("-o", "--out", true);
-
+    parser.add("-f", "--follow", false);
     parser.add("", "--list-devices", false);
     parser.add("", "--keyspace", true);
     parser.add("", "--continue", true);
     parser.add("", "--share", true);
     parser.add("", "--stride", true);
 
-	parser.parse(argc, argv);
-	std::vector<OptArg> args = parser.getArgs();
+    try {
+        parser.parse(argc, argv);
+    } catch(std::string err) {
+        Logger::log(LogLevel::Error, "Error: " + err);
+        return 1;
+    }
+
+    std::vector<OptArg> args = parser.getArgs();
 
 	for(unsigned int i = 0; i < args.size(); i++) {
 		OptArg optArg = args[i];
@@ -531,7 +557,6 @@ int main(int argc, char **argv)
                 listDevices = true;
             } else if(optArg.equals("", "--continue")) {
                 _config.checkpointFile = optArg.arg;
-                optContinue = true;
             } else if(optArg.equals("", "--keyspace")) {
                 secp256k1::uint256 start;
                 secp256k1::uint256 end;
@@ -575,6 +600,8 @@ int main(int argc, char **argv)
                 if(_config.stride.cmp(0) == 0) {
                     throw std::string("argument is out of range");
                 }
+            } else if(optArg.equals("-f", "--follow")) {
+                _config.follow = true;
             }
 
 		} catch(std::string err) {

@@ -47,7 +47,7 @@ void CmdParse::parse(int argc, char **argv)
 				// It requires an argument
 
 				if(i == argc - 1) {
-					throw std::string("-k requires an argument");
+					throw std::string("'" + arg + "' requires an argument");
 				}
 
 				std::string optArg(argv[i + 1]);
