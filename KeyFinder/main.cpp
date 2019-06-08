@@ -185,14 +185,14 @@ void usage()
     printf("-c, --compressed        Use compressed points\n");
     printf("-u, --uncompressed      Use Uncompressed points\n");
     printf("--compression  MODE     Specify compression where MODE is\n");
-    printf("                          compressed or uncompressed or both\n");
+    printf("                          COMPRESSED or UNCOMPRESSED or BOTH\n");
     printf("-d, --device ID         Use device ID\n");
     printf("-b, --blocks N          N blocks\n");
     printf("-t, --threads N         N threads per block\n");
     printf("-p, --points N          N points per thread\n");
     printf("-i, --in FILE           Read addresses from FILE, one per line\n");
     printf("-o, --out FILE          Write keys to FILE\n");
-    printf("--list-devices      List available devices\n");
+    printf("--list-devices          List available devices\n");
     printf("--keyspace KEYSPACE     Specify the keyspace:\n");
     printf("                          START:END\n");
     printf("                          START:+COUNT\n");
