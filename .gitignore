@@ -7,7 +7,8 @@
 # not need to be checked in
 CLKeySearchDevice/bitcrack.cl
 CLKeySearchDevice/bitcrack_cl.cpp
-
+CLUnitTests/test.cpp
+CLUnitTests/test.cl
 
 # Linux build results
 *.o
