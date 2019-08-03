@@ -133,11 +133,11 @@ kernel to run longer, but more keys will be processed.
 
 ### Build dependencies
 
-Visual Studio 2017 (if on Windows)
+Visual Studio 2019 (if on Windows)
 
-For CUDA: CUDA Toolkit 9.2
+For CUDA: CUDA Toolkit 10.1
 
-For OpenCL: An OpenCL SDK
+For OpenCL: An OpenCL SDK (The CUDA toolkit contains an OpenCL SDK).
 
 
 ### Building in Windows
@@ -150,24 +150,6 @@ Build the `cuKeyFinder` project for a CUDA build.
 
 Note: By default the NVIDIA OpenCL headers are used. You can set the header and library path for
 OpenCL in the `BitCrack.props` property sheet.
-
-Note: CUDA may give the build error,
-```
-unsupported Microsoft Visual Studio version! Only the versions 2012, 2013, 2015 and 2017 are supported!
-```
-
-To fix this, edit `C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v9.2\include\crt\host_config.h` as
-Administrator and change
-
-```
-#if _MSC_VER < 1600 || _MSC_VER > 1911
-```
-
-to
-
-```
-#if _MSC_VER < 1600 || _MSC_VER > 1916
-```
 
 ### Building in Linux
 
