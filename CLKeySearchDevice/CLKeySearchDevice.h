@@ -36,7 +36,7 @@ private:
 
     int _threads;
 
-    int _pointsPerThread;
+    int _points;
 
     cl_device_id _device;
 
@@ -84,7 +84,8 @@ private:
     int getIndex(int block, int thread, int idx);
 
     void splatBigInt(unsigned int *dest, int block, int thread, int idx, const secp256k1::uint256 &i);
-    secp256k1::uint256 readBigInt(unsigned int *src, int block, int thread, int idx);
+    void splatBigInt(unsigned int *dest, int idx, secp256k1::uint256 &k);
+    secp256k1::uint256 readBigInt(unsigned int *src, int idx);
 
     void selfTest();
 

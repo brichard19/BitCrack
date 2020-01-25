@@ -32,7 +32,8 @@ int runTest(cl_device_id deviceId)
 
     std::cout << "Running test kernel..." << std::endl;
 
-    k.call(1, 1, devErrors, devNumErrors);
+    k.set_args(devErrors, devNumErrors);
+    k.call(1, 1);
 
     unsigned int numErrors = 0;
     std::vector<CLErrorInfo> errors;
