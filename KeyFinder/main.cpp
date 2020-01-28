@@ -504,7 +504,7 @@ int main(int argc, char **argv)
 	parser.add("-d", "--device", true);
 	parser.add("-t", "--threads", true);
 	parser.add("-b", "--blocks", true);
-	parser.add("-p", "--per-thread", true);
+	parser.add("-p", "--points", true);
 	parser.add("-d", "--device", true);
 	parser.add("-c", "--compressed", false);
 	parser.add("-u", "--uncompressed", false);
