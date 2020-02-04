@@ -2,6 +2,7 @@
 #include <string>
 #include <sstream>
 #include <cstring>
+#include <algorithm>
 
 #include "clContext.h"
 #include "util.h"
@@ -56,7 +57,6 @@ void cl::CLContext::free(cl_mem mem)
 void cl::CLContext::copyHostToDevice(const void *hostPtr, cl_mem devicePtr, size_t size)
 {
    clCall(clEnqueueWriteBuffer(_queue, devicePtr, CL_TRUE, 0, size, hostPtr, 0, NULL, NULL));
-    
 }
 
 void cl::CLContext::copyHostToDevice(const void *hostPtr, cl_mem devicePtr, size_t offset, size_t size)
@@ -67,6 +67,11 @@ void cl::CLContext::copyHostToDevice(const void *hostPtr, cl_mem devicePtr, size
 void cl::CLContext::copyDeviceToHost(cl_mem devicePtr, void *hostPtr, size_t size)
 {
     clCall(clEnqueueReadBuffer(_queue, devicePtr, CL_TRUE, 0, size, hostPtr, 0, NULL, NULL));
+}
+
+void cl::CLContext::copyBuffer(cl_mem src_buffer, size_t src_offset, cl_mem dst_buffer, size_t dst_offset, size_t size)
+{
+    clCall(clEnqueueCopyBuffer(_queue, src_buffer, dst_buffer, src_offset, dst_offset, size, NULL, NULL, NULL));
 }
 
 void cl::CLContext::memset(cl_mem devicePtr, unsigned char value, size_t size)
@@ -118,7 +123,7 @@ cl::CLProgram::CLProgram(cl::CLContext &ctx, const char *src, std::string option
     cl_int err;
 
     if(util::toLower(_ctx.getDeviceVendor()).find("intel") != std::string::npos) {
-        options += "-DDEVICE_VENDOR_INTEL";
+        options += " -DDEVICE_VENDOR_INTEL";
     }
 
     _prog = clCreateProgramWithSource(ctx.getContext(), 1, &src, &len, &err);
@@ -188,6 +193,28 @@ std::string cl::CLContext::getDeviceVendor()
     clCall(clGetDeviceInfo(_device, CL_DEVICE_VENDOR, sizeof(name), name, NULL));
 
     return std::string(name);
+}
+
+int cl::CLContext::get_mp_count()
+{
+    size_t count = 1;
+
+    clCall(clGetDeviceInfo(_device, CL_DEVICE_MAX_COMPUTE_UNITS, sizeof(count), &count, NULL));
+
+    return (int)count;
+}
+
+// TODO: This is for 1 dimension only
+int cl::CLContext::get_max_block_size()
+{
+    size_t count[3] = { 1,1,1 };
+    size_t max_items = 1;
+
+    clCall(clGetDeviceInfo(_device, CL_DEVICE_MAX_WORK_ITEM_SIZES, sizeof(count), &count, NULL));
+
+    clCall(clGetDeviceInfo(_device, CL_DEVICE_MAX_WORK_GROUP_SIZE, sizeof(max_items), &max_items, NULL));
+
+    return (int)std::min(count[0], max_items);
 }
 
 cl::CLProgram::~CLProgram()
