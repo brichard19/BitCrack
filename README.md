@@ -127,7 +127,7 @@ There are 3 parameters that affect performance: blocks, threads per block, and k
 `threads:` The number of threads in a block. This must be a multiple of 32. The default is 256.
 
 `Keys per thread:` The number of keys each thread will process. The performance (keys per second)
-increases asymptotically with this value. The default is256. Increasing this value will cause the
+increases asymptotically with this value. The default is 256. Increasing this value will cause the
 kernel to run longer, but more keys will be processed.
 
 
