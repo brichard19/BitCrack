@@ -22,7 +22,7 @@ __device__ unsigned int *ec::getYPtr()
 	return _yPtr[0];
 }
 
-__global__ void multiplyStepKernel(const unsigned int *privateKeys, int pointsPerThread, int step, unsigned int *chain, const unsigned int *gxPtr, const unsigned int *gyPtr);
+__global__ void multiplyStepKernel(unsigned int *privateKeys, int pointsPerThread, int step, unsigned int *chain, const unsigned int *gxPtr, const unsigned int *gyPtr);
 
 
 int CudaDeviceKeys::getIndex(int block, int thread, int idx)
@@ -45,15 +45,22 @@ void CudaDeviceKeys::splatBigInt(unsigned int *dest, int block, int thread, int 
 	i.exportWords(value, 8, secp256k1::uint256::BigEndian);
 
 	int totalThreads = _blocks * _threads;
-	int threadId = block * _threads + thread;
+	int threadId = block * _threads * 4 + thread * 4;
 
 	int base = idx * _blocks * _threads * 8;
 
 	int index = base + threadId;
 
-	for(int k = 0; k < 8; k++) {
+	for(int k = 0; k < 4; k++) {
 		dest[index] = value[k];
-		index += totalThreads;
+		index++;
+	}
+
+	index = base + totalThreads * 4 + threadId;
+
+	for(int k = 4; k < 8; k++) {
+		dest[index] = value[k];
+		index++;
 	}
 }
 
@@ -62,15 +69,22 @@ secp256k1::uint256 CudaDeviceKeys::readBigInt(unsigned int *src, int block, int 
 	unsigned int value[8] = { 0 };
 
 	int totalThreads = _blocks * _threads;
-	int threadId = block * _threads + thread;
+	int threadId = block * _threads * 4 + thread * 4;
 
 	int base = idx * _blocks * _threads * 8;
 
 	int index = base + threadId;
 
-	for(int k = 0; k < 8; k++) {
+	for(int k = 0; k < 4; k++) {
 		value[k] = src[index];
-		index += totalThreads;
+		index++;
+	}
+
+	index = base + totalThreads * 4 + threadId;
+
+	for(int k = 4; k < 8; k++) {
+		value[k] = src[index];
+		index++;
 	}
 
 	secp256k1::uint256 v(value, secp256k1::uint256::BigEndian);
@@ -286,7 +300,7 @@ cudaError_t CudaDeviceKeys::doStep()
 	return err;
 }
 
-__global__ void multiplyStepKernel(const unsigned int *privateKeys, int pointsPerThread, int step, unsigned int *chain, const unsigned int *gxPtr, const unsigned int *gyPtr)
+__global__ void multiplyStepKernel(unsigned int *privateKeys, int pointsPerThread, int step, unsigned int *chain, const unsigned int *gxPtr, const unsigned int *gyPtr)
 {
 	unsigned int *xPtr = ec::getXPtr();
 
