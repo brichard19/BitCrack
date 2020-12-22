@@ -41,6 +41,7 @@ unsigned int endian(unsigned int x);
 std::string toLower(const std::string &s);
 std::string trim(const std::string &s, char c=' ');
 
+std::vector<std::string> ReadFileLines(const std::string& fileName);
 }
 
 #endif

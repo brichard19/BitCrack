@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 15
-VisualStudioVersion = 15.0.27703.2018
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.29519.87
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "secp256k1lib", "secp256k1lib\secp256k1lib.vcxproj", "{BFF4B5FE-C2C5-4384-8941-CD6CB29E78C6}"
 EndProject
@@ -78,6 +78,10 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "CLUnitTests", "CLUnitTests\
 	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "clMath", "clMath\clMath.vcxproj", "{83327841-C283-4D46-A873-97AC674C68AC}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "StringsHasher", "StringsHasher\StringsHasher.vcxproj", "{691AB22B-0E94-4C8A-8C63-E33CF8768726}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "TestLib", "TestLib\TestLib.vcxproj", "{FEBBC324-1FF3-4393-9249-535549A85B80}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -231,6 +235,18 @@ Global
 		{83327841-C283-4D46-A873-97AC674C68AC}.Release|x64.Build.0 = Release|x64
 		{83327841-C283-4D46-A873-97AC674C68AC}.Release|x86.ActiveCfg = Release|Win32
 		{83327841-C283-4D46-A873-97AC674C68AC}.Release|x86.Build.0 = Release|Win32
+		{691AB22B-0E94-4C8A-8C63-E33CF8768726}.Debug|x64.ActiveCfg = Debug|x64
+		{691AB22B-0E94-4C8A-8C63-E33CF8768726}.Debug|x64.Build.0 = Debug|x64
+		{691AB22B-0E94-4C8A-8C63-E33CF8768726}.Debug|x86.ActiveCfg = Debug|x64
+		{691AB22B-0E94-4C8A-8C63-E33CF8768726}.Release|x64.ActiveCfg = Release|x64
+		{691AB22B-0E94-4C8A-8C63-E33CF8768726}.Release|x64.Build.0 = Release|x64
+		{691AB22B-0E94-4C8A-8C63-E33CF8768726}.Release|x86.ActiveCfg = Release|x64
+		{FEBBC324-1FF3-4393-9249-535549A85B80}.Debug|x64.ActiveCfg = Debug|x64
+		{FEBBC324-1FF3-4393-9249-535549A85B80}.Debug|x64.Build.0 = Debug|x64
+		{FEBBC324-1FF3-4393-9249-535549A85B80}.Debug|x86.ActiveCfg = Debug|x64
+		{FEBBC324-1FF3-4393-9249-535549A85B80}.Release|x64.ActiveCfg = Release|x64
+		{FEBBC324-1FF3-4393-9249-535549A85B80}.Release|x64.Build.0 = Release|x64
+		{FEBBC324-1FF3-4393-9249-535549A85B80}.Release|x86.ActiveCfg = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

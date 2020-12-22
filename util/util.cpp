@@ -295,4 +295,11 @@ namespace util {
 
         return s.substr(left, right - left + 1);
     }
+
+	std::vector<std::string> ReadFileLines(const std::string& fileName)
+	{
+		std::vector<std::string> lines;
+		util::readLinesFromStream(fileName, lines);
+		return lines;
+	}
 }
