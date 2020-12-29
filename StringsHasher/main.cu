@@ -12,6 +12,7 @@
 #include "cudabridge.h"
 #include "util.h"
 #include <iostream>
+#include <chrono>
 
 char* trim(char* str) {
 	size_t len = 0;
@@ -61,6 +62,35 @@ __global__ void sha256_cuda(JOB** jobs, int n) {
 		sha256_init(&ctx);
 		sha256_update(&ctx, jobs[i]->data, jobs[i]->size);
 		sha256_final(&ctx, jobs[i]->digest);
+
+		if (i == 0)
+		{
+			printf("jobs[i]->data = \n");
+			/*
+			char* string = (char*)malloc(70);
+			int k, i;
+			for (i = 0, k = 0; i < 32; i++, k += 2)
+			{
+				sprintf(string + k, "%.2x", buff[i]);
+				//printf("%02x", buff[i]);
+			}
+			string[64] = 0;
+			return string;
+			*/
+			
+		}
+		/*
+		SHA256_CTX ctx2;
+		sha256_init(&ctx2);
+		sha256_update(&ctx2, jobs[i]->digest, 64);
+		sha256_final(&ctx2, jobs[i]->digest2);
+
+
+		SHA256_CTX ctx3;
+		sha256_init(&ctx3);
+		sha256_update(&ctx3, jobs[i]->digest, 32);
+		sha256_final(&ctx3, jobs[i]->digest3);
+		*/
 	}
 }
 
@@ -86,52 +116,13 @@ JOB* JOB_init(BYTE* data, long size, char* fname) {
 	for (int i = 0; i < 64; i++)
 	{
 		j->digest[i] = 0xff;
+		//j->digest2[i] = 0xff;
+		//j->digest3[i] = 0xff;
 	}
 	strcpy(j->fname, fname);
 	return j;
 }
 
-
-BYTE* get_file_data(char* fname, unsigned long* size) {
-	FILE* f = 0;
-	BYTE* buffer = 0;
-	unsigned long fsize = 0;
-
-	f = fopen(fname, "rb");
-	if (!f) {
-		fprintf(stderr, "get_file_data Unable to open '%s'\n", fname);
-		return 0;
-	}
-	fflush(f);
-
-	if (fseek(f, 0, SEEK_END)) {
-		fprintf(stderr, "Unable to fseek %s\n", fname);
-		return 0;
-	}
-	fflush(f);
-	fsize = ftell(f);
-	rewind(f);
-
-	//buffer = (char *)malloc((fsize+1)*sizeof(char));
-	checkCudaErrors(cudaMallocManaged(&buffer, (fsize + 1) * sizeof(char)));
-	fread(buffer, fsize, 1, f);
-	fclose(f);
-	*size = fsize;
-	return buffer;
-}
-
-void print_usage() {
-	printf("Usage: CudaSHA256 [OPTION] [FILE]...\n");
-	printf("Calculate sha256 hash of given FILEs\n\n");
-	printf("OPTIONS:\n");
-	printf("\t-f FILE1 \tRead a list of files (separeted by \\n) from FILE1, output hash for each file\n");
-	printf("\t-h       \tPrint this help\n");
-	printf("\nIf no OPTIONS are supplied, then program reads the content of FILEs and outputs hash for each FILEs \n");
-	printf("\nOutput format:\n");
-	printf("Hash following by two spaces following by file name (same as sha256sum).\n");
-	printf("\nNotes:\n");
-	printf("Calculations are performed on GPU, each seperate file is hashed in its own thread\n");
-}
 
 int main(int argc, char** argv) {
 	int i = 0, n = 0;
@@ -140,35 +131,12 @@ int main(int argc, char** argv) {
 	char* a_file = 0, * line = 0;
 	BYTE* buff = 0;
 	char option, index;
-	//ssize_t read;
 	JOB** jobs;
-
-	/*
-	// parse input
-	while ((option = getopt(argc, argv, "hf:")) != -1)
-		switch (option) {
-		case 'h':
-			print_usage();
-			break;
-		case 'f':
-			a_file = optarg;
-			break;
-		default:
-			break;
-		}
-	*/
-
-	/*
-	FILE* f = 0;
-	f = fopen(a_file, "r");
-	if (!f) {
-		fprintf(stderr, "Unable to open %s\n", a_file);
-		return 0;
-	}
-	*/
 
 	std::string path("C:/Users/avira/Documents/Passwords/example.txt");
 	std::vector<std::string> lines = util::ReadFileLines(path);
+
+	auto t0 = std::chrono::high_resolution_clock::now();
 	
 	n = lines.size();
 	checkCudaErrors(cudaMallocManaged(&jobs, n * sizeof(JOB*)));
@@ -178,7 +146,6 @@ int main(int argc, char** argv) {
 	//std::string combined; //Works perfectly fine so long as it is contiguously allocated
 	//std::vector<int> indexes; //You *might* be able to use int instead of size_t to save space
 	for (std::string const& line : lines) {
-		std::cout << "In Loop." << std::endl;
 		//std::copy(line.begin(), line.end(), buff);
 		BYTE* buffer = 0;
 		size_t length = line.size() + 1;
@@ -187,39 +154,19 @@ int main(int argc, char** argv) {
 		jobs[n++] = JOB_init(buffer, length - 1, "test");
 	}
 	std::cout << "After Loop." << std::endl;
-	
 
-	//line = "C:/Users/avira/Documents/Passwords/example.txt";
-	//line = trim(line);
-	//buff = get_file_data(line, &temp);
-	//jobs[n++] = JOB_init(buff, temp, line);
-
+	auto t1 = std::chrono::high_resolution_clock::now();
 	pre_sha256();
 	runJobs(jobs, n);
 
-	
-	/*
-	else {
-		// get number of arguments = files = jobs
-		n = argc - optind;
-		if (n > 0) {
-
-			checkCudaErrors(cudaMallocManaged(&jobs, n * sizeof(JOB*)));
-
-			// iterate over file list - non optional arguments
-			for (i = 0, index = optind; index < argc; index++, i++) {
-				buff = get_file_data(argv[index], &temp);
-				jobs[i] = JOB_init(buff, temp, argv[index]);
-			}
-
-			pre_sha256();
-			runJobs(jobs, n);
-		}
-	}
-	*/
-
 	cudaDeviceSynchronize();
-	print_jobs(jobs, n);
+	auto t2 = std::chrono::high_resolution_clock::now();
+	auto duration_total = std::chrono::duration_cast<std::chrono::microseconds>(t2 - t0).count();
+	auto duration_gpu_work = std::chrono::duration_cast<std::chrono::microseconds>(t2 - t1).count();
+	printf("\t duration_gpu_work = %d microseconds  \n", duration_gpu_work);
+	printf("\t duration_total = %d microseconds  \n", duration_total);
+	
+	//print_jobs(jobs, n);
 	cudaDeviceReset();
 	return 0;
 }

@@ -26,6 +26,7 @@
 #include <cstdint>
 #include <crt/host_defines.h>
 /**************************** DATA TYPES ****************************/
+//typedef unsigned char BYTE;             // 8-bit byte
 typedef unsigned char BYTE;             // 8-bit byte
 typedef uint32_t  WORD;             // 32-bit word, change to "long" for 16-bit machines
 
@@ -33,6 +34,8 @@ typedef struct JOB {
 	BYTE* data;
 	unsigned long long size;
 	BYTE digest[64];
+	//BYTE digest2[64];
+	//BYTE digest3[64];
 	char fname[128];
 }JOB;
 
@@ -67,7 +70,7 @@ __device__ void sha256_final(SHA256_CTX* ctx, BYTE hash[]);
 char* hash_to_string(BYTE* buff) {
 	char* string = (char*)malloc(70);
 	int k, i;
-	for (i = 0, k = 0; i < 32; i++, k += 2)
+	for (i = 0, k = 0; i < 32; i++, k += 1)
 	{
 		sprintf(string + k, "%.2x", buff[i]);
 		//printf("%02x", buff[i]);
@@ -77,7 +80,9 @@ char* hash_to_string(BYTE* buff) {
 }
 
 void print_job(JOB* j) {
-	printf("%s  %s\n", hash_to_string(j->digest), j->data);
+	printf("d1 %s  %s\n", hash_to_string(j->digest), j->data);
+	//printf("d2 %s  %s\n", hash_to_string(j->digest2), j->data);
+	//printf("d3 %s  %s\n", hash_to_string(j->digest3), j->data);
 }
 
 void print_jobs(JOB** jobs, int n) {
