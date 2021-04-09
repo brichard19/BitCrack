@@ -71,7 +71,8 @@ std::string Base58::toBase58(const secp256k1::uint256 &x)
 
 	secp256k1::uint256 value = x;
 
-	while(!value.isZero()) {
+	//while(!value.isZero()) {
+	for(unsigned int i=0; i<=32; i++){
 		secp256k1::uint256 digit = value.mod(58);
 		int digitInt = digit.toInt32();
 
