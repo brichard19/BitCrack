@@ -56,7 +56,7 @@ __device__ __forceinline__ unsigned int s1(unsigned int x)
 }
 
 
-__device__ __forceinline__ void roundSha256(unsigned int a, unsigned int b, unsigned int c, unsigned int &d, unsigned e, unsigned int f, unsigned int g, unsigned int &h, unsigned int m, unsigned int k)
+__device__ __forceinline__ void roundSha256(unsigned int a, unsigned int b, unsigned int c, unsigned int &d, unsigned int e, unsigned int f, unsigned int g, unsigned int &h, unsigned int m, unsigned int k)
 {
 	unsigned int s = CH(e, f, g) + (rotr(e, 6) ^ rotr(e, 11) ^ rotr(e, 25)) + k + m;
 
