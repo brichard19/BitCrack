@@ -24,6 +24,20 @@ __device__ unsigned int *ec::getYPtr()
 
 __global__ void multiplyStepKernel(unsigned int *privateKeys, int pointsPerThread, int step, unsigned int *chain, const unsigned int *gxPtr, const unsigned int *gyPtr);
 
+unsigned int * CudaDeviceKeys::getXPoints()
+{
+	return _devX;
+}
+
+unsigned int * CudaDeviceKeys::getYPoints()
+{
+	return _devY;
+}
+
+unsigned int * CudaDeviceKeys::getChain()
+{
+	return _devChain;
+}
 
 int CudaDeviceKeys::getIndex(int block, int thread, int idx)
 {
@@ -269,9 +283,11 @@ cudaError_t CudaDeviceKeys::init(int blocks, int threads, int pointsPerThread, c
 
 void CudaDeviceKeys::clearPublicKeys()
 {
+	cudaFree(_devChain);
 	cudaFree(_devX);
 	cudaFree(_devY);
 
+	_devChain = NULL;
 	_devX = NULL;
 	_devY = NULL;
 }
@@ -281,9 +297,9 @@ void CudaDeviceKeys::clearPrivateKeys()
 	cudaFree(_devBasePointX);
 	cudaFree(_devBasePointY);
 	cudaFree(_devPrivate);
-	cudaFree(_devChain);
+	//cudaFree(_devChain);
 
-	_devChain = NULL;
+	//_devChain = NULL;
 	_devBasePointX = NULL;
 	_devBasePointY = NULL;
 	_devPrivate = NULL;

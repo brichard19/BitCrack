@@ -76,6 +76,9 @@ public:
 
 	void clearPublicKeys();
 
+	unsigned int * getXPoints();
+	unsigned int * getYPoints();
+	unsigned int * getChain();
 };
 
 #endif

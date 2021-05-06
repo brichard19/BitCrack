@@ -4,8 +4,6 @@
 #include<cuda.h>
 #include<cuda_runtime.h>
 
-#include<stdio.h>
-
 
 __constant__ unsigned int _K[64] = {
 	0x428a2f98, 0x71374491, 0xb5c0fbcf, 0xe9b5dba5, 0x3956c25b, 0x59f111f1, 0x923f82a4, 0xab1c5ed5,
@@ -56,7 +54,7 @@ __device__ __forceinline__ unsigned int s1(unsigned int x)
 }
 
 
-__device__ __forceinline__ void roundSha256(unsigned int a, unsigned int b, unsigned int c, unsigned int &d, unsigned e, unsigned int f, unsigned int g, unsigned int &h, unsigned int m, unsigned int k)
+__device__ __forceinline__ void roundSha256(unsigned int a, unsigned int b, unsigned int c, unsigned int &d, unsigned int e, unsigned int f, unsigned int g, unsigned int &h, unsigned int m, unsigned int k)
 {
 	unsigned int s = CH(e, f, g) + (rotr(e, 6) ^ rotr(e, 11) ^ rotr(e, 25)) + k + m;
 
