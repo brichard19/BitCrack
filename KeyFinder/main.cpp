@@ -72,35 +72,35 @@ static uint64_t _startTime = 0;
 */
 void resultCallback(KeySearchResult info)
 {
-	if(_config.resultsFile.length() != 0) {
-		Logger::log(LogLevel::Info, "Found key for address '" + info.address + "'. Written to '" + _config.resultsFile + "'");
+    if(_config.resultsFile.length() != 0) {
+        Logger::log(LogLevel::Info, "Found key for address '" + info.address + "'. Written to '" + _config.resultsFile + "'");
 
-		std::string s = info.address + " " + info.privateKey.toString(16) + " " + info.publicKey.toString(info.compressed);
-		util::appendToFile(_config.resultsFile, s);
+        std::string s = info.address + " " + info.privateKey.toString(16) + " " + info.publicKey.toString(info.compressed);
+        util::appendToFile(_config.resultsFile, s);
 
-		return;
-	}
+        return;
+    }
 
-	std::string logStr = "Address:     " + info.address + "\n";
-	logStr += "Private key: " + info.privateKey.toString(16) + "\n";
-	logStr += "Compressed:  ";
+    std::string logStr = "Address:     " + info.address + "\n";
+    logStr += "Private key: " + info.privateKey.toString(16) + "\n";
+    logStr += "Compressed:  ";
 
-	if(info.compressed) {
-		logStr += "yes\n";
-	} else {
-		logStr += "no\n";
-	}
+    if(info.compressed) {
+        logStr += "yes\n";
+    } else {
+        logStr += "no\n";
+    }
 
-	logStr += "Public key:  \n";
+    logStr += "Public key:  \n";
 
-	if(info.compressed) {
-		logStr += info.publicKey.toString(true) + "\n";
-	} else {
-		logStr += info.publicKey.x.toString(16) + "\n";
-		logStr += info.publicKey.y.toString(16) + "\n";
-	}
+    if(info.compressed) {
+        logStr += info.publicKey.toString(true) + "\n";
+    } else {
+        logStr += info.publicKey.x.toString(16) + "\n";
+        logStr += info.publicKey.y.toString(16) + "\n";
+    }
 
-	Logger::log(LogLevel::Info, logStr);
+    Logger::log(LogLevel::Info, logStr);
 }
 
 /**
@@ -108,28 +108,28 @@ Callback to display progress
 */
 void statusCallback(KeySearchStatus info)
 {
-	std::string speedStr;
+    std::string speedStr;
 
-	if(info.speed < 0.01) {
-		speedStr = "< 0.01 MKey/s";
-	} else {
-		speedStr = util::format("%.2f", info.speed) + " MKey/s";
-	}
+    if(info.speed < 0.01) {
+        speedStr = "< 0.01 MKey/s";
+    } else {
+        speedStr = util::format("%.2f", info.speed) + " MKey/s";
+    }
 
-	std::string totalStr = "(" + util::formatThousands(_config.totalkeys + info.total) + " total)";
+    std::string totalStr = "(" + util::formatThousands(_config.totalkeys + info.total) + " total)";
 
-	std::string timeStr = "[" + util::formatSeconds((unsigned int)((_config.elapsed + info.totalTime) / 1000)) + "]";
+    std::string timeStr = "[" + util::formatSeconds((unsigned int)((_config.elapsed + info.totalTime) / 1000)) + "]";
 
-	std::string usedMemStr = util::format((info.deviceMemory - info.freeMemory) /(1024 * 1024));
+    std::string usedMemStr = util::format((info.deviceMemory - info.freeMemory) /(1024 * 1024));
 
-	std::string totalMemStr = util::format(info.deviceMemory / (1024 * 1024));
+    std::string totalMemStr = util::format(info.deviceMemory / (1024 * 1024));
 
     std::string targetStr = util::format(info.targets) + " target" + (info.targets > 1 ? "s" : "");
 
 
-	// Fit device name in 16 characters, pad with spaces if less
-	std::string devName = info.deviceName.substr(0, 16);
-	devName += std::string(16 - devName.length(), ' ');
+    // Fit device name in 16 characters, pad with spaces if less
+    std::string devName = info.deviceName.substr(0, 16);
+    devName += std::string(16 - devName.length(), ' ');
 
     const char *formatStr = NULL;
 
@@ -139,7 +139,7 @@ void statusCallback(KeySearchStatus info)
         formatStr = "\r%s %s / %sMB | %s %s %s %s";
     }
 
-	printf(formatStr, devName.c_str(), usedMemStr.c_str(), totalMemStr.c_str(), targetStr.c_str(), speedStr.c_str(), totalStr.c_str(), timeStr.c_str());
+    printf(formatStr, devName.c_str(), usedMemStr.c_str(), totalMemStr.c_str(), targetStr.c_str(), speedStr.c_str(), totalStr.c_str(), timeStr.c_str());
 
     if(_config.checkpointFile.length() > 0) {
         uint64_t t = util::getSystemTime();
@@ -222,19 +222,19 @@ void usage()
  Finds default parameters depending on the device
  */
 typedef struct {
-	int threads;
-	int blocks;
-	int pointsPerThread;
+    int threads;
+    int blocks;
+    int pointsPerThread;
 }DeviceParameters;
 
 DeviceParameters getDefaultParameters(const DeviceManager::DeviceInfo &device)
 {
-	DeviceParameters p;
-	p.threads = 256;
+    DeviceParameters p;
+    p.threads = 256;
     p.blocks = 32;
-	p.pointsPerThread = 32;
+    p.pointsPerThread = 32;
 
-	return p;
+    return p;
 }
 
 static KeySearchDevice *getDeviceContext(DeviceManager::DeviceInfo &device, int blocks, int threads, int pointsPerThread)
@@ -461,8 +461,8 @@ bool parseShare(const std::string &s, uint32_t &idx, uint32_t &total)
 
 int main(int argc, char **argv)
 {
-	bool optCompressed = false;
-	bool optUncompressed = false;
+    bool optCompressed = false;
+    bool optUncompressed = false;
     bool listDevices = false;
     bool optShares = false;
     bool optThreads = false;
@@ -494,23 +494,23 @@ int main(int argc, char **argv)
     }
 
     // Check for arguments
-	if(argc == 1) {
-		usage();
-		return 0;
-	}
+    if(argc == 1) {
+        usage();
+        return 0;
+    }
 
 
-	CmdParse parser;
-	parser.add("-d", "--device", true);
-	parser.add("-t", "--threads", true);
-	parser.add("-b", "--blocks", true);
-	parser.add("-p", "--points", true);
-	parser.add("-d", "--device", true);
-	parser.add("-c", "--compressed", false);
-	parser.add("-u", "--uncompressed", false);
+    CmdParse parser;
+    parser.add("-d", "--device", true);
+    parser.add("-t", "--threads", true);
+    parser.add("-b", "--blocks", true);
+    parser.add("-p", "--points", true);
+    parser.add("-d", "--device", true);
+    parser.add("-c", "--compressed", false);
+    parser.add("-u", "--uncompressed", false);
     parser.add("", "--compression", true);
-	parser.add("-i", "--in", true);
-	parser.add("-o", "--out", true);
+    parser.add("-i", "--in", true);
+    parser.add("-o", "--out", true);
     parser.add("-f", "--follow", false);
     parser.add("", "--list-devices", false);
     parser.add("", "--keyspace", true);
@@ -527,32 +527,32 @@ int main(int argc, char **argv)
 
     std::vector<OptArg> args = parser.getArgs();
 
-	for(unsigned int i = 0; i < args.size(); i++) {
-		OptArg optArg = args[i];
-		std::string opt = args[i].option;
+    for(unsigned int i = 0; i < args.size(); i++) {
+        OptArg optArg = args[i];
+        std::string opt = args[i].option;
 
-		try {
-			if(optArg.equals("-t", "--threads")) {
-				_config.threads = util::parseUInt32(optArg.arg);
+        try {
+            if(optArg.equals("-t", "--threads")) {
+                _config.threads = util::parseUInt32(optArg.arg);
                 optThreads = true;
             } else if(optArg.equals("-b", "--blocks")) {
                 _config.blocks = util::parseUInt32(optArg.arg);
                 optBlocks = true;
-			} else if(optArg.equals("-p", "--points")) {
-				_config.pointsPerThread = util::parseUInt32(optArg.arg);
+            } else if(optArg.equals("-p", "--points")) {
+                _config.pointsPerThread = util::parseUInt32(optArg.arg);
                 optPoints = true;
-			} else if(optArg.equals("-d", "--device")) {
-				_config.device = util::parseUInt32(optArg.arg);
-			} else if(optArg.equals("-c", "--compressed")) {
-				optCompressed = true;
+            } else if(optArg.equals("-d", "--device")) {
+                _config.device = util::parseUInt32(optArg.arg);
+            } else if(optArg.equals("-c", "--compressed")) {
+                optCompressed = true;
             } else if(optArg.equals("-u", "--uncompressed")) {
                 optUncompressed = true;
             } else if(optArg.equals("", "--compression")) {
                 _config.compression = parseCompressionString(optArg.arg);
-			} else if(optArg.equals("-i", "--in")) {
-				_config.targetsFile = optArg.arg;
-			} else if(optArg.equals("-o", "--out")) {
-				_config.resultsFile = optArg.arg;
+            } else if(optArg.equals("-i", "--in")) {
+                _config.targetsFile = optArg.arg;
+            } else if(optArg.equals("-o", "--out")) {
+                _config.resultsFile = optArg.arg;
             } else if(optArg.equals("", "--list-devices")) {
                 listDevices = true;
             } else if(optArg.equals("", "--continue")) {
@@ -604,43 +604,43 @@ int main(int argc, char **argv)
                 _config.follow = true;
             }
 
-		} catch(std::string err) {
-			Logger::log(LogLevel::Error, "Error " + opt + ": " + err);
-			return 1;
-		}
-	}
+        } catch(std::string err) {
+            Logger::log(LogLevel::Error, "Error " + opt + ": " + err);
+            return 1;
+        }
+    }
 
     if(listDevices) {
         printDeviceList(_devices);
         return 0;
     }
 
-	// Verify device exists
-	if(_config.device < 0 || _config.device >= _devices.size()) {
-		Logger::log(LogLevel::Error, "device " + util::format(_config.device) + " does not exist");
-		return 1;
-	}
+    // Verify device exists
+    if(_config.device < 0 || _config.device >= _devices.size()) {
+        Logger::log(LogLevel::Error, "device " + util::format(_config.device) + " does not exist");
+        return 1;
+    }
 
-	// Parse operands
-	std::vector<std::string> ops = parser.getOperands();
+    // Parse operands
+    std::vector<std::string> ops = parser.getOperands();
 
     // If there are no operands, then we must be reading from a file, otherwise
     // expect addresses on the commandline
-	if(ops.size() == 0) {
-		if(_config.targetsFile.length() == 0) {
-			Logger::log(LogLevel::Error, "Missing arguments");
-			usage();
-			return 1;
-		}
-	} else {
-		for(unsigned int i = 0; i < ops.size(); i++) {
+    if(ops.size() == 0) {
+        if(_config.targetsFile.length() == 0) {
+            Logger::log(LogLevel::Error, "Missing arguments");
+            usage();
+            return 1;
+        }
+    } else {
+        for(unsigned int i = 0; i < ops.size(); i++) {
             if(!Address::verifyAddress(ops[i])) {
                 Logger::log(LogLevel::Error, "Invalid address '" + ops[i] + "'");
                 return 1;
             }
-			_config.targets.push_back(ops[i]);
-		}
-	}
+            _config.targets.push_back(ops[i]);
+        }
+    }
     
     // Calculate where to start and end in the keyspace when the --share option is used
     if(optShares) {
@@ -663,14 +663,14 @@ int main(int argc, char **argv)
         _config.startKey = startPos;
     }
 
-	// Check option for compressed, uncompressed, or both
-	if(optCompressed && optUncompressed) {
-		_config.compression = PointCompressionType::BOTH;
-	} else if(optCompressed) {
-		_config.compression = PointCompressionType::COMPRESSED;
-	} else if(optUncompressed) {
-		_config.compression = PointCompressionType::UNCOMPRESSED;
-	}
+    // Check option for compressed, uncompressed, or both
+    if(optCompressed && optUncompressed) {
+        _config.compression = PointCompressionType::BOTH;
+    } else if(optCompressed) {
+        _config.compression = PointCompressionType::COMPRESSED;
+    } else if(optUncompressed) {
+        _config.compression = PointCompressionType::UNCOMPRESSED;
+    }
 
     if(_config.checkpointFile.length() > 0) {
         readCheckpointFile();

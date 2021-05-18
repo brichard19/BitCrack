@@ -80,7 +80,7 @@ void CudaKeySearchDevice::init(const secp256k1::uint256 &start, int compression,
 
     generateStartingPoints();
 
-    cudaCall(allocateChainBuf(_threads * _blocks * _pointsPerThread));
+    //cudaCall(allocateChainBuf(_threads * _blocks * _pointsPerThread));
 
     // Set the incrementor
     secp256k1::ecpoint g = secp256k1::G();
@@ -148,9 +148,9 @@ void CudaKeySearchDevice::doStep()
 
     try {
         if(_iterations < 2 && _startExponent.cmp(numKeys) <= 0) {
-            callKeyFinderKernel(_blocks, _threads, _pointsPerThread, true, _compression);
+            callKeyFinderKernel(_blocks, _threads, _pointsPerThread, _deviceKeys.getXPoints(), _deviceKeys.getYPoints(), _deviceKeys.getChain(), true, _compression);
         } else {
-            callKeyFinderKernel(_blocks, _threads, _pointsPerThread, false, _compression);
+            callKeyFinderKernel(_blocks, _threads, _pointsPerThread, _deviceKeys.getXPoints(), _deviceKeys.getYPoints(), _deviceKeys.getChain(), false, _compression);
         }
     } catch(cuda::CudaException ex) {
         throw KeySearchException(ex.msg);
