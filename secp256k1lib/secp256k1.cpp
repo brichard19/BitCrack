@@ -1,8 +1,8 @@
-#include<string.h>
-#include<stdio.h>
-#include<stdlib.h>
-#include"CryptoUtil.h"
+#include <string.h>
+#include <stdio.h>
+#include <stdlib.h>
 
+#include "CryptoUtil.h"
 #include "secp256k1.h"
 
 
@@ -12,28 +12,26 @@ static uint256 _ONE(1);
 static uint256 _ZERO;
 static crypto::Rng _rng;
 
-static inline void addc(unsigned int a, unsigned int b, unsigned int carryIn, unsigned int &sum, int &carryOut)
+static inline void addc(unsigned int a, unsigned int b, int& carry, unsigned int &sum)
 {
-	uint64_t sum64 = (uint64_t)a + b + carryIn;
+	uint64_t sum64 = (uint64_t)a + b + carry;
 
 	sum = (unsigned int)sum64;
-	carryOut = (int)(sum64 >> 32) & 1;
+	carry = (int)(sum64 >> 32) & 1;
 }
 
 
-static inline void subc(unsigned int a, unsigned int b, unsigned int borrowIn, unsigned int &diff, int &borrowOut)
+static inline void subc(unsigned int a, unsigned int b, int& borrow, unsigned int &diff)
 {
-	uint64_t diff64 = (uint64_t)a - b - borrowIn;
+	uint64_t diff64 = (uint64_t)a - b - borrow;
 
 	diff = (unsigned int)diff64;
-	borrowOut = (int)((diff64 >> 32) & 1);
+	borrow = (int)((diff64 >> 32) & 1);
 }
 
-
-
-static bool lessThanEqualTo(const unsigned int *a, const unsigned int *b, int len)
+static bool lessThanEqualTo(const unsigned int *a, const unsigned int *b)
 {
-	for(int i = len - 1; i >= 0; i--) {
+	for(int i = 7; i >= 0; i--) {
 		if(a[i] < b[i]) {
 			// is greater than
 			return true;
@@ -68,7 +66,7 @@ static int add(const unsigned int *a, const unsigned int *b, unsigned int *c, in
 	int carry = 0;
 
 	for(int i = 0; i < len; i++) {
-		addc(a[i], b[i], carry, c[i], carry);
+		addc(a[i], b[i], carry, c[i]);
 	}
 
 	return carry;
@@ -79,7 +77,7 @@ static int sub(const unsigned int *a, const unsigned int *b, unsigned int *c, in
 	int borrow = 0;
 
 	for(int i = 0; i < len; i++) {
-		subc(a[i], b[i], borrow, c[i], borrow);
+		subc(a[i], b[i], borrow, c[i]);
 	}
 
 	return borrow & 1;
@@ -386,7 +384,7 @@ uint256 secp256k1::invModP(const uint256 &x)
 			}
 		}
 
-		if(lessThanEqualTo(v.v, u.v, 8)) {
+		if(lessThanEqualTo(v.v, u.v)) {
 			sub(u.v, v.v, u.v, 8);
 
 			// x1 = x1 - x2
@@ -613,7 +611,7 @@ uint256 secp256k1::multiplyModN(const uint256 &a, const uint256 &b)
 	return r;
 }
 
-std::string secp256k1::uint256::toString(int base)
+std::string secp256k1::uint256::toString()
 {
 	std::string s = "";
 
@@ -731,17 +729,6 @@ ecpoint secp256k1::multiplyPoint(const uint256 &k, const ecpoint &p)
 	return sum;
 }
 
-uint256 generatePrivateKey()
-{
-	uint256 k;
-
-	for(int i = 0; i < 8; i++) {
-		k.v[i] = ((unsigned int)rand() | ((unsigned int)rand()) << 17);
-	}
-
-	return k;
-}
-
 bool secp256k1::pointExists(const ecpoint &p)
 {
 	uint256 y = multiplyModP(p.y, p.y);
@@ -767,14 +754,15 @@ static void bulkInversionModP(std::vector<uint256> &in)
 
 	uint256 inverse = secp256k1::invModP(total);
 
-	for(int i = (int)in.size() - 1; i >= 0; i--) {
+	for(size_t i = in.size() - 1;; i--) {
 
-		if(i > 0) {
+		if(i != 0) {
 			uint256 newValue = secp256k1::multiplyModP(products[i - 1], inverse);
 			inverse = multiplyModP(inverse, in[i]);
 			in[i] = newValue;
 		} else {
-			in[i] = inverse;
+			in[0] = inverse;
+			break;
 		}
 	}
 }

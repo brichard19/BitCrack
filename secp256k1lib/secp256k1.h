@@ -1,5 +1,5 @@
-#ifndef _HOST_SECP256K1_H
-#define _HOST_SECP256K1_H
+#ifndef HOST_SECP256K1_H
+#define HOST_SECP256K1_H
 
 #include<stdio.h>
 #include<stdint.h>
@@ -27,7 +27,7 @@ namespace secp256k1 {
 			std::string t = s;
 
 			// 0x prefix
-			if(t.length() >= 2 && (t[0] == '0' && t[1] == 'x' || t[1] == 'X')) {
+			if(t.length() >= 2 && (t[0] == '0' && (t[1] == 'x' || t[1] == 'X'))) {
 				t = t.substr(2);
 			}
 
@@ -41,7 +41,7 @@ namespace secp256k1 {
 			}
 
 			// Verify only valid hex characters
-			for(int i = 0; i < (int)t.length(); i++) {
+			for(size_t i = 0, tl = t.length(); i < tl; i++) {
 				if(!((t[i] >= 'a' && t[i] <= 'f') || (t[i] >= 'A' && t[i] <= 'F') || (t[i] >= '0' && t[i] <= '9'))) {
 					throw std::string("Incorrect hex formatting");
 				}
@@ -61,7 +61,7 @@ namespace secp256k1 {
 
 			int j = 0;
 			for(int i = len - 8; i >= 0; i-= 8) {
-				std::string sub = t.substr(i, 8);
+				std::string sub = t.substr((unsigned long long)i, 8);
 				uint32_t val;
 				if(sscanf(sub.c_str(), "%x", &val) != 1) {
 					throw std::string("Incorrect hex formatting");
@@ -261,12 +261,13 @@ namespace secp256k1 {
 			return (this->v[0] & 1) == 0;
 		}
 
-		std::string toString(int base = 16);
+		std::string toString();
 
         uint64_t toUint64()
         {
             return ((uint64_t)this->v[1] << 32) | v[0];
         }
+
 	};
 
 	const unsigned int _POINT_AT_INFINITY_WORDS[8] = { 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF };
@@ -290,10 +291,10 @@ namespace secp256k1 {
 			this->y = uint256(_POINT_AT_INFINITY_WORDS);
 		}
 
-		ecpoint(const uint256 &x, const uint256 &y)
+		ecpoint(const uint256 &pX, const uint256 &pY)
 		{
-			this->x = x;
-			this->y = y;
+			this->x = pX;
+			this->y = pY;
 		}
 
 		ecpoint(const ecpoint &p)
@@ -365,6 +366,7 @@ namespace secp256k1 {
 	void generateKeyPairsBulk(unsigned int count, const ecpoint &basePoint, std::vector<uint256> &privKeysOut, std::vector<ecpoint> &pubKeysOut);
 	void generateKeyPairsBulk(const ecpoint &basePoint, std::vector<uint256> &privKeys, std::vector<ecpoint> &pubKeysOut);
 
+	uint256 generatePrivateKey();
 	ecpoint parsePublicKey(const std::string &pubKeyString);
 }
 
