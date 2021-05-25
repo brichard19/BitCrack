@@ -135,7 +135,7 @@ kernel to run longer, but more keys will be processed.
 
 Visual Studio 2019 (if on Windows)
 
-For CUDA: CUDA Toolkit 10.1
+For CUDA: CUDA Toolkit 11.3
 
 For OpenCL: An OpenCL SDK (The CUDA toolkit contains an OpenCL SDK).
 
