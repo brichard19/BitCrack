@@ -1,5 +1,5 @@
 #include <iostream>
-#include<string>
+#include <string>
 #include "secp256k1.h"
 #include "util.h"
 #include "AddressUtil.h"
