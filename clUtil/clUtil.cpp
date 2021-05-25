@@ -1,13 +1,11 @@
 #include "clutil.h"
 
-
 void cl::clCall(cl_int err)
 {
     if(err != CL_SUCCESS) {
         throw cl::CLException(err);
     }
 }
-
 
 std::vector<cl::CLDeviceInfo> cl::getDevices()
 {
@@ -60,10 +58,10 @@ std::vector<cl::CLDeviceInfo> cl::getDevices()
             deviceList.push_back(info);
         }
 
-        delete devices;
+        delete[] devices;
     }
 
-    delete platforms;
+    delete[] platforms;
 
     return deviceList;
 }

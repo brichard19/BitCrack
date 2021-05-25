@@ -1,5 +1,5 @@
-#ifndef _CL_UTIL_H
-#define _CL_UTIL_H
+#ifndef CL_UTIL_H
+#define CL_UTIL_H
 
 #ifdef __APPLE__
 #define CL_SILENCE_DEPRECATION
@@ -12,7 +12,8 @@
 #include <vector>
 
 namespace cl {
-    std::string getErrorString(cl_int err);
+    std::string getOpenCLErrorName(cl_int errorCode);
+    std::string getOpenCLErrorDescription(cl_int errorCode);
 
     typedef struct {
         cl_device_id id;
@@ -26,25 +27,33 @@ namespace cl {
     public:
         int error;
         std::string msg;
+        std::string description;
 
-        CLException(cl_int err)
+        CLException(cl_int errorCode)
         {
-            this->error = err;
-            this->msg = getErrorString(err);
+            this->error = errorCode;
+            this->msg = getOpenCLErrorName(errorCode);
+            this->description = getOpenCLErrorDescription(errorCode);
         }
 
-        CLException(cl_int err, std::string msg)
+        CLException(cl_int errorCode, std::string pMsg)
         {
-            this->error = err;
-            this->msg = msg;
+            this->error = errorCode;
+            this->msg = pMsg;
+            this->description = getOpenCLErrorDescription(errorCode);
+        }
+
+        CLException(cl_int errorCode, std::string pMsg, std::string pDescription)
+        {
+            this->error = errorCode;
+            this->msg = pMsg;
+            this->description = pDescription;
         }
     };
 
     CLDeviceInfo getDeviceInfo(int device);
 
     std::vector<CLDeviceInfo> getDevices();
-
-    int getDeviceCount();
 
     void clCall(cl_int err);
 
