@@ -9,18 +9,10 @@
 #include "CmdParse.h"
 #include "Logger.h"
 #include "ConfigFile.h"
-
 #include "DeviceManager.h"
-
-#ifdef BUILD_CUDA
-#include "CudaKeySearchDevice.h"
-#endif
-
-#ifdef BUILD_OPENCL
 #include "CLKeySearchDevice.h"
-#endif
 
-typedef struct {
+struct RunConfig{
     // startKey is the first key. We store it so that if the --continue
     // option is used, the correct progress is displayed. startKey and
     // nextKey are only equal at the very beginning. nextKey gets saved
@@ -55,7 +47,7 @@ typedef struct {
     secp256k1::uint256 stride = 1;
 
     bool follow = false;
-}RunConfig;
+};
 
 static RunConfig _config;
 
@@ -64,7 +56,6 @@ std::vector<DeviceManager::DeviceInfo> _devices;
 void writeCheckpoint(secp256k1::uint256 nextKey);
 
 static uint64_t _lastUpdate = 0;
-static uint64_t _runningTime = 0;
 static uint64_t _startTime = 0;
 
 /**
@@ -75,30 +66,16 @@ void resultCallback(KeySearchResult info)
 	if(_config.resultsFile.length() != 0) {
 		Logger::log(LogLevel::Info, "Found key for address '" + info.address + "'. Written to '" + _config.resultsFile + "'");
 
-		std::string s = info.address + " " + info.privateKey.toString(16) + " " + info.publicKey.toString(info.compressed);
+		std::string s = info.address + " " + info.privateKey.toString() + " " + info.publicKey.toString(info.compressed);
 		util::appendToFile(_config.resultsFile, s);
 
 		return;
 	}
 
-	std::string logStr = "Address:     " + info.address + "\n";
-	logStr += "Private key: " + info.privateKey.toString(16) + "\n";
-	logStr += "Compressed:  ";
-
-	if(info.compressed) {
-		logStr += "yes\n";
-	} else {
-		logStr += "no\n";
-	}
-
-	logStr += "Public key:  \n";
-
-	if(info.compressed) {
-		logStr += info.publicKey.toString(true) + "\n";
-	} else {
-		logStr += info.publicKey.x.toString(16) + "\n";
-		logStr += info.publicKey.y.toString(16) + "\n";
-	}
+	std::string logStr = "\nAddress:     " + info.address + "\n";
+	logStr +=              "Private key: " + info.privateKey.toString() + "\n";
+    logStr +=              "Compressed:  "; logStr += (info.compressed) ? "yes\n" : "no\n";
+    logStr +=              "Public key:  "; logStr += (info.compressed) ? info.publicKey.toString(true) + "\n" : info.publicKey.x.toString() + "\n            " + info.publicKey.y.toString() + "\n";
 
 	Logger::log(LogLevel::Info, logStr);
 }
@@ -205,7 +182,7 @@ void usage()
     printf("-o, --out FILE          Write keys to FILE\n");
     printf("-f, --follow            Follow text output\n");
     printf("--list-devices          List available devices\n");
-    printf("--keyspace KEYSPACE     Specify the keyspace:\n");
+    printf("-k, --keyspace KEYSPACE     Specify the keyspace:\n");
     printf("                          START:END\n");
     printf("                          START:+COUNT\n");
     printf("                          START\n");
@@ -229,27 +206,19 @@ typedef struct {
 
 DeviceParameters getDefaultParameters(const DeviceManager::DeviceInfo &device)
 {
-	DeviceParameters p;
-	p.threads = 256;
-    p.blocks = 32;
-	p.pointsPerThread = 32;
+	DeviceParameters parameters;
+	parameters.threads = 256;
+    parameters.blocks = 32;
+	parameters.pointsPerThread = 32;
 
-	return p;
+	return parameters;
 }
 
 static KeySearchDevice *getDeviceContext(DeviceManager::DeviceInfo &device, int blocks, int threads, int pointsPerThread)
 {
-#ifdef BUILD_CUDA
-    if(device.type == DeviceManager::DeviceType::CUDA) {
-        return new CudaKeySearchDevice((int)device.physicalId, threads, pointsPerThread, blocks);
-    }
-#endif
-
-#ifdef BUILD_OPENCL
     if(device.type == DeviceManager::DeviceType::OpenCL) {
         return new CLKeySearchDevice(device.physicalId, threads, pointsPerThread, blocks);
     }
-#endif
 
     return NULL;
 }
@@ -309,19 +278,19 @@ static std::string getCompressionString(int mode)
 
 void writeCheckpoint(secp256k1::uint256 nextKey)
 {
-    std::ofstream tmp(_config.checkpointFile, std::ios::out);
+    std::ofstream fileStream(_config.checkpointFile, std::ios::out);
 
-    tmp << "start=" << _config.startKey.toString() << std::endl;
-    tmp << "next=" << nextKey.toString() << std::endl;
-    tmp << "end=" << _config.endKey.toString() << std::endl;
-    tmp << "blocks=" << _config.blocks << std::endl;
-    tmp << "threads=" << _config.threads << std::endl;
-    tmp << "points=" << _config.pointsPerThread << std::endl;
-    tmp << "compression=" << getCompressionString(_config.compression) << std::endl;
-    tmp << "device=" << _config.device << std::endl;
-    tmp << "elapsed=" << (_config.elapsed + util::getSystemTime() - _startTime) << std::endl;
-    tmp << "stride=" << _config.stride.toString();
-    tmp.close();
+    fileStream << "start=" << _config.startKey.toString() << "\n";
+    fileStream << "next=" << nextKey.toString() << "\n";
+    fileStream << "end=" << _config.endKey.toString() << "\n";
+    fileStream << "blocks=" << _config.blocks << "\n";
+    fileStream << "threads=" << _config.threads << "\n";
+    fileStream << "points=" << _config.pointsPerThread << "\n";
+    fileStream << "compression=" << getCompressionString(_config.compression) << "\n";
+    fileStream << "device=" << _config.device << "\n";
+    fileStream << "elapsed=" << (_config.elapsed + util::getSystemTime() - _startTime) << "\n";
+    fileStream << "stride=" << _config.stride.toString();
+    fileStream.close();
 }
 
 void readCheckpointFile()
@@ -399,27 +368,27 @@ int run()
         }
 
         // Get device context
-        KeySearchDevice *d = getDeviceContext(_devices[_config.device], _config.blocks, _config.threads, _config.pointsPerThread);
+        KeySearchDevice *keySearchDevice = getDeviceContext(_devices[_config.device], _config.blocks, _config.threads, _config.pointsPerThread);
 
-        KeyFinder f(_config.nextKey, _config.endKey, _config.compression, d, _config.stride);
+        KeyFinder keyFinder(_config.nextKey, _config.endKey, _config.compression, keySearchDevice, _config.stride);
 
-        f.setResultCallback(resultCallback);
-        f.setStatusInterval(_config.statusInterval);
-        f.setStatusCallback(statusCallback);
+        keyFinder.setResultCallback(resultCallback);
+        keyFinder.setStatusInterval(_config.statusInterval);
+        keyFinder.setStatusCallback(statusCallback);
 
-        f.init();
+        keyFinder.init();
 
         if(!_config.targetsFile.empty()) {
-            f.setTargets(_config.targetsFile);
+            keyFinder.setTargets(_config.targetsFile);
         } else {
-            f.setTargets(_config.targets);
+            keyFinder.setTargets(_config.targets);
         }
 
-        f.run();
+        keyFinder.run();
 
-        delete d;
+        delete keySearchDevice;
     } catch(KeySearchException ex) {
-        Logger::log(LogLevel::Info, "Error: " + ex.msg);
+        Logger::log(LogLevel::Info, "Error: " + ex.msg + ": " + ex.description);
         return 1;
     }
 
@@ -465,9 +434,6 @@ int main(int argc, char **argv)
 	bool optUncompressed = false;
     bool listDevices = false;
     bool optShares = false;
-    bool optThreads = false;
-    bool optBlocks = false;
-    bool optPoints = false;
 
     uint32_t shareIdx = 0;
     uint32_t numShares = 0;
@@ -513,7 +479,7 @@ int main(int argc, char **argv)
 	parser.add("-o", "--out", true);
     parser.add("-f", "--follow", false);
     parser.add("", "--list-devices", false);
-    parser.add("", "--keyspace", true);
+    parser.add("-k", "--keyspace", true);
     parser.add("", "--continue", true);
     parser.add("", "--share", true);
     parser.add("", "--stride", true);
@@ -534,13 +500,10 @@ int main(int argc, char **argv)
 		try {
 			if(optArg.equals("-t", "--threads")) {
 				_config.threads = util::parseUInt32(optArg.arg);
-                optThreads = true;
             } else if(optArg.equals("-b", "--blocks")) {
                 _config.blocks = util::parseUInt32(optArg.arg);
-                optBlocks = true;
 			} else if(optArg.equals("-p", "--points")) {
 				_config.pointsPerThread = util::parseUInt32(optArg.arg);
-                optPoints = true;
 			} else if(optArg.equals("-d", "--device")) {
 				_config.device = util::parseUInt32(optArg.arg);
 			} else if(optArg.equals("-c", "--compressed")) {

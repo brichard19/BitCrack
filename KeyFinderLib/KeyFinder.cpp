@@ -7,17 +7,6 @@
 
 #include "Logger.h"
 
-
-void KeyFinder::defaultResultCallback(KeySearchResult result)
-{
-	// Do nothing
-}
-
-void KeyFinder::defaultStatusCallback(KeySearchStatus status)
-{
-	// Do nothing
-}
-
 KeyFinder::KeyFinder(const secp256k1::uint256 &startKey, const secp256k1::uint256 &endKey, int compression, KeySearchDevice* device, const secp256k1::uint256 &stride)
 {
 	_total = 0;
@@ -46,7 +35,7 @@ KeyFinder::~KeyFinder()
 void KeyFinder::setTargets(std::vector<std::string> &targets)
 {
 	if(targets.size() == 0) {
-		throw KeySearchException("Requires at least 1 target");
+		throw KeySearchException("KEYSEARCH_NO_TARGET", "Requires at least 1 target");
 	}
 
 	_targets.clear();
@@ -55,7 +44,7 @@ void KeyFinder::setTargets(std::vector<std::string> &targets)
 	for(unsigned int i = 0; i < targets.size(); i++) {
 
 		if(!Address::verifyAddress(targets[i])) {
-			throw KeySearchException("Invalid address '" + targets[i] + "'");
+			throw KeySearchException("KEYSEARCH_INVALID_ADDRESS", "Invalid address '" + targets[i] + "'");
 		}
 
 		KeySearchTarget t;

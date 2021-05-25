@@ -16,12 +16,14 @@ public:
 
     }
 
-    KeySearchException(const std::string &msg)
+    KeySearchException(const std::string &msg, const std::string &description)
     {
         this->msg = msg;
+        this->description = description;
     }
 
     std::string msg;
+    std::string description;
 };
 
 
@@ -37,6 +39,8 @@ typedef struct {
 class KeySearchDevice {
 
 public:
+
+    virtual ~KeySearchDevice() {};
 
     // Initialize the device
     virtual void init(const secp256k1::uint256 &start, int compression, const secp256k1::uint256 &stride) = 0;

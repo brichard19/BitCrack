@@ -21,7 +21,6 @@ public:
 class DeviceType {
 public:
     enum {
-        CUDA = 0,
         OpenCL
     };
 };
@@ -37,10 +36,6 @@ typedef struct {
     uint64_t memory;
     int computeUnits;
 
-    // CUDA device info
-    int cudaMajor;
-    int cudaMinor;
-    int cudaCores;
 }DeviceInfo;
 
 std::vector<DeviceInfo> getDevices();
