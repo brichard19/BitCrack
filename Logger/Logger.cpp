@@ -4,12 +4,29 @@
 #include "Logger.h"
 #include "util.h"
 
+inline tm localtime_xp(time_t timer)
+{
+	tm bt{};
+#if defined(__unix__)
+	localtime_r(&timer, &bt);
+#elif defined(_MSC_VER)
+	localtime_s(&bt, &timer);
+#else
+	static std::mutex mtx;
+	std::lock_guard<std::mutex> lock(mtx);
+	bt = *std::localtime(&timer);
+#endif
+	return bt;
+}
+
+
 bool LogLevel::isValid(int level)
 {
 	switch(level) {
 		case Info:
 		case Error:
 		case Debug:
+		case Warning:
 			return true;
 		default:
 			return false;
@@ -27,9 +44,9 @@ std::string LogLevel::toString(int level)
 			return "Debug";
         case Warning:
             return "Warning";
+		default:
+			return "";
 	}
-
-	return "";
 }
 
 std::string Logger::getDateTimeString()
@@ -37,7 +54,7 @@ std::string Logger::getDateTimeString()
 	time_t     now = time(0);
 	struct tm  tstruct;
 	char       buf[80];
-	tstruct = *localtime(&now);
+	tstruct = localtime_xp(now);
 
 	strftime(buf, sizeof(buf), "%Y-%m-%d.%X", &tstruct);
 
@@ -77,9 +94,4 @@ void Logger::log(int logLevel, std::string msg)
 	std::string str = formatLog(logLevel, msg);
 
 	fprintf(stderr, "%s\n", str.c_str());
-}
-
-void Logger::setLogFile(std::string path)
-{
-
 }

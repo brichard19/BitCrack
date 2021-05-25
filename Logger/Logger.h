@@ -1,8 +1,7 @@
-#ifndef _LOGGER_H
-#define _LOGGER_H
+#ifndef LOGGER_H
+#define LOGGER_H
 
 #include <string>
-
 
 namespace LogLevel {
 	enum Level {
@@ -15,8 +14,7 @@ namespace LogLevel {
 	bool isValid(int level);
 
 	std::string toString(int level);
-};
-
+}
 
 class Logger {
 
@@ -35,7 +33,6 @@ public:
 
 	static void log(int logLevel, std::string msg);
 
-	static void setLogFile(std::string path);
 };
 
 #endif
