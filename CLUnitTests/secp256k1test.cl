@@ -8,6 +8,17 @@ typedef struct {
 }CLErrorInfo;
 
 
+bool equal(const unsigned int a[8], const unsigned int b[8])
+{
+    for(int i = 0; i < 8; i++) {
+        if(a[i] != b[i]) {
+            return false;
+        }
+    }
+
+    return true;
+}
+
 bool addTest()
 {
     unsigned int x[8] = { 0xa4aea9b8, 0x6fe248f5, 0x1fc74965, 0xe9493264, 0x4e2dff0c, 0x009f7c9c, 0x832fa59b, 0x3361f837 };

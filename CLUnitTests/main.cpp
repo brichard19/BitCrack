@@ -67,7 +67,7 @@ int main(int argc, char **argv)
     try {
         devices = cl::getDevices();
     }catch(cl::CLException ex) {
-        std::cout << "Error: " << ex.msg << std::endl;
+        std::cout << "Error " << ex.msg << ": " << ex.description << std::endl;
         return 1;
     }
 
@@ -86,7 +86,7 @@ int main(int argc, char **argv)
             numErrors += runTest(devices[i].id);
         }
         catch(cl::CLException ex) {
-            std::cout << "Error " << ex.msg << std::endl;
+            std::cout << "Error " << ex.msg << ": " << ex.description << std::endl;
         }
     }
 
