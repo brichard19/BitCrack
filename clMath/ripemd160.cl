@@ -1,24 +1,11 @@
-#ifndef _RIPEMD160_CL
-#define _RIPEMD160_CL
+#ifndef RIPEMD160_CL
+#define RIPEMD160_CL
 
-
-__constant unsigned int _RIPEMD160_IV[5] = {
-    0x67452301,
-    0xefcdab89,
-    0x98badcfe,
-    0x10325476,
-    0xc3d2e1f0
-};
-
-__constant unsigned int _K0 = 0x5a827999;
-__constant unsigned int _K1 = 0x6ed9eba1;
-__constant unsigned int _K2 = 0x8f1bbcdc;
-__constant unsigned int _K3 = 0xa953fd4e;
-
-__constant unsigned int _K4 = 0x7a6d76e9;
-__constant unsigned int _K5 = 0x6d703ef3;
-__constant unsigned int _K6 = 0x5c4dd124;
-__constant unsigned int _K7 = 0x50a28be6;
+#define RIPEMD160_IV_0 (0x67452301)
+#define RIPEMD160_IV_1 (0xefcdab89)
+#define RIPEMD160_IV_2 (0x98badcfe)
+#define RIPEMD160_IV_3 (0x10325476)
+#define RIPEMD160_IV_4 (0xc3d2e1f0)
 
 #define rotl(x, n) (((x) << (n)) | ((x) >> (32 - (n))))
 
@@ -38,22 +25,22 @@ __constant unsigned int _K7 = 0x50a28be6;
     c = rotl((c), 10)
 
 #define GG(a, b, c, d, e, x, s)\
-    a += G((b), (c), (d)) + (x) + _K0;\
+    a += G((b), (c), (d)) + (x) + 0x5a827999;\
     a = rotl((a), (s)) + (e);\
     c = rotl((c), 10)
 
 #define HH(a, b, c, d, e, x, s)\
-    a += H((b), (c), (d)) + (x) + _K1;\
+    a += H((b), (c), (d)) + (x) + 0x6ed9eba1;\
     a = rotl((a), (s)) + (e);\
     c = rotl((c), 10)
 
 #define II(a, b, c, d, e, x, s)\
-    a += I((b), (c), (d)) + (x) + _K2;\
+    a += I((b), (c), (d)) + (x) + 0x8f1bbcdc;\
     a = rotl((a), (s)) + e;\
     c = rotl((c), 10)
 
 #define JJ(a, b, c, d, e, x, s)\
-    a += J((b), (c), (d)) + (x) + _K3;\
+    a += J((b), (c), (d)) + (x) + 0xa953fd4e;\
     a = rotl((a), (s)) + (e);\
     c = rotl((c), 10)
 
@@ -63,33 +50,33 @@ __constant unsigned int _K7 = 0x50a28be6;
     c = rotl((c), 10)
 
 #define GGG(a, b, c, d, e, x, s)\
-    a += G((b), (c), (d)) + x + _K4;\
+    a += G((b), (c), (d)) + x + 0x7a6d76e9;\
     a = rotl((a), (s)) + (e);\
     c = rotl((c), 10)
 
 #define HHH(a, b, c, d, e, x, s)\
-    a += H((b), (c), (d)) + (x) + _K5;\
+    a += H((b), (c), (d)) + (x) + 0x6d703ef3;\
     a = rotl((a), (s)) + (e);\
     c = rotl((c), 10)
 
 #define III(a, b, c, d, e, x, s)\
-    a += I((b), (c), (d)) + (x) + _K6;\
+    a += I((b), (c), (d)) + (x) + 0x5c4dd124;\
     a = rotl((a), (s)) + (e);\
     c = rotl((c), 10)
 
 #define JJJ(a, b, c, d, e, x, s)\
-    a += J((b), (c), (d)) + (x) + _K7;\
+    a += J((b), (c), (d)) + (x) + 0x50a28be6;\
     a = rotl((a), (s)) + (e);\
     c = rotl((c), 10)
 
 
 void ripemd160sha256(const unsigned int x[8], unsigned int digest[5])
 {
-    unsigned int a1 = _RIPEMD160_IV[0];
-    unsigned int b1 = _RIPEMD160_IV[1];
-    unsigned int c1 = _RIPEMD160_IV[2];
-    unsigned int d1 = _RIPEMD160_IV[3];
-    unsigned int e1 = _RIPEMD160_IV[4];
+    unsigned int a1 = RIPEMD160_IV_0;
+    unsigned int b1 = RIPEMD160_IV_1;
+    unsigned int c1 = RIPEMD160_IV_2;
+    unsigned int d1 = RIPEMD160_IV_3;
+    unsigned int e1 = RIPEMD160_IV_4;
 
     const unsigned int x8 = 0x00000080;
     const unsigned int x14 = 256;
@@ -184,11 +171,11 @@ void ripemd160sha256(const unsigned int x[8], unsigned int digest[5])
     JJ(c1, d1, e1, a1, b1, 0, 5);
     JJ(b1, c1, d1, e1, a1, 0, 6);
 
-    unsigned int a2 = _RIPEMD160_IV[0];
-    unsigned int b2 = _RIPEMD160_IV[1];
-    unsigned int c2 = _RIPEMD160_IV[2];
-    unsigned int d2 = _RIPEMD160_IV[3];
-    unsigned int e2 = _RIPEMD160_IV[4];
+    unsigned int a2 = RIPEMD160_IV_0;
+    unsigned int b2 = RIPEMD160_IV_1;
+    unsigned int c2 = RIPEMD160_IV_2;
+    unsigned int d2 = RIPEMD160_IV_3;
+    unsigned int e2 = RIPEMD160_IV_4;
 
     /* parallel round 1 */
     JJJ(a2, b2, c2, d2, e2, x[5], 8);
@@ -280,21 +267,21 @@ void ripemd160sha256(const unsigned int x[8], unsigned int digest[5])
     FFF(c2, d2, e2, a2, b2, 0, 11);
     FFF(b2, c2, d2, e2, a2, 0, 11);
 
-    digest[0] = _RIPEMD160_IV[1] + c1 + d2;
-    digest[1] = _RIPEMD160_IV[2] + d1 + e2;
-    digest[2] = _RIPEMD160_IV[3] + e1 + a2;
-    digest[3] = _RIPEMD160_IV[4] + a1 + b2;
-    digest[4] = _RIPEMD160_IV[0] + b1 + c2;
+    digest[0] = RIPEMD160_IV_1 + c1 + d2;
+    digest[1] = RIPEMD160_IV_2 + d1 + e2;
+    digest[2] = RIPEMD160_IV_3 + e1 + a2;
+    digest[3] = RIPEMD160_IV_4 + a1 + b2;
+    digest[4] = RIPEMD160_IV_0 + b1 + c2;
 }
 
 
 void ripemd160sha256NoFinal(const unsigned int x[8], unsigned int digest[5])
 {
-    unsigned int a1 = _RIPEMD160_IV[0];
-    unsigned int b1 = _RIPEMD160_IV[1];
-    unsigned int c1 = _RIPEMD160_IV[2];
-    unsigned int d1 = _RIPEMD160_IV[3];
-    unsigned int e1 = _RIPEMD160_IV[4];
+    unsigned int a1 = RIPEMD160_IV_0;
+    unsigned int b1 = RIPEMD160_IV_1;
+    unsigned int c1 = RIPEMD160_IV_2;
+    unsigned int d1 = RIPEMD160_IV_3;
+    unsigned int e1 = RIPEMD160_IV_4;
 
     const unsigned int x8 = 0x00000080;
     const unsigned int x14 = 256;
@@ -389,11 +376,11 @@ void ripemd160sha256NoFinal(const unsigned int x[8], unsigned int digest[5])
     JJ(c1, d1, e1, a1, b1, 0, 5);
     JJ(b1, c1, d1, e1, a1, 0, 6);
 
-    unsigned int a2 = _RIPEMD160_IV[0];
-    unsigned int b2 = _RIPEMD160_IV[1];
-    unsigned int c2 = _RIPEMD160_IV[2];
-    unsigned int d2 = _RIPEMD160_IV[3];
-    unsigned int e2 = _RIPEMD160_IV[4];
+    unsigned int a2 = RIPEMD160_IV_0;
+    unsigned int b2 = RIPEMD160_IV_1;
+    unsigned int c2 = RIPEMD160_IV_2;
+    unsigned int d2 = RIPEMD160_IV_3;
+    unsigned int e2 = RIPEMD160_IV_4;
 
     /* parallel round 1 */
     JJJ(a2, b2, c2, d2, e2, x[5], 8);
@@ -491,4 +478,5 @@ void ripemd160sha256NoFinal(const unsigned int x[8], unsigned int digest[5])
     digest[3] = a1 + b2;
     digest[4] = b1 + c2;
 }
+
 #endif
