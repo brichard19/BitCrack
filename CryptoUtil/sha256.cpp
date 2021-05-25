@@ -50,6 +50,7 @@ static void round(unsigned int a, unsigned int b, unsigned int c, unsigned int &
 
 void crypto::sha256Init(unsigned int *digest)
 {
+	#pragma clang loop unroll(full)
 	for(int i = 0; i < 8; i++) {
 		digest[i] = _IV[i];
 	}
@@ -70,11 +71,14 @@ void crypto::sha256(unsigned int *msg, unsigned int *digest)
 	h = digest[7];
 
 	unsigned int w[80] = { 0 };
+	#pragma clang loop unroll(full)
 	for(int i = 0; i < 16; i++) {
 		w[i] = msg[i];
 	}
 
 	// Expand 16 words to 64 words
+
+	#pragma clang loop unroll(full)
 	for(int i = 16; i < 64; i++) {
 		unsigned int x = w[i - 15];
 		unsigned int y = w[i - 2];
@@ -84,6 +88,7 @@ void crypto::sha256(unsigned int *msg, unsigned int *digest)
 		w[i] = w[i - 16] + s0 + w[i - 7] + s1;
 	}
 
+	#pragma clang loop unroll(full)
 	for(int i = 0; i < 64; i += 8) {
 		round(a, b, c, d, e, f, g, h, w[i], _K[i]);
 		round(h, a, b, c, d, e, f, g, w[i + 1], _K[i + 1]);

@@ -46,7 +46,7 @@ void crypto::Rng::reseed()
 	secureRandom((unsigned char *)_state, 32);
 }
 
-void crypto::Rng::get(unsigned char *buf, int len)
+void crypto::Rng::get(unsigned char *buf, size_t len)
 {
 	int i = 0;
 	while(len > 0) {

@@ -10,7 +10,7 @@ namespace crypto {
 
 	public:
 		Rng();
-		void get(unsigned char *buf, int len);
+		void get(unsigned char *buf, size_t len);
 	};
 
 
@@ -20,6 +20,6 @@ namespace crypto {
 	void sha256(unsigned int *msg, unsigned int *digest);
 
 	unsigned int checksum(const unsigned int *hash);
-};
+}
 
 #endif
