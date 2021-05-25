@@ -15,36 +15,11 @@ typedef struct {
     unsigned int digest[5];
 }CLDeviceResult;
 
-bool isInList(unsigned int hash[5], __global unsigned int *targetList, size_t numTargets)
-{
-    bool found = false;
-
-    for(size_t i = 0; i < numTargets; i++) {
-        int equal = 0;
-
-        for(int j = 0; j < 5; j++) {
-            if(hash[j] == targetList[5 * i + j]) {
-                equal++;
-            }
-        }
-
-        if(equal == 5) {
-            found = true;
-        }
-    }
-
-    return found;
-}
-
 bool isInBloomFilter(unsigned int hash[5], __global unsigned int *targetList, ulong mask)
 {
-    bool foundMatch = true;
+    bool notFoundMatch = true;
 
-    unsigned int h5 = 0;
-
-    for(int i = 0; i < 5; i++) {
-        h5 += hash[i];
-    }
+    unsigned int h5 = hash[0] + hash[1] + hash[2] + hash[3] + hash[4];
 
     uint64_t idx[5];
 
@@ -54,41 +29,22 @@ bool isInBloomFilter(unsigned int hash[5], __global unsigned int *targetList, ul
     idx[3] = ((hash[3] << 6) | ((h5 >> 18) & 0x3f)) & mask;
     idx[4] = ((hash[4] << 6) | ((h5 >> 24) & 0x3f)) & mask;
 
-    for(int i = 0; i < 5; i++) {
-        unsigned int j = idx[i];
-        unsigned int f = targetList[j / 32];
+    notFoundMatch = (targetList[idx[0] / 32] & (0x01 << (idx[0] % 32))) == 0
+      || (targetList[idx[1] / 32] & (0x01 << (idx[1] % 32))) == 0
+      || (targetList[idx[2] / 32] & (0x01 << (idx[2] % 32))) == 0
+      || (targetList[idx[3] / 32] & (0x01 << (idx[3] % 32))) == 0
+      || (targetList[idx[4] / 32] & (0x01 << (idx[4] % 32))) == 0;
 
-        if((f & (0x01 << (j % 32))) == 0) {
-            foundMatch = false;
-        }
-    }
-
-    return foundMatch;
+    return notFoundMatch == false;
 }
-
-bool checkHash(unsigned int hash[5], __global unsigned int *targetList, size_t numTargets, ulong mask)
-{
-    if(numTargets > 16) {
-        return isInBloomFilter(hash, targetList, mask);
-    } else {
-        return isInList(hash, targetList, numTargets);
-    }
-}
-
 
 void doRMD160FinalRound(const unsigned int hIn[5], unsigned int hOut[5])
 {
-    const unsigned int iv[5] = {
-        0x67452301,
-        0xefcdab89,
-        0x98badcfe,
-        0x10325476,
-        0xc3d2e1f0
-    };
-
-    for(int i = 0; i < 5; i++) {
-        hOut[i] = endian(hIn[i] + iv[(i + 1) % 5]);
-    }
+    hOut[0] = endian(hIn[0] + 0xefcdab89);
+    hOut[1] = endian(hIn[1] + 0x98badcfe);
+    hOut[2] = endian(hIn[2] + 0x10325476);
+    hOut[3] = endian(hIn[3] + 0xc3d2e1f0);
+    hOut[4] = endian(hIn[4] + 0x67452301);
 }
 
 
@@ -125,14 +81,13 @@ __kernel void multiplyStepKernel(
         uint256_t x = xPtr[i];
 
         if(bit != 0) {
-            if(!isInfinity256k(x)) {
+            if(!isInfinity256k(&x)) {
                 beginBatchAddWithDouble256k(gx, gy, xPtr, chain, i, batchIdx, &inverse);
                 batchIdx++;
             }
         }
     }
 
-    //doBatchInverse(inverse);
     inverse = doBatchInverse256k(inverse);
 
     i -= dim;
@@ -145,10 +100,9 @@ __kernel void multiplyStepKernel(
         unsigned int bit = p & (1 << (step % 32));
 
         uint256_t x = xPtr[i];
-        bool infinity = isInfinity256k(x);
 
         if(bit != 0) {
-            if(!infinity) {
+            if(!isInfinity256k(&x)) {
                 batchIdx--;
                 completeBatchAddWithDouble256k(gx, gy, xPtr, yPtr, i, batchIdx, chain, &inverse, &newX, &newY);
             } else {
@@ -170,9 +124,14 @@ void hashPublicKey(uint256_t x, uint256_t y, unsigned int* digestOut)
     sha256PublicKey(x.v, y.v, hash);
 
     // Swap to little-endian
-    for(int i = 0; i < 8; i++) {
-        hash[i] = endian(hash[i]);
-    }
+    hash[0] = endian(hash[0]);
+    hash[1] = endian(hash[1]);
+    hash[2] = endian(hash[2]);
+    hash[3] = endian(hash[3]);
+    hash[4] = endian(hash[4]);
+    hash[5] = endian(hash[5]);
+    hash[6] = endian(hash[6]);
+    hash[7] = endian(hash[7]);
 
     ripemd160sha256NoFinal(hash, digestOut);
 }
@@ -184,9 +143,14 @@ void hashPublicKeyCompressed(uint256_t x, unsigned int yParity, unsigned int* di
     sha256PublicKeyCompressed(x.v, yParity, hash);
 
     // Swap to little-endian
-    for(int i = 0; i < 8; i++) {
-        hash[i] = endian(hash[i]);
-    }
+    hash[0] = endian(hash[0]);
+    hash[1] = endian(hash[1]);
+    hash[2] = endian(hash[2]);
+    hash[3] = endian(hash[3]);
+    hash[4] = endian(hash[4]);
+    hash[5] = endian(hash[5]);
+    hash[6] = endian(hash[6]);
+    hash[7] = endian(hash[7]);
 
     ripemd160sha256NoFinal(hash, digestOut);
 
@@ -206,10 +170,29 @@ void setResultFound(int idx, bool compressed, uint256_t x, uint256_t y, unsigned
     r.idx = idx;
     r.compressed = compressed;
 
-    for(int i = 0; i < 8; i++) {
-        r.x[i] = x.v[i];
-        r.y[i] = y.v[i];
-    }
+    r.x[0] = x.v[0];
+    r.y[0] = y.v[0];
+
+    r.x[1] = x.v[1];
+    r.y[1] = y.v[1];
+    
+    r.x[2] = x.v[2];
+    r.y[2] = y.v[2];
+    
+    r.x[3] = x.v[3];
+    r.y[3] = y.v[3];
+
+    r.x[4] = x.v[4];
+    r.y[4] = y.v[4];
+    
+    r.x[5] = x.v[5];
+    r.y[5] = y.v[5];
+    
+    r.x[6] = x.v[6];
+    r.y[6] = y.v[6];
+    
+    r.x[7] = x.v[7];
+    r.y[7] = y.v[7];
 
     doRMD160FinalRound(digest, r.digest);
 
@@ -253,7 +236,7 @@ void doIteration(
 
             hashPublicKey(x, y, digest);
 
-            if(checkHash(digest, targetList, numTargets, mask)) {
+            if(isInBloomFilter(digest, targetList, mask)) {
                 setResultFound(i, false, x, y, digest, results, numResults);
             }
         }
@@ -262,7 +245,7 @@ void doIteration(
 
             hashPublicKeyCompressed(x, readLSW256k(yPtr, i), digest);
 
-            if(checkHash(digest, targetList, numTargets, mask)) {
+            if(isInBloomFilter(digest, targetList, mask)) {
                 uint256_t y = yPtr[i];
                 setResultFound(i, true, x, y, digest, results, numResults);
             }
@@ -326,7 +309,7 @@ void doIterationWithDouble(
             uint256_t y = yPtr[i];
             hashPublicKey(x, y, digest);
 
-            if(checkHash(digest, targetList, numTargets, mask)) {
+            if(isInBloomFilter(digest, targetList, mask)) {
                 setResultFound(i, false, x, y, digest, results, numResults);
             }
         }
@@ -336,7 +319,7 @@ void doIterationWithDouble(
 
             hashPublicKeyCompressed(x, readLSW256k(yPtr, i), digest);
 
-            if(checkHash(digest, targetList, numTargets, mask)) {
+            if(isInBloomFilter(digest, targetList, mask)) {
 
                 uint256_t y = yPtr[i];
                 setResultFound(i, true, x, y, digest, results, numResults);
