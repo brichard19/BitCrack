@@ -199,16 +199,16 @@ void setResultFound(int idx, bool compressed, uint256_t x, uint256_t y, unsigned
     atomicListAdd(results, numResults, &r);
 }
 
-void doIteration(
-    size_t totalPoints,
+__kernel void keyFinderKernel(
+    unsigned int totalPoints,
     int compression,
     __global uint256_t* chain,
     __global uint256_t* xPtr,
     __global uint256_t* yPtr,
     __global uint256_t* incXPtr,
     __global uint256_t* incYPtr,
-    __global unsigned int *targetList,
-    size_t numTargets,
+    __global unsigned int* targetList,
+    ulong numTargets,
     ulong mask,
     __global CLDeviceResult *results,
     __global unsigned int *numResults)
@@ -271,9 +271,8 @@ void doIteration(
     }
 }
 
-
-void doIterationWithDouble(
-    size_t totalPoints,
+__kernel void keyFinderKernelWithDouble(
+    unsigned int totalPoints,
     int compression,
     __global uint256_t* chain,
     __global uint256_t* xPtr,
@@ -281,7 +280,7 @@ void doIterationWithDouble(
     __global uint256_t* incXPtr,
     __global uint256_t* incYPtr,
     __global unsigned int* targetList,
-    size_t numTargets,
+    ulong numTargets,
     ulong mask,
     __global CLDeviceResult *results,
     __global unsigned int *numResults)
@@ -343,41 +342,4 @@ void doIterationWithDouble(
         xPtr[i] = newX;
         yPtr[i] = newY;
     }
-}
-
-/**
-* Performs a single iteration
-*/
-__kernel void keyFinderKernel(
-    unsigned int totalPoints,
-    int compression,
-    __global uint256_t* chain,
-    __global uint256_t* xPtr,
-    __global uint256_t* yPtr,
-    __global uint256_t* incXPtr,
-    __global uint256_t* incYPtr,
-    __global unsigned int* targetList,
-    ulong numTargets,
-    ulong mask,
-    __global CLDeviceResult *results,
-    __global unsigned int *numResults)
-{
-    doIteration(totalPoints, compression, chain, xPtr, yPtr, incXPtr, incYPtr, targetList, numTargets, mask, results, numResults);
-}
-
-__kernel void keyFinderKernelWithDouble(
-    unsigned int totalPoints,
-    int compression,
-    __global uint256_t* chain,
-    __global uint256_t* xPtr,
-    __global uint256_t* yPtr,
-    __global uint256_t* incXPtr,
-    __global uint256_t* incYPtr,
-    __global unsigned int* targetList,
-    ulong numTargets,
-    ulong mask,
-    __global CLDeviceResult *results,
-    __global unsigned int *numResults)
-{
-    doIterationWithDouble(totalPoints, compression, chain, xPtr, yPtr, incXPtr, incYPtr, targetList, numTargets, mask, results, numResults);
 }
