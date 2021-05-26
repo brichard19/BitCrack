@@ -69,7 +69,7 @@
     a = rotl((a), (s)) + (e);\
     c = rotl((c), 10)
 
-void ripemd160sha256NoFinal(const unsigned int x[8], unsigned int digest[5])
+void ripemd160p1(const unsigned int x[8], unsigned int digest[5])
 {
     unsigned int a = RIPEMD160_IV_0;
     unsigned int b = RIPEMD160_IV_1;
@@ -167,17 +167,20 @@ void ripemd160sha256NoFinal(const unsigned int x[8], unsigned int digest[5])
     JJ(c, d, e, a, b, 0, 5);
     JJ(b, c, d, e, a, 0, 6);
 
-    digest[0] += c;
-    digest[1] += d;
-    digest[2] += e;
-    digest[3] += a;
-    digest[4] += b;
+    digest[0] = c;
+    digest[1] = d;
+    digest[2] = e;
+    digest[3] = a;
+    digest[4] = b;
+}
 
-    a = RIPEMD160_IV_0;
-    b = RIPEMD160_IV_1;
-    c = RIPEMD160_IV_2;
-    d = RIPEMD160_IV_3;
-    e = RIPEMD160_IV_4;
+void ripemd160p2(const unsigned int x[8], unsigned int digest[5])
+{
+    unsigned int a = RIPEMD160_IV_0;
+    unsigned int b = RIPEMD160_IV_1;
+    unsigned int c = RIPEMD160_IV_2;
+    unsigned int d = RIPEMD160_IV_3;
+    unsigned int e = RIPEMD160_IV_4;
 
     /* parallel round 1 */
     JJJ(a, b, c, d, e, x[5], 8);
@@ -274,6 +277,17 @@ void ripemd160sha256NoFinal(const unsigned int x[8], unsigned int digest[5])
     digest[2] += a;
     digest[3] += b;
     digest[4] += c;
+}
+
+void ripemd160sha256NoFinal(const unsigned int x[8], unsigned int digest[5])
+{
+    digest[0] = 0;
+    digest[1] = 0;
+    digest[2] = 0;
+    digest[3] = 0;
+    digest[4] = 0;
+    ripemd160p1(x, digest);
+    ripemd160p2(x, digest);
 }
 
 #endif
