@@ -272,22 +272,27 @@ void ripemd160p2(const unsigned int x[8], unsigned int digest[5])
     FFF(c, d, e, a, b, 0, 11);
     FFF(b, c, d, e, a, 0, 11);
 
-    digest[0] += d;
-    digest[1] += e;
-    digest[2] += a;
-    digest[3] += b;
-    digest[4] += c;
+    digest[0] = d;
+    digest[1] = e;
+    digest[2] = a;
+    digest[3] = b;
+    digest[4] = c;
 }
 
 void ripemd160sha256NoFinal(const unsigned int x[8], unsigned int digest[5])
 {
-    digest[0] = 0;
-    digest[1] = 0;
-    digest[2] = 0;
-    digest[3] = 0;
-    digest[4] = 0;
-    ripemd160p1(x, digest);
-    ripemd160p2(x, digest);
+    unsigned int digest1[5];
+    unsigned int digest2[5];
+
+    ripemd160p1(x, &digest1);
+    ripemd160p2(x, &digest2);
+
+    digest[0] = digest1[0] + digest2[0];
+    digest[1] = digest1[1] + digest2[1];
+    digest[2] = digest1[2] + digest2[2];
+    digest[3] = digest1[3] + digest2[3];
+    digest[4] = digest1[4] + digest2[4];
+
 }
 
 #endif
