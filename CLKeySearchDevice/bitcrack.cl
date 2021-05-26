@@ -77,9 +77,6 @@ void ripemd160sha256NoFinal(const unsigned int x[8], unsigned int digest[5])
     unsigned int d1 = RIPEMD160_IV_3;
     unsigned int e1 = RIPEMD160_IV_4;
 
-    const unsigned int x8 = 0x00000080;
-    const unsigned int x14 = 256;
-
     /* round 1 */
     FF(a1, b1, c1, d1, e1, x[0], 11);
     FF(e1, a1, b1, c1, d1, x[1], 14);
@@ -89,13 +86,13 @@ void ripemd160sha256NoFinal(const unsigned int x[8], unsigned int digest[5])
     FF(a1, b1, c1, d1, e1, x[5], 8);
     FF(e1, a1, b1, c1, d1, x[6], 7);
     FF(d1, e1, a1, b1, c1, x[7], 9);
-    FF(c1, d1, e1, a1, b1, x8, 11);
+    FF(c1, d1, e1, a1, b1, 128, 11);
     FF(b1, c1, d1, e1, a1, 0, 13);
     FF(a1, b1, c1, d1, e1, 0, 14);
     FF(e1, a1, b1, c1, d1, 0, 15);
     FF(d1, e1, a1, b1, c1, 0, 6);
     FF(c1, d1, e1, a1, b1, 0, 7);
-    FF(b1, c1, d1, e1, a1, x14, 9);
+    FF(b1, c1, d1, e1, a1, 256, 9);
     FF(a1, b1, c1, d1, e1, 0, 8);
 
     /* round 2 */
@@ -112,18 +109,18 @@ void ripemd160sha256NoFinal(const unsigned int x[8], unsigned int digest[5])
     GG(e1, a1, b1, c1, d1, 0, 15);
     GG(d1, e1, a1, b1, c1, x[5], 9);
     GG(c1, d1, e1, a1, b1, x[2], 11);
-    GG(b1, c1, d1, e1, a1, x14, 7);
+    GG(b1, c1, d1, e1, a1, 256, 7);
     GG(a1, b1, c1, d1, e1, 0, 13);
-    GG(e1, a1, b1, c1, d1, x8, 12);
+    GG(e1, a1, b1, c1, d1, 0x80, 12);
 
     /* round 3 */
     HH(d1, e1, a1, b1, c1, x[3], 11);
     HH(c1, d1, e1, a1, b1, 0, 13);
-    HH(b1, c1, d1, e1, a1, x14, 6);
+    HH(b1, c1, d1, e1, a1, 256, 6);
     HH(a1, b1, c1, d1, e1, x[4], 7);
     HH(e1, a1, b1, c1, d1, 0, 14);
     HH(d1, e1, a1, b1, c1, 0, 9);
-    HH(c1, d1, e1, a1, b1, x8, 13);
+    HH(c1, d1, e1, a1, b1, 0x80, 13);
     HH(b1, c1, d1, e1, a1, x[1], 15);
     HH(a1, b1, c1, d1, e1, x[2], 14);
     HH(e1, a1, b1, c1, d1, x[7], 8);
@@ -140,14 +137,14 @@ void ripemd160sha256NoFinal(const unsigned int x[8], unsigned int digest[5])
     II(a1, b1, c1, d1, e1, 0, 14);
     II(e1, a1, b1, c1, d1, 0, 15);
     II(d1, e1, a1, b1, c1, x[0], 14);
-    II(c1, d1, e1, a1, b1, x8, 15);
+    II(c1, d1, e1, a1, b1, 0x80, 15);
     II(b1, c1, d1, e1, a1, 0, 9);
     II(a1, b1, c1, d1, e1, x[4], 8);
     II(e1, a1, b1, c1, d1, 0, 9);
     II(d1, e1, a1, b1, c1, x[3], 14);
     II(c1, d1, e1, a1, b1, x[7], 5);
     II(b1, c1, d1, e1, a1, 0, 6);
-    II(a1, b1, c1, d1, e1, x14, 8);
+    II(a1, b1, c1, d1, e1, 256, 8);
     II(e1, a1, b1, c1, d1, x[5], 6);
     II(d1, e1, a1, b1, c1, x[6], 5);
     II(c1, d1, e1, a1, b1, x[2], 12);
@@ -161,10 +158,10 @@ void ripemd160sha256NoFinal(const unsigned int x[8], unsigned int digest[5])
     JJ(b1, c1, d1, e1, a1, 0, 8);
     JJ(a1, b1, c1, d1, e1, x[2], 13);
     JJ(e1, a1, b1, c1, d1, 0, 12);
-    JJ(d1, e1, a1, b1, c1, x14, 5);
+    JJ(d1, e1, a1, b1, c1, 256, 5);
     JJ(c1, d1, e1, a1, b1, x[1], 12);
     JJ(b1, c1, d1, e1, a1, x[3], 13);
-    JJ(a1, b1, c1, d1, e1, x8, 14);
+    JJ(a1, b1, c1, d1, e1, 0x80, 14);
     JJ(e1, a1, b1, c1, d1, 0, 11);
     JJ(d1, e1, a1, b1, c1, x[6], 8);
     JJ(c1, d1, e1, a1, b1, 0, 5);
@@ -178,7 +175,7 @@ void ripemd160sha256NoFinal(const unsigned int x[8], unsigned int digest[5])
 
     /* parallel round 1 */
     JJJ(a2, b2, c2, d2, e2, x[5], 8);
-    JJJ(e2, a2, b2, c2, d2, x14, 9);
+    JJJ(e2, a2, b2, c2, d2, 256, 9);
     JJJ(d2, e2, a2, b2, c2, x[7], 9);
     JJJ(c2, d2, e2, a2, b2, x[0], 11);
     JJJ(b2, c2, d2, e2, a2, 0, 13);
@@ -188,7 +185,7 @@ void ripemd160sha256NoFinal(const unsigned int x[8], unsigned int digest[5])
     JJJ(c2, d2, e2, a2, b2, 0, 7);
     JJJ(b2, c2, d2, e2, a2, x[6], 7);
     JJJ(a2, b2, c2, d2, e2, 0, 8);
-    JJJ(e2, a2, b2, c2, d2, x8, 11);
+    JJJ(e2, a2, b2, c2, d2, 0x80, 11);
     JJJ(d2, e2, a2, b2, c2, x[1], 14);
     JJJ(c2, d2, e2, a2, b2, 0, 14);
     JJJ(b2, c2, d2, e2, a2, x[3], 12);
@@ -203,9 +200,9 @@ void ripemd160sha256NoFinal(const unsigned int x[8], unsigned int digest[5])
     III(e2, a2, b2, c2, d2, 0, 8);
     III(d2, e2, a2, b2, c2, x[5], 9);
     III(c2, d2, e2, a2, b2, 0, 11);
-    III(b2, c2, d2, e2, a2, x14, 7);
+    III(b2, c2, d2, e2, a2, 256, 7);
     III(a2, b2, c2, d2, e2, 0, 7);
-    III(e2, a2, b2, c2, d2, x8, 12);
+    III(e2, a2, b2, c2, d2, 0x80, 12);
     III(d2, e2, a2, b2, c2, 0, 7);
     III(c2, d2, e2, a2, b2, x[4], 6);
     III(b2, c2, d2, e2, a2, 0, 15);
@@ -218,11 +215,11 @@ void ripemd160sha256NoFinal(const unsigned int x[8], unsigned int digest[5])
     HHH(b2, c2, d2, e2, a2, x[1], 15);
     HHH(a2, b2, c2, d2, e2, x[3], 11);
     HHH(e2, a2, b2, c2, d2, x[7], 8);
-    HHH(d2, e2, a2, b2, c2, x14, 6);
+    HHH(d2, e2, a2, b2, c2, 256, 6);
     HHH(c2, d2, e2, a2, b2, x[6], 6);
     HHH(b2, c2, d2, e2, a2, 0, 14);
     HHH(a2, b2, c2, d2, e2, 0, 12);
-    HHH(e2, a2, b2, c2, d2, x8, 13);
+    HHH(e2, a2, b2, c2, d2, 0x80, 13);
     HHH(d2, e2, a2, b2, c2, 0, 5);
     HHH(c2, d2, e2, a2, b2, x[2], 14);
     HHH(b2, c2, d2, e2, a2, 0, 13);
@@ -231,7 +228,7 @@ void ripemd160sha256NoFinal(const unsigned int x[8], unsigned int digest[5])
     HHH(d2, e2, a2, b2, c2, 0, 5);
 
     /* parallel round 4 */
-    GGG(c2, d2, e2, a2, b2, x8, 15);
+    GGG(c2, d2, e2, a2, b2, 0x80, 15);
     GGG(b2, c2, d2, e2, a2, x[6], 5);
     GGG(a2, b2, c2, d2, e2, x[4], 8);
     GGG(e2, a2, b2, c2, d2, x[1], 11);
@@ -246,7 +243,7 @@ void ripemd160sha256NoFinal(const unsigned int x[8], unsigned int digest[5])
     GGG(a2, b2, c2, d2, e2, 0, 12);
     GGG(e2, a2, b2, c2, d2, x[7], 5);
     GGG(d2, e2, a2, b2, c2, 0, 15);
-    GGG(c2, d2, e2, a2, b2, x14, 8);
+    GGG(c2, d2, e2, a2, b2, 256, 8);
 
     /* parallel round 5 */
     FFF(b2, c2, d2, e2, a2, 0, 8);
@@ -255,12 +252,12 @@ void ripemd160sha256NoFinal(const unsigned int x[8], unsigned int digest[5])
     FFF(d2, e2, a2, b2, c2, x[4], 9);
     FFF(c2, d2, e2, a2, b2, x[1], 12);
     FFF(b2, c2, d2, e2, a2, x[5], 5);
-    FFF(a2, b2, c2, d2, e2, x8, 14);
+    FFF(a2, b2, c2, d2, e2, 0x80, 14);
     FFF(e2, a2, b2, c2, d2, x[7], 6);
     FFF(d2, e2, a2, b2, c2, x[6], 8);
     FFF(c2, d2, e2, a2, b2, x[2], 13);
     FFF(b2, c2, d2, e2, a2, 0, 6);
-    FFF(a2, b2, c2, d2, e2, x14, 5);
+    FFF(a2, b2, c2, d2, e2, 256, 5);
     FFF(e2, a2, b2, c2, d2, x[0], 15);
     FFF(d2, e2, a2, b2, c2, x[3], 13);
     FFF(c2, d2, e2, a2, b2, 0, 11);
