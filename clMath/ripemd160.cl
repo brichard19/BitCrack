@@ -284,8 +284,8 @@ void ripemd160sha256NoFinal(const unsigned int x[8], unsigned int digest[5])
     unsigned int digest1[5];
     unsigned int digest2[5];
 
-    ripemd160p1(x, &digest1);
-    ripemd160p2(x, &digest2);
+    ripemd160p1(x, digest1);
+    ripemd160p2(x, digest2);
 
     digest[0] = digest1[0] + digest2[0];
     digest[1] = digest1[1] + digest2[1];
