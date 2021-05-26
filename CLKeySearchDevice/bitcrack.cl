@@ -284,8 +284,8 @@ void ripemd160sha256NoFinal(const unsigned int x[8], unsigned int digest[5])
     unsigned int digest1[5];
     unsigned int digest2[5];
 
-    ripemd160p1(x, &digest1);
-    ripemd160p2(x, &digest2);
+    ripemd160p1(x, digest1);
+    ripemd160p2(x, digest2);
 
     digest[0] = digest1[0] + digest2[0];
     digest[1] = digest1[1] + digest2[1];
@@ -673,16 +673,7 @@ void mulModP(unsigned int a[8], unsigned int b[8], unsigned int product_low[8])
     }
 }
 
-uint256_t mulModP256k(uint256_t a, uint256_t b)
-{
-    uint256_t c;
-
-    mulModP(a.v, b.v, c.v);
-
-    return c;
-}
-
-void mulModP256kv(uint256_t *a, uint256_t *b, uint256_t *c)
+void mulModP256k(uint256_t *a, uint256_t *b, uint256_t *c)
 {
     mulModP(a->v, b->v, c->v);
 }
@@ -699,33 +690,34 @@ uint256_t invModP256k(uint256_t x)
 {
     uint256_t y = {{0, 0, 0, 0, 0, 0, 0, 1}};
 
-    mulModP256kv(&x, &y, &y);
+    mulModP256k(&x, &y, &y);
     squareModP256k(&x);
     squareModP256k(&x);
-    mulModP256kv(&x, &y, &y);
+    mulModP256k(&x, &y, &y);
     squareModP256k(&x);
-    mulModP256kv(&x, &y, &y);
+    mulModP256k(&x, &y, &y);
     squareModP256k(&x);
     squareModP256k(&x);
-    mulModP256kv(&x, &y, &y);
+    mulModP256k(&x, &y, &y);
 
     for(int i = 0; i < 5; i++) {
         squareModP256k(&x);
     }
 
     for(int i = 0; i < 22; i++) {
-        mulModP256kv(&x, &y, &y);
+        mulModP256k(&x, &y, &y);
         squareModP256k(&x);
     }
 
     squareModP256k(&x);
 
     for(int i = 0; i < 222; i++) {
-        mulModP256kv(&x, &y, &y);
+        mulModP256k(&x, &y, &y);
         squareModP256k(&x);
     }
 
-    return mulModP256k(x, y);
+    mulModP256k(&x, &y, &x);
+    return x;
 }
 
 
@@ -740,7 +732,7 @@ void beginBatchAdd256k(uint256_t px, uint256_t x, __global uint256_t* chain, int
 
     // Keep a chain of multiples of the diff, i.e. c[0] = diff0, c[1] = diff0 * diff1,
     // c[2] = diff2 * diff1 * diff0, etc
-    *inverse = mulModP256k(*inverse, t);
+    mulModP256k(inverse, &t, inverse);
 
     chain[batchIdx * dim + gid] = *inverse;
 }
@@ -762,7 +754,7 @@ void beginBatchAddWithDouble256k(uint256_t px, uint256_t py, __global uint256_t*
 
     // Keep a chain of multiples of the diff, i.e. c[0] = diff0, c[1] = diff0 * diff1,
     // c[2] = diff2 * diff1 * diff0, etc
-    *inverse = mulModP256k(x, *inverse);
+    mulModP256k(&x, inverse, inverse);
 
     chain[batchIdx * dim + gid] = *inverse;
 }
@@ -794,7 +786,7 @@ void completeBatchAddWithDouble256k(
         uint256_t c;
 
         c = chain[(batchIdx - 1) * dim + gid];
-        s = mulModP256k(*inverse, c);
+        mulModP256k(inverse, &c, &s);
 
         uint256_t diff;
         if(equal256k(&px, &x)) {
@@ -803,7 +795,7 @@ void completeBatchAddWithDouble256k(
             diff = subModP256k(px, x);
         }
 
-        *inverse = mulModP256k(diff, *inverse);
+        mulModP256k(&diff, inverse, inverse);
     } else {
         s = *inverse;
     }
@@ -816,16 +808,16 @@ void completeBatchAddWithDouble256k(
         uint256_t tx2;
 
         // 3x^2
-        mulModP256kv(&x, &x, &x2);
+        mulModP256k(&x, &x, &x2);
         addModP256k(&x2, &x2, &tx2);
         addModP256k(&x2, &tx2, &tx2);
 
         // s = 3x^2 * 1/2y
-        mulModP256kv(&tx2, &s, &s);
+        mulModP256k(&tx2, &s, &s);
 
         // s^2
         uint256_t s2;
-        mulModP256kv(&s, &s, &s2);
+        mulModP256k(&s, &s, &s2);
 
         // Rx = s^2 - 2px
         *newX = subModP256k(s2, x);
@@ -833,18 +825,18 @@ void completeBatchAddWithDouble256k(
 
         // Ry = s(px - rx) - py
         uint256_t k = subModP256k(px, *newX);
-        *newY = mulModP256k(s, k);
+        mulModP256k(&s, &k, newY);
         *newY = subModP256k(*newY, py);
     } else {
 
         uint256_t rise;
         rise = subModP256k(py, y);
 
-        mulModP256kv(&rise, &s, &s);
+        mulModP256k(&rise, &s, &s);
 
         // Rx = s^2 - Gx - Qx
         uint256_t s2;
-        mulModP256kv(&s, &s, &s2);
+        mulModP256k(&s, &s, &s2);
 
         *newX = subModP256k(s2, px);
         *newX = subModP256k(*newX, x);
@@ -852,7 +844,7 @@ void completeBatchAddWithDouble256k(
         // Ry = s(px - rx) - py
         uint256_t k;
         k = subModP256k(px, *newX);
-        *newY = mulModP256k(s, k);
+        mulModP256k(&s, &k, newY);
         *newY = subModP256k(*newY, py);
     }
 }
@@ -882,11 +874,11 @@ void completeBatchAdd256k(
         uint256_t c;
 
         c = chain[(batchIdx - 1) * dim + gid];
-        s = mulModP256k(*inverse, c);
+        mulModP256k(inverse, &c, &s);
 
         uint256_t diff;
         diff = subModP256k(px, x);
-        *inverse = mulModP256k(diff, *inverse);
+        mulModP256k(&diff, inverse, inverse);
     } else {
         s = *inverse;
     }
@@ -895,18 +887,18 @@ void completeBatchAdd256k(
 
     uint256_t rise = subModP256k(py, y);
 
-    s = mulModP256k(rise, s);
+    mulModP256k(&rise, &s, &s);
 
     // Rx = s^2 - Gx - Qx
     uint256_t s2;
-    mulModP256kv(&s, &s, &s2);
+    mulModP256k(&s, &s, &s2);
 
     *newX = subModP256k(s2, px);
     *newX = subModP256k(*newX, x);
 
     // Ry = s(px - rx) - py
     uint256_t k = subModP256k(px, *newX);
-    *newY = mulModP256k(s, k);
+    mulModP256k(&s, &k, newY);
     *newY = subModP256k(*newY, py);
 }
 
