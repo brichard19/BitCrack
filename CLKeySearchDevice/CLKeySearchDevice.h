@@ -109,7 +109,7 @@ private:
 
 public:
 
-    CLKeySearchDevice(uint64_t device, int threads, int pointsPerThread, int blocks = 0);
+    CLKeySearchDevice(uint64_t device, int threads, int pointsPerThread, int blocks = 0, int compressionMode = PointCompressionType::COMPRESSED);
     ~CLKeySearchDevice();
 
 

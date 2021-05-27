@@ -30,7 +30,7 @@ static void undoRMD160FinalRound(const unsigned int hIn[5], unsigned int hOut[5]
     }
 }
 
-CLKeySearchDevice::CLKeySearchDevice(uint64_t device, int threads, int pointsPerThread, int blocks)
+CLKeySearchDevice::CLKeySearchDevice(uint64_t device, int threads, int pointsPerThread, int blocks, int compressionMode)
 {
     _threads = threads;
     _blocks = blocks;
@@ -46,11 +46,24 @@ CLKeySearchDevice::CLKeySearchDevice(uint64_t device, int threads, int pointsPer
         throw KeySearchException("KEYSEARCH_MINIMUM_POINT_EXCEPTION", "At least 1 point per thread required");
     }
 
+    std::string options = "";
+
+    switch (compressionMode) {
+        case PointCompressionType::COMPRESSED:
+            options += " -DCOMPRESSION_COMPRESSED";
+        break;
+        case PointCompressionType::UNCOMPRESSED:
+            options += " -DCOMPRESSION_UNCOMPRESSED";
+        break;
+        case PointCompressionType::BOTH:
+            options += " -DCOMPRESSION_BOTH";
+        break;
+    }
     try {
         // Create the context
         _clContext = new cl::CLContext(_device);
         Logger::log(LogLevel::Info, "Compiling OpenCL kernels...");
-        _clProgram = new cl::CLProgram(*_clContext, _bitcrack_cl);
+        _clProgram = new cl::CLProgram(*_clContext, _bitcrack_cl, options);
 
         // Load the kernels
         _initKeysKernel = new cl::CLKernel(*_clProgram, "multiplyStepKernel");

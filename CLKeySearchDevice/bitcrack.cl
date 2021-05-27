@@ -1496,14 +1496,15 @@ __kernel void multiplyStepKernel(
 
     int batchIdx = 0;
     int i = gid;
+    unsigned int p;
+    unsigned int bit;
+    uint256_t x;
+
     for(; i < totalPoints; i += dim) {
 
-        unsigned int p;
         p = readWord256k(privateKeys, i, 7 - step / 32);
-
-        unsigned int bit = p & (1 << (step % 32));
-
-        uint256_t x = xPtr[i];
+        bit = p & (1 << (step % 32));
+        x = xPtr[i];
 
         if(bit != 0) {
             if(!isInfinity256k(&x)) {
@@ -1649,36 +1650,48 @@ __kernel void keyFinderKernel(
     int i = gid;
     int batchIdx = 0;
 
+    unsigned int digest[5];
+
+#ifdef COMPRESSION_UNCOMPRESSED
     for(; i < totalPoints; i += dim) {
-        uint256_t x;
+        hashPublicKey(xPtr[i], yPtr[i], digest);
 
-        unsigned int digest[5];
-
-        x = xPtr[i];
-
-        if((compression == UNCOMPRESSED) || (compression == BOTH)) {
-            uint256_t y = yPtr[i];
-
-            hashPublicKey(x, y, digest);
-
-            if(isInBloomFilter(digest, targetList, mask)) {
-                setResultFound(i, false, x, y, digest, results, numResults);
-            }
+        if(isInBloomFilter(digest, targetList, mask)) {
+            setResultFound(i, false, xPtr[i], yPtr[i], digest, results, numResults);
         }
 
-        if((compression == COMPRESSED) || (compression == BOTH)) {
-
-            hashPublicKeyCompressed(x, readLSW256k(yPtr, i), digest);
-
-            if(isInBloomFilter(digest, targetList, mask)) {
-                uint256_t y = yPtr[i];
-                setResultFound(i, true, x, y, digest, results, numResults);
-            }
-        }
-
-        beginBatchAdd256k(incX, x, chain, i, batchIdx, &inverse);
+        beginBatchAdd256k(incX, xPtr[i], chain, i, batchIdx, &inverse);
         batchIdx++;
     }
+#elif COMPRESSION_BOTH
+    for(; i < totalPoints; i += dim) {
+        hashPublicKey(xPtr[i], yPtr[i], digest);
+
+        if(isInBloomFilter(digest, targetList, mask)) {
+            setResultFound(i, false, xPtr[i], yPtr[i], digest, results, numResults);
+        }
+
+        hashPublicKeyCompressed(xPtr[i], readLSW256k(yPtr, i), digest);
+
+        if(isInBloomFilter(digest, targetList, mask)) {
+            setResultFound(i, true, xPtr[i], yPtr[i], digest, results, numResults);
+        }
+
+        beginBatchAdd256k(incX, xPtr[i], chain, i, batchIdx, &inverse);
+        batchIdx++;
+    }
+#else
+    for(; i < totalPoints; i += dim) {
+        hashPublicKeyCompressed(xPtr[i], readLSW256k(yPtr, i), digest);
+
+        if(isInBloomFilter(digest, targetList, mask)) {
+            setResultFound(i, true, xPtr[i], yPtr[i], digest, results, numResults);
+        }
+
+        beginBatchAdd256k(incX, xPtr[i], chain, i, batchIdx, &inverse);
+        batchIdx++;
+    }
+#endif
 
     inverse = doBatchInverse256k(inverse);
 
@@ -1721,38 +1734,47 @@ __kernel void keyFinderKernelWithDouble(
 
     int i = gid;
     int batchIdx = 0;
+    unsigned int digest[5];
+
+#ifdef COMPRESSION_UNCOMPRESSED
     for(; i < totalPoints; i += dim) {
-        uint256_t x;
+        hashPublicKey(xPtr[i], yPtr[i], digest);
 
-        unsigned int digest[5];
-
-        x = xPtr[i];
-
-        // uncompressed
-        if((compression == UNCOMPRESSED) || (compression == BOTH)) {
-            uint256_t y = yPtr[i];
-            hashPublicKey(x, y, digest);
-
-            if(isInBloomFilter(digest, targetList, mask)) {
-                setResultFound(i, false, x, y, digest, results, numResults);
-            }
-        }
-
-        // compressed
-        if((compression == COMPRESSED) || (compression == BOTH)) {
-
-            hashPublicKeyCompressed(x, readLSW256k(yPtr, i), digest);
-
-            if(isInBloomFilter(digest, targetList, mask)) {
-
-                uint256_t y = yPtr[i];
-                setResultFound(i, true, x, y, digest, results, numResults);
-            }
+        if(isInBloomFilter(digest, targetList, mask)) {
+            setResultFound(i, false, xPtr[i], yPtr[i], digest, results, numResults);
         }
 
         beginBatchAddWithDouble256k(incX, incY, xPtr, chain, i, batchIdx, &inverse);
         batchIdx++;
     }
+#elif COMPRESSION_BOTH
+    for(; i < totalPoints; i += dim) {
+        hashPublicKey(xPtr[i], yPtr[i], digest);
+
+        if(isInBloomFilter(digest, targetList, mask)) {
+            setResultFound(i, false, xPtr[i], yPtr[i], digest, results, numResults);
+        }
+
+        hashPublicKeyCompressed(xPtr[i], readLSW256k(yPtr, i), digest);
+
+        if(isInBloomFilter(digest, targetList, mask)) {
+            setResultFound(i, true, xPtr[i], yPtr[i], digest, results, numResults);
+        }
+
+        beginBatchAddWithDouble256k(incX, incY, xPtr, chain, i, batchIdx, &inverse);
+        batchIdx++;
+    }
+#else
+    for(; i < totalPoints; i += dim) {
+        hashPublicKeyCompressed(xPtr[i], readLSW256k(yPtr, i), digest);
+        if(isInBloomFilter(digest, targetList, mask)) {
+            setResultFound(i, true, xPtr[i], yPtr[i], digest, results, numResults);
+        }
+
+        beginBatchAddWithDouble256k(incX, incY, xPtr, chain, i, batchIdx, &inverse);
+        batchIdx++;
+    }
+#endif
 
     inverse = doBatchInverse256k(inverse);
 

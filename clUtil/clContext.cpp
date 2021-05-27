@@ -94,8 +94,11 @@ cl::CLProgram::CLProgram(cl::CLContext &ctx, std::string srcFile, std::string op
     cl_int err;
 
     if(util::toLower(_ctx.getDeviceVendor()).find("intel") != std::string::npos) {
-        options += "-DDEVICE_VENDOR_INTEL";
+        options += " -DDEVICE_VENDOR_INTEL";
     }
+
+    // disable optimization as codeXL shows it will result in higher throughput
+    options += " -O0";
 
     _prog = clCreateProgramWithSource(ctx.getContext(), 1, &ptr, &len, &err);
     clCall(err);

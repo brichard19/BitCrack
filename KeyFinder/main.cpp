@@ -30,7 +30,7 @@ struct RunConfig{
     unsigned int blocks = 0;
     unsigned int pointsPerThread = 0;
     
-    int compression = PointCompressionType::COMPRESSED;
+    int compressionMode = PointCompressionType::COMPRESSED;
  
     std::vector<std::string> targets;
 
@@ -202,6 +202,7 @@ typedef struct {
 	int threads;
 	int blocks;
 	int pointsPerThread;
+    int compressionMode;
 }DeviceParameters;
 
 DeviceParameters getDefaultParameters(const DeviceManager::DeviceInfo &device)
@@ -210,14 +211,15 @@ DeviceParameters getDefaultParameters(const DeviceManager::DeviceInfo &device)
 	parameters.threads = 256;
     parameters.blocks = 32;
 	parameters.pointsPerThread = 32;
+    parameters.compressionMode = PointCompressionType::COMPRESSED;
 
 	return parameters;
 }
 
-static KeySearchDevice *getDeviceContext(DeviceManager::DeviceInfo &device, int blocks, int threads, int pointsPerThread)
+static KeySearchDevice *getDeviceContext(DeviceManager::DeviceInfo &device, int blocks, int threads, int pointsPerThread, int compressionMode)
 {
     if(device.type == DeviceManager::DeviceType::OpenCL) {
-        return new CLKeySearchDevice(device.physicalId, threads, pointsPerThread, blocks);
+        return new CLKeySearchDevice(device.physicalId, threads, pointsPerThread, blocks, compressionMode);
     }
 
     return NULL;
@@ -286,7 +288,7 @@ void writeCheckpoint(secp256k1::uint256 nextKey)
     fileStream << "blocks=" << _config.blocks << "\n";
     fileStream << "threads=" << _config.threads << "\n";
     fileStream << "points=" << _config.pointsPerThread << "\n";
-    fileStream << "compression=" << getCompressionString(_config.compression) << "\n";
+    fileStream << "compression=" << getCompressionString(_config.compressionMode) << "\n";
     fileStream << "device=" << _config.device << "\n";
     fileStream << "elapsed=" << (_config.elapsed + util::getSystemTime() - _startTime) << "\n";
     fileStream << "stride=" << _config.stride.toString();
@@ -323,7 +325,7 @@ void readCheckpointFile()
         _config.pointsPerThread = util::parseUInt32(entries["points"].value);
     }
     if(entries.find("compression") != entries.end()) {
-        _config.compression = parseCompressionString(entries["compression"].value);
+        _config.compressionMode = parseCompressionString(entries["compression"].value);
     }
     if(entries.find("elapsed") != entries.end()) {
         _config.elapsed = util::parseUInt32(entries["elapsed"].value);
@@ -342,7 +344,7 @@ int run()
         return 1;
     }
 
-    Logger::log(LogLevel::Info, "Compression: " + getCompressionString(_config.compression));
+    Logger::log(LogLevel::Info, "Compression: " + getCompressionString(_config.compressionMode));
     Logger::log(LogLevel::Info, "Starting at: " + _config.nextKey.toString());
     Logger::log(LogLevel::Info, "Ending at:   " + _config.endKey.toString());
     Logger::log(LogLevel::Info, "Counting by: " + _config.stride.toString());
@@ -368,9 +370,9 @@ int run()
         }
 
         // Get device context
-        KeySearchDevice *keySearchDevice = getDeviceContext(_devices[_config.device], _config.blocks, _config.threads, _config.pointsPerThread);
+        KeySearchDevice *keySearchDevice = getDeviceContext(_devices[_config.device], _config.blocks, _config.threads, _config.pointsPerThread, _config.compressionMode);
 
-        KeyFinder keyFinder(_config.nextKey, _config.endKey, _config.compression, keySearchDevice, _config.stride);
+        KeyFinder keyFinder(_config.nextKey, _config.endKey, _config.compressionMode, keySearchDevice, _config.stride);
 
         keyFinder.setResultCallback(resultCallback);
         keyFinder.setStatusInterval(_config.statusInterval);
@@ -511,7 +513,7 @@ int main(int argc, char **argv)
             } else if(optArg.equals("-u", "--uncompressed")) {
                 optUncompressed = true;
             } else if(optArg.equals("", "--compression")) {
-                _config.compression = parseCompressionString(optArg.arg);
+                _config.compressionMode = parseCompressionString(optArg.arg);
 			} else if(optArg.equals("-i", "--in")) {
 				_config.targetsFile = optArg.arg;
 			} else if(optArg.equals("-o", "--out")) {
@@ -628,11 +630,11 @@ int main(int argc, char **argv)
 
 	// Check option for compressed, uncompressed, or both
 	if(optCompressed && optUncompressed) {
-		_config.compression = PointCompressionType::BOTH;
+		_config.compressionMode = PointCompressionType::BOTH;
 	} else if(optCompressed) {
-		_config.compression = PointCompressionType::COMPRESSED;
+		_config.compressionMode = PointCompressionType::COMPRESSED;
 	} else if(optUncompressed) {
-		_config.compression = PointCompressionType::UNCOMPRESSED;
+		_config.compressionMode = PointCompressionType::UNCOMPRESSED;
 	}
 
     if(_config.checkpointFile.length() > 0) {
