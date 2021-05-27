@@ -15,27 +15,19 @@ typedef struct {
     unsigned int digest[5];
 }CLDeviceResult;
 
-bool isInBloomFilter(unsigned int hash[5], __global unsigned int *targetList, ulong mask)
+bool isInBloomFilter(unsigned int hash[5], __global unsigned int *targetList, ulong *mask)
 {
-    bool notFoundMatch = true;
-
     unsigned int h5 = hash[0] + hash[1] + hash[2] + hash[3] + hash[4];
 
-    uint64_t idx[5];
-
-    idx[0] = ((hash[0] << 6) | (h5 & 0x3f)) & mask;
-    idx[1] = ((hash[1] << 6) | ((h5 >> 6) & 0x3f)) & mask;
-    idx[2] = ((hash[2] << 6) | ((h5 >> 12) & 0x3f)) & mask;
-    idx[3] = ((hash[3] << 6) | ((h5 >> 18) & 0x3f)) & mask;
-    idx[4] = ((hash[4] << 6) | ((h5 >> 24) & 0x3f)) & mask;
-
-    notFoundMatch = (targetList[idx[0] / 32] & (0x01 << (idx[0] % 32))) == 0
-      || (targetList[idx[1] / 32] & (0x01 << (idx[1] % 32))) == 0
-      || (targetList[idx[2] / 32] & (0x01 << (idx[2] % 32))) == 0
-      || (targetList[idx[3] / 32] & (0x01 << (idx[3] % 32))) == 0
-      || (targetList[idx[4] / 32] & (0x01 << (idx[4] % 32))) == 0;
-
-    return notFoundMatch == false;
+    return (false == 
+        (
+            (targetList[(((hash[0] << 6) | (h5 & 0x3f)) & *mask) / 32] & (0x01 << ((((hash[0] << 6) | (h5 & 0x3f)) & *mask) % 32))) == 0 ||
+            (targetList[(((hash[1] << 6) | ((h5 >> 6) & 0x3f)) & *mask) / 32] & (0x01 << ((((hash[1] << 6) | ((h5 >> 6) & 0x3f)) & *mask) % 32))) == 0 ||
+            (targetList[(((hash[2] << 6) | ((h5 >> 12) & 0x3f)) & *mask) / 32] & (0x01 << ((((hash[2] << 6) | ((h5 >> 12) & 0x3f)) & *mask) % 32))) == 0 ||
+            (targetList[(((hash[3] << 6) | ((h5 >> 18) & 0x3f)) & *mask) / 32] & (0x01 << ((((hash[3] << 6) | ((h5 >> 18) & 0x3f)) & *mask) % 32))) == 0 || 
+            (targetList[ (((hash[4] << 6) | ((h5 >> 24) & 0x3f)) & *mask) / 32] & (0x01 << ( (((hash[4] << 6) | ((h5 >> 24) & 0x3f)) & *mask) % 32))) == 0
+        )
+    );
 }
 
 void doRMD160FinalRound(const unsigned int hIn[5], unsigned int hOut[5])
@@ -231,7 +223,7 @@ __kernel void keyFinderKernel(
     for(; i < totalPoints; i += dim) {
         hashPublicKey(xPtr[i], yPtr[i], digest);
 
-        if(isInBloomFilter(digest, targetList, mask)) {
+        if(isInBloomFilter(digest, targetList, &mask)) {
             setResultFound(i, false, xPtr[i], yPtr[i], digest, results, numResults);
         }
 
@@ -242,13 +234,13 @@ __kernel void keyFinderKernel(
     for(; i < totalPoints; i += dim) {
         hashPublicKey(xPtr[i], yPtr[i], digest);
 
-        if(isInBloomFilter(digest, targetList, mask)) {
+        if(isInBloomFilter(digest, targetList, &mask)) {
             setResultFound(i, false, xPtr[i], yPtr[i], digest, results, numResults);
         }
 
         hashPublicKeyCompressed(xPtr[i], readLSW256k(yPtr, i), digest);
 
-        if(isInBloomFilter(digest, targetList, mask)) {
+        if(isInBloomFilter(digest, targetList, &mask)) {
             setResultFound(i, true, xPtr[i], yPtr[i], digest, results, numResults);
         }
 
@@ -259,7 +251,7 @@ __kernel void keyFinderKernel(
     for(; i < totalPoints; i += dim) {
         hashPublicKeyCompressed(xPtr[i], readLSW256k(yPtr, i), digest);
 
-        if(isInBloomFilter(digest, targetList, mask)) {
+        if(isInBloomFilter(digest, targetList, &mask)) {
             setResultFound(i, true, xPtr[i], yPtr[i], digest, results, numResults);
         }
 
@@ -315,7 +307,7 @@ __kernel void keyFinderKernelWithDouble(
     for(; i < totalPoints; i += dim) {
         hashPublicKey(xPtr[i], yPtr[i], digest);
 
-        if(isInBloomFilter(digest, targetList, mask)) {
+        if(isInBloomFilter(digest, targetList, &mask)) {
             setResultFound(i, false, xPtr[i], yPtr[i], digest, results, numResults);
         }
 
@@ -326,13 +318,13 @@ __kernel void keyFinderKernelWithDouble(
     for(; i < totalPoints; i += dim) {
         hashPublicKey(xPtr[i], yPtr[i], digest);
 
-        if(isInBloomFilter(digest, targetList, mask)) {
+        if(isInBloomFilter(digest, targetList, &mask)) {
             setResultFound(i, false, xPtr[i], yPtr[i], digest, results, numResults);
         }
 
         hashPublicKeyCompressed(xPtr[i], readLSW256k(yPtr, i), digest);
 
-        if(isInBloomFilter(digest, targetList, mask)) {
+        if(isInBloomFilter(digest, targetList, &mask)) {
             setResultFound(i, true, xPtr[i], yPtr[i], digest, results, numResults);
         }
 
@@ -342,7 +334,7 @@ __kernel void keyFinderKernelWithDouble(
 #else
     for(; i < totalPoints; i += dim) {
         hashPublicKeyCompressed(xPtr[i], readLSW256k(yPtr, i), digest);
-        if(isInBloomFilter(digest, targetList, mask)) {
+        if(isInBloomFilter(digest, targetList, &mask)) {
             setResultFound(i, true, xPtr[i], yPtr[i], digest, results, numResults);
         }
 
