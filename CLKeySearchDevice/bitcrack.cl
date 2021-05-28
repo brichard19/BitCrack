@@ -1120,7 +1120,7 @@ void sha256PublicKey(const unsigned int x[8], const unsigned int y[8], unsigned 
     tmp[7] = h;
 
     w[0] = (y[7] << 24) | 0x00800000;
-    w[15] = 65 * 8;
+    w[15] = 520; // 65 * 8
 
     roundSha(a, b, c, d, e, f, g, h, w[0], _K[0]);
     roundSha(h, a, b, c, d, e, f, g, 0, _K[1]);
@@ -1268,7 +1268,7 @@ void sha256PublicKeyCompressed(const unsigned int x[8], unsigned int yParity, un
     w[6] = (x[6] >> 8) | (x[5] << 24);
     w[7] = (x[7] >> 8) | (x[6] << 24);
     w[8] = (x[7] << 24) | 0x00800000;
-    w[15] = 33 * 8;
+    w[15] = 264; // 33 * 8
 
     a = _IV[0];
     b = _IV[1];
@@ -1423,7 +1423,7 @@ void sha256PublicKeyCompressed(const unsigned int x[8], unsigned int yParity, un
 #define BOTH 2
 
 #ifndef endian
-#define endian(x) (x << 24) | ((x << 8) & 0x00ff0000) | ((x >> 8) & 0x0000ff00) | (x >> 24)
+#define endian(x) ((x) << 24) | (((x) << 8) & 0x00ff0000) | (((x) >> 8) & 0x0000ff00) | ((x) >> 24)
 #endif
 
 typedef struct {
