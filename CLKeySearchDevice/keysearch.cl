@@ -2,10 +2,9 @@
 #define UNCOMPRESSED 1
 #define BOTH 2
 
-unsigned int endian(unsigned int x)
-{
-    return (x << 24) | ((x << 8) & 0x00ff0000) | ((x >> 8) & 0x0000ff00) | (x >> 24);
-}
+#ifndef endian
+#define endian(x) ((x) << 24) | (((x) << 8) & 0x00ff0000) | (((x) >> 8) & 0x0000ff00) | ((x) >> 24)
+#endif
 
 typedef struct {
     int idx;
@@ -52,7 +51,7 @@ __kernel void multiplyStepKernel(
 {
     uint256_t gx;
     uint256_t gy;
-    int gid = get_local_size(0) * get_group_id(0) + get_local_id(0);
+    int i = get_local_size(0) * get_group_id(0) + get_local_id(0);
     int dim = get_global_size(0);
 
     gx = gxPtr[step];
@@ -62,18 +61,15 @@ __kernel void multiplyStepKernel(
     uint256_t inverse = { {0,0,0,0,0,0,0,1} };
 
     int batchIdx = 0;
-    int i = gid;
     unsigned int p;
-    unsigned int bit;
     uint256_t x;
 
     for(; i < totalPoints; i += dim) {
 
         p = readWord256k(privateKeys, i, 7 - step / 32);
-        bit = p & (1 << (step % 32));
         x = xPtr[i];
 
-        if(bit != 0) {
+        if(( p & (1 << (step % 32))) != 0) {
             if(!isInfinity256k(&x)) {
                 beginBatchAddWithDouble256k(gx, gy, xPtr, chain, i, batchIdx, &inverse);
                 batchIdx++;
@@ -90,11 +86,10 @@ __kernel void multiplyStepKernel(
 
         unsigned int p;
         p = readWord256k(privateKeys, i, 7 - step / 32);
-        unsigned int bit = p & (1 << (step % 32));
 
         uint256_t x = xPtr[i];
 
-        if(bit != 0) {
+        if((p & (1 << (step % 32))) != 0) {
             if(!isInfinity256k(&x)) {
                 batchIdx--;
                 completeBatchAddWithDouble256k(gx, gy, xPtr, yPtr, i, batchIdx, chain, &inverse, &newX, &newY);
@@ -206,7 +201,7 @@ __kernel void keyFinderKernel(
     __global CLDeviceResult *results,
     __global unsigned int *numResults)
 {
-    int gid = get_local_size(0) * get_group_id(0) + get_local_id(0);
+    int i = get_local_size(0) * get_group_id(0) + get_local_id(0);
     int dim = get_global_size(0);
 
     uint256_t incX = *incXPtr;
@@ -214,7 +209,6 @@ __kernel void keyFinderKernel(
 
     // Multiply together all (_Gx - x) and then invert
     uint256_t inverse = { {0,0,0,0,0,0,0,1} };
-    int i = gid;
     int batchIdx = 0;
 
     unsigned int digest[5];
@@ -263,11 +257,10 @@ __kernel void keyFinderKernel(
     inverse = doBatchInverse256k(inverse);
 
     i -= dim;
-
+    uint256_t newX;
+    uint256_t newY;
     for(;  i >= 0; i -= dim) {
 
-        uint256_t newX;
-        uint256_t newY;
         batchIdx--;
         completeBatchAdd256k(incX, incY, xPtr, yPtr, i, batchIdx, chain, &inverse, &newX, &newY);
 
@@ -290,7 +283,7 @@ __kernel void keyFinderKernelWithDouble(
     __global CLDeviceResult *results,
     __global unsigned int *numResults)
 {
-    int gid = get_local_size(0) * get_group_id(0) + get_local_id(0);
+    int i = get_local_size(0) * get_group_id(0) + get_local_id(0);
     int dim = get_global_size(0);
 
     uint256_t incX = *incXPtr;
@@ -299,7 +292,6 @@ __kernel void keyFinderKernelWithDouble(
     // Multiply together all (_Gx - x) and then invert
     uint256_t inverse = { {0,0,0,0,0,0,0,1} };
 
-    int i = gid;
     int batchIdx = 0;
     unsigned int digest[5];
 
@@ -347,9 +339,9 @@ __kernel void keyFinderKernelWithDouble(
 
     i -= dim;
 
+    uint256_t newX;
+    uint256_t newY;
     for(; i >= 0; i -= dim) {
-        uint256_t newX;
-        uint256_t newY;
         batchIdx--;
         completeBatchAddWithDouble256k(incX, incY, xPtr, yPtr, i, batchIdx, chain, &inverse, &newX, &newY);
 

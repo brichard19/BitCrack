@@ -568,26 +568,21 @@ void completeBatchAdd256k(
     int dim = get_global_size(0);
 
     uint256_t s;
-    uint256_t x;
 
-    x = xPtr[i];
-
-    if(batchIdx >= 1) {
+    if(batchIdx != 0) {
         uint256_t c;
 
         c = chain[(batchIdx - 1) * dim + gid];
         mulModP256k(inverse, &c, &s);
 
         uint256_t diff;
-        diff = subModP256k(px, x);
+        diff = subModP256k(px, xPtr[i]);
         mulModP256k(&diff, inverse, inverse);
     } else {
         s = *inverse;
     }
 
-    uint256_t y = yPtr[i];
-
-    uint256_t rise = subModP256k(py, y);
+    uint256_t rise = subModP256k(py, yPtr[i]);
 
     mulModP256k(&rise, &s, &s);
 
@@ -596,7 +591,7 @@ void completeBatchAdd256k(
     mulModP256k(&s, &s, &s2);
 
     *newX = subModP256k(s2, px);
-    *newX = subModP256k(*newX, x);
+    *newX = subModP256k(*newX, xPtr[i]);
 
     // Ry = s(px - rx) - py
     uint256_t k = subModP256k(px, *newX);
