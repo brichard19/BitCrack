@@ -67,8 +67,6 @@ CLKeySearchDevice::CLKeySearchDevice(uint64_t device, int threads, int pointsPer
 
         // Load the kernels
         _initKeysKernel = new cl::CLKernel(*_clProgram, "multiplyStepKernel");
-        _initKeysKernel->getWorkGroupSize();
-
         _stepKernel = new cl::CLKernel(*_clProgram, "keyFinderKernel");
         _stepKernelWithDouble = new cl::CLKernel(*_clProgram, "keyFinderKernelWithDouble");
 
