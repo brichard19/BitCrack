@@ -121,42 +121,236 @@ bool greaterThanEqualToP(const unsigned int a[8])
     return true;
 }
 
+
 void multiply256(const unsigned int x[8], const unsigned int y[8], unsigned int out_high[8], unsigned int out_low[8])
 {
     unsigned int z[16];
-    unsigned int high = 0;
-    uint64_t product = 0;
+    unsigned long product;
 
     // First round, overwrite z
-    for(int j = 7; j >= 0; j--) {
+    product = (unsigned long)x[7] * y[7];
+    z[15] = (unsigned int)product;
+    
+    product = (unsigned long)x[7] * y[6] + (unsigned int)(product >> 32);
+    z[14] = (unsigned int)product;
+    
+    product = (unsigned long)x[7] * y[5] + (unsigned int)(product >> 32);
+    z[13] = (unsigned int)product;
+    
+    product = (unsigned long)x[7] * y[4] + (unsigned int)(product >> 32);
+    z[12] = (unsigned int)product;
+    
+    product = (unsigned long)x[7] * y[3] + (unsigned int)(product >> 32);
+    z[11] = (unsigned int)product;
+    
+    product = (unsigned long)x[7] * y[2] + (unsigned int)(product >> 32);
+    z[10] = (unsigned int)product;
+        
+    product = (unsigned long)x[7] * y[1] + (unsigned int)(product >> 32);
+    z[9] = (unsigned int)product;
+        
+    product = (unsigned long)x[7] * y[0] + (unsigned int)(product >> 32);
+    z[8] = (unsigned int)product;
+    z[7] = (unsigned int)(product >> 32);
 
-        product = (uint64_t)x[7] * y[j] + high;
+    product = (unsigned long)x[6] * y[7] + z[14];
+    z[14] = (unsigned int)product;
 
-        z[7 + j + 1] = (unsigned int)product;
-        high = (unsigned int)(product >> 32);
-    }
-    z[7] = high;
+    /** round6 */
+    product = (unsigned long)x[6] * y[6] + z[13] + (product >> 32);
+    z[13] = (unsigned int)product;
 
-    for(int i = 6; i >= 0; i--) {
+    product = (unsigned long)x[6] * y[5] + z[12] + (product >> 32);
+    z[12] = (unsigned int)product;
 
-        high = 0;
+    product = (unsigned long)x[6] * y[4] + z[11] + (product >> 32);
+    z[11] = (unsigned int)product;
 
-        for(int j = 7; j >= 0; j--) {
+    product = (unsigned long)x[6] * y[3] + z[10] + (product >> 32);
+    z[10] = (unsigned int)product;
 
-            product = (uint64_t)x[i] * y[j] + z[i + j + 1] + high;
+    product = (unsigned long)x[6] * y[2] + z[9] + (product >> 32);
+    z[9] = (unsigned int)product;
+    
+    product = (unsigned long)x[6] * y[1] + z[8] + (product >> 32);
+    z[8] = (unsigned int)product;
+    
+    product = (unsigned long)x[6] * y[0] + z[7] + (product >> 32);
+    z[7] = (unsigned int)product;
+    z[6] = product >> 32;
 
-            z[i + j + 1] = (unsigned int)product;
+    /** round 5 */
+    product = (unsigned long)x[5] * y[7] + z[13];
+    z[13] = (unsigned int)product;
 
-            high = product >> 32;
-        }
+    product = (unsigned long)x[5] * y[6] + z[12] + (product >> 32);
+    z[12] = (unsigned int)product;
 
-        z[i] = high;
-    }
+    product = (unsigned long)x[5] * y[5] + z[11] + (product >> 32);
+    z[11] = (unsigned int)product;
 
-    for(int i = 0; i < 8; i++) {
-        out_high[i] = z[i];
-        out_low[i] = z[8 + i];
-    }
+    product = (unsigned long)x[5] * y[4] + z[10] + (product >> 32);
+    z[10] = (unsigned int)product;
+
+    product = (unsigned long)x[5] * y[3] + z[9] + (product >> 32);
+    z[9] = (unsigned int)product;
+
+    product = (unsigned long)x[5] * y[2] + z[8] + (product >> 32);
+    z[8] = (unsigned int)product;
+    
+    product = (unsigned long)x[5] * y[1] + z[7] + (product >> 32);
+    z[7] = (unsigned int)product;
+    
+    product = (unsigned long)x[5] * y[0] + z[6] + (product >> 32);
+    z[6] = (unsigned int)product;
+    z[5] = product >> 32;
+
+    /** round 4 */
+    product = (unsigned long)x[4] * y[7] + z[12];
+    z[12] = (unsigned int)product;
+
+    product = (unsigned long)x[4] * y[6] + z[11] + (product >> 32);
+    z[11] = (unsigned int)product;
+
+    product = (unsigned long)x[4] * y[5] + z[10] + (product >> 32);
+    z[10] = (unsigned int)product;
+
+    product = (unsigned long)x[4] * y[4] + z[9] + (product >> 32);
+    z[9] = (unsigned int)product;
+
+    product = (unsigned long)x[4] * y[3] + z[8] + (product >> 32);
+    z[8] = (unsigned int)product;
+
+    product = (unsigned long)x[4] * y[2] + z[7] + (product >> 32);
+    z[7] = (unsigned int)product;
+    
+    product = (unsigned long)x[4] * y[1] + z[6] + (product >> 32);
+    z[6] = (unsigned int)product;
+    
+    product = (unsigned long)x[4] * y[0] + z[5] + (product >> 32);
+    z[5] = (unsigned int)product;
+    z[4] = product >> 32;
+
+    /** round 3 */
+    product = (unsigned long)x[3] * y[7] + z[11];
+    z[11] = (unsigned int)product;
+
+    product = (unsigned long)x[3] * y[6] + z[10] + (product >> 32);
+    z[10] = (unsigned int)product;
+
+    product = (unsigned long)x[3] * y[5] + z[9] + (product >> 32);
+    z[9] = (unsigned int)product;
+
+    product = (unsigned long)x[3] * y[4] + z[8] + (product >> 32);
+    z[8] = (unsigned int)product;
+
+    product = (unsigned long)x[3] * y[3] + z[7] + (product >> 32);
+    z[7] = (unsigned int)product;
+
+    product = (unsigned long)x[3] * y[2] + z[6] + (product >> 32);
+    z[6] = (unsigned int)product;
+    
+    product = (unsigned long)x[3] * y[1] + z[5] + (product >> 32);
+    z[5] = (unsigned int)product;
+    
+    product = (unsigned long)x[3] * y[0] + z[4] + (product >> 32);
+    z[4] = (unsigned int)product;
+    z[3] = product >> 32;
+
+    /** round 2 */
+    product = (unsigned long)x[2] * y[7] + z[10];
+    z[10] = (unsigned int)product;
+
+    product = (unsigned long)x[2] * y[6] + z[9] + (product >> 32);
+    z[9] = (unsigned int)product;
+
+    product = (unsigned long)x[2] * y[5] + z[8] + (product >> 32);
+    z[8] = (unsigned int)product;
+
+    product = (unsigned long)x[2] * y[4] + z[7] + (product >> 32);
+    z[7] = (unsigned int)product;
+
+    product = (unsigned long)x[2] * y[3] + z[6] + (product >> 32);
+    z[6] = (unsigned int)product;
+
+    product = (unsigned long)x[2] * y[2] + z[5] + (product >> 32);
+    z[5] = (unsigned int)product;
+    
+    product = (unsigned long)x[2] * y[1] + z[4] + (product >> 32);
+    z[4] = (unsigned int)product;
+    
+    product = (unsigned long)x[2] * y[0] + z[3] + (product >> 32);
+    z[3] = (unsigned int)product;
+    z[2] = product >> 32;
+    
+    /** round 1 */
+    product = (unsigned long)x[1] * y[7] + z[9];
+    z[9] = (unsigned int)product;
+
+    product = (unsigned long)x[1] * y[6] + z[8] + (product >> 32);
+    z[8] = (unsigned int)product;
+
+    product = (unsigned long)x[1] * y[5] + z[7] + (product >> 32);
+    z[7] = (unsigned int)product;
+
+    product = (unsigned long)x[1] * y[4] + z[6] + (product >> 32);
+    z[6] = (unsigned int)product;
+
+    product = (unsigned long)x[1] * y[3] + z[5] + (product >> 32);
+    z[5] = (unsigned int)product;
+
+    product = (unsigned long)x[1] * y[2] + z[4] + (product >> 32);
+    z[4] = (unsigned int)product;
+    
+    product = (unsigned long)x[1] * y[1] + z[3] + (product >> 32);
+    z[3] = (unsigned int)product;
+    
+    product = (unsigned long)x[1] * y[0] + z[2] + (product >> 32);
+    z[2] = (unsigned int)product;
+    z[1] = product >> 32;
+
+    /** round 0 */
+    product = (unsigned long)x[0] * y[7] + z[8];
+    z[8] = (unsigned int)product;
+
+    product = (unsigned long)x[0] * y[6] + z[7] + (product >> 32);
+    z[7] = (unsigned int)product;
+
+    product = (unsigned long)x[0] * y[5] + z[6] + (product >> 32);
+    z[6] = (unsigned int)product;
+
+    product = (unsigned long)x[0] * y[4] + z[5] + (product >> 32);
+    z[5] = (unsigned int)product;
+
+    product = (unsigned long)x[0] * y[3] + z[4] + (product >> 32);
+    z[4] = (unsigned int)product;
+
+    product = (unsigned long)x[0] * y[2] + z[3] + (product >> 32);
+    z[3] = (unsigned int)product;
+    
+    product = (unsigned long)x[0] * y[1] + z[2] + (product >> 32);
+    z[2] = (unsigned int)product;
+    
+    product = (unsigned long)x[0] * y[0] + z[1] + (product >> 32);
+    z[1] = (unsigned int)product;
+    out_high[0] = product >> 32;
+
+    out_high[1] = z[1];
+    out_high[2] = z[2];
+    out_high[3] = z[3];
+    out_high[4] = z[4];
+    out_high[5] = z[5];
+    out_high[6] = z[6];
+    out_high[7] = z[7];
+    
+    out_low[0] = z[8];
+    out_low[1] = z[9];
+    out_low[2] = z[10];
+    out_low[3] = z[11];
+    out_low[4] = z[12];
+    out_low[5] = z[13];
+    out_low[6] = z[14];
+    out_low[7] = z[15];
 }
 
 uint256_t add256k(uint256_t a, uint256_t b, unsigned int* carry_ptr)

@@ -7,6 +7,15 @@
 #define RIPEMD160_IV_3 (0x10325476)
 #define RIPEMD160_IV_4 (0xc3d2e1f0)
 
+#define K0 (0x5a827999);
+#define K1 (0x6ed9eba1);
+#define K2 (0x8f1bbcdc);
+#define K3 (0xa953fd4e);
+#define K4 (0x7a6d76e9);
+#define K5 (0x6d703ef3);
+#define K6 (0x5c4dd124);
+#define K7 (0x50a28be6);
+
 #define rotl(x, n) (((x) << (n)) | ((x) >> (32 - (n))))
 
 #define F(x, y, z) ((x) ^ (y) ^ (z))
@@ -25,22 +34,22 @@
     c = rotl((c), 10)
 
 #define GG(a, b, c, d, e, x, s)\
-    a += G((b), (c), (d)) + (x) + 0x5a827999;\
+    a += G((b), (c), (d)) + (x) + K0;\
     a = rotl((a), (s)) + (e);\
     c = rotl((c), 10)
 
 #define HH(a, b, c, d, e, x, s)\
-    a += H((b), (c), (d)) + (x) + 0x6ed9eba1;\
+    a += H((b), (c), (d)) + (x) + K1;\
     a = rotl((a), (s)) + (e);\
     c = rotl((c), 10)
 
 #define II(a, b, c, d, e, x, s)\
-    a += I((b), (c), (d)) + (x) + 0x8f1bbcdc;\
+    a += I((b), (c), (d)) + (x) + K2;\
     a = rotl((a), (s)) + e;\
     c = rotl((c), 10)
 
 #define JJ(a, b, c, d, e, x, s)\
-    a += J((b), (c), (d)) + (x) + 0xa953fd4e;\
+    a += J((b), (c), (d)) + (x) + K3;\
     a = rotl((a), (s)) + (e);\
     c = rotl((c), 10)
 
@@ -50,22 +59,22 @@
     c = rotl((c), 10)
 
 #define GGG(a, b, c, d, e, x, s)\
-    a += G((b), (c), (d)) + x + 0x7a6d76e9;\
+    a += G((b), (c), (d)) + x + K4;\
     a = rotl((a), (s)) + (e);\
     c = rotl((c), 10)
 
 #define HHH(a, b, c, d, e, x, s)\
-    a += H((b), (c), (d)) + (x) + 0x6d703ef3;\
+    a += H((b), (c), (d)) + (x) + K5;\
     a = rotl((a), (s)) + (e);\
     c = rotl((c), 10)
 
 #define III(a, b, c, d, e, x, s)\
-    a += I((b), (c), (d)) + (x) + 0x5c4dd124;\
+    a += I((b), (c), (d)) + (x) + K6;\
     a = rotl((a), (s)) + (e);\
     c = rotl((c), 10)
 
 #define JJJ(a, b, c, d, e, x, s)\
-    a += J((b), (c), (d)) + (x) + 0x50a28be6;\
+    a += J((b), (c), (d)) + (x) + K7;\
     a = rotl((a), (s)) + (e);\
     c = rotl((c), 10)
 
