@@ -1,20 +1,13 @@
 #ifndef RIPEMD160_CL
 #define RIPEMD160_CL
 
-#define RIPEMD160_IV_0 (0x67452301)
-#define RIPEMD160_IV_1 (0xefcdab89)
-#define RIPEMD160_IV_2 (0x98badcfe)
-#define RIPEMD160_IV_3 (0x10325476)
-#define RIPEMD160_IV_4 (0xc3d2e1f0)
+__constant unsigned int RIPEMD160_IV[5] = {
+    0x67452301, 0xefcdab89, 0x98badcfe, 0x10325476, 0xc3d2e1f0,
+};
 
-#define K0 (0x5a827999);
-#define K1 (0x6ed9eba1);
-#define K2 (0x8f1bbcdc);
-#define K3 (0xa953fd4e);
-#define K4 (0x7a6d76e9);
-#define K5 (0x6d703ef3);
-#define K6 (0x5c4dd124);
-#define K7 (0x50a28be6);
+__constant unsigned int K[8] = {
+    0x5a827999, 0x6ed9eba1, 0x8f1bbcdc, 0xa953fd4e, 0x7a6d76e9, 0x6d703ef3, 0x5c4dd124, 0x50a28be6
+};
 
 #define rotl(x, n) (((x) << (n)) | ((x) >> (32 - (n))))
 
@@ -34,22 +27,22 @@
     c = rotl((c), 10)
 
 #define GG(a, b, c, d, e, x, s)\
-    a += G((b), (c), (d)) + (x) + K0;\
+    a += G((b), (c), (d)) + (x) + K[0];\
     a = rotl((a), (s)) + (e);\
     c = rotl((c), 10)
 
 #define HH(a, b, c, d, e, x, s)\
-    a += H((b), (c), (d)) + (x) + K1;\
+    a += H((b), (c), (d)) + (x) + K[1];\
     a = rotl((a), (s)) + (e);\
     c = rotl((c), 10)
 
 #define II(a, b, c, d, e, x, s)\
-    a += I((b), (c), (d)) + (x) + K2;\
+    a += I((b), (c), (d)) + (x) + K[2];\
     a = rotl((a), (s)) + e;\
     c = rotl((c), 10)
 
 #define JJ(a, b, c, d, e, x, s)\
-    a += J((b), (c), (d)) + (x) + K3;\
+    a += J((b), (c), (d)) + (x) + K[3];\
     a = rotl((a), (s)) + (e);\
     c = rotl((c), 10)
 
@@ -59,32 +52,32 @@
     c = rotl((c), 10)
 
 #define GGG(a, b, c, d, e, x, s)\
-    a += G((b), (c), (d)) + x + K4;\
+    a += G((b), (c), (d)) + x + K[4];\
     a = rotl((a), (s)) + (e);\
     c = rotl((c), 10)
 
 #define HHH(a, b, c, d, e, x, s)\
-    a += H((b), (c), (d)) + (x) + K5;\
+    a += H((b), (c), (d)) + (x) + K[5];\
     a = rotl((a), (s)) + (e);\
     c = rotl((c), 10)
 
 #define III(a, b, c, d, e, x, s)\
-    a += I((b), (c), (d)) + (x) + K6;\
+    a += I((b), (c), (d)) + (x) + K[6];\
     a = rotl((a), (s)) + (e);\
     c = rotl((c), 10)
 
 #define JJJ(a, b, c, d, e, x, s)\
-    a += J((b), (c), (d)) + (x) + K7;\
+    a += J((b), (c), (d)) + (x) + K[7];\
     a = rotl((a), (s)) + (e);\
     c = rotl((c), 10)
 
 void ripemd160p1(const unsigned int x[8], unsigned int digest[5])
 {
-    unsigned int a = RIPEMD160_IV_0;
-    unsigned int b = RIPEMD160_IV_1;
-    unsigned int c = RIPEMD160_IV_2;
-    unsigned int d = RIPEMD160_IV_3;
-    unsigned int e = RIPEMD160_IV_4;
+    unsigned int a = RIPEMD160_IV[0];
+    unsigned int b = RIPEMD160_IV[1];
+    unsigned int c = RIPEMD160_IV[2];
+    unsigned int d = RIPEMD160_IV[3];
+    unsigned int e = RIPEMD160_IV[4];
 
     /* round 1 */
     FF(a, b, c, d, e, x[0], 11);
@@ -185,11 +178,11 @@ void ripemd160p1(const unsigned int x[8], unsigned int digest[5])
 
 void ripemd160p2(const unsigned int x[8], unsigned int digest[5])
 {
-    unsigned int a = RIPEMD160_IV_0;
-    unsigned int b = RIPEMD160_IV_1;
-    unsigned int c = RIPEMD160_IV_2;
-    unsigned int d = RIPEMD160_IV_3;
-    unsigned int e = RIPEMD160_IV_4;
+    unsigned int a = RIPEMD160_IV[0];
+    unsigned int b = RIPEMD160_IV[1];
+    unsigned int c = RIPEMD160_IV[2];
+    unsigned int d = RIPEMD160_IV[3];
+    unsigned int e = RIPEMD160_IV[4];
 
     /* parallel round 1 */
     JJJ(a, b, c, d, e, x[5], 8);

@@ -33,9 +33,6 @@ __constant unsigned int P[8] = {
     0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFE, 0xFFFFFC2F
 };
 
-#define P6 (0xFFFFFFFE)
-#define P7 (0xFFFFFC2F)
-
 #ifdef DEVICE_VENDOR_INTEL
 // Intel devices have a mul_hi bug
 unsigned int mul_hi977(unsigned int x)
@@ -57,7 +54,7 @@ void madd977(unsigned int *high, unsigned int *low, unsigned int *a, unsigned in
 }
 #else
 
-__inline void madd977(unsigned int *high, unsigned int *low, unsigned int *a, unsigned int *c)
+void madd977(unsigned int *high, unsigned int *low, unsigned int *a, unsigned int *c)
 {
     *low = *a * 977;
     unsigned int tmp = *low + *c;
@@ -115,7 +112,7 @@ __inline void madd977(unsigned int *high, unsigned int *low, unsigned int *a, un
     )
 
 #define greaterOrEqualToP(a)    \
-    (a[6] >= P6 || a[7] >= P7)
+    (a[6] >= P[6] || a[7] >= P[7])
 
 #define equal256k(a, b)   \
     (                     \
@@ -348,7 +345,6 @@ void mulModP(unsigned int a[8], unsigned int b[8], unsigned int product_low[8])
     unsigned int low[8];
 
     unsigned int hWord = 0;
-    unsigned int borrow = 0;
     unsigned int carry = 0;
     unsigned int t = 0;
     unsigned int product6 = 0;
@@ -423,7 +419,8 @@ void mulModP(unsigned int a[8], unsigned int b[8], unsigned int product_low[8])
 
     // Reduce if >= P
     if(carry || greaterOrEqualToP(product_low)) {
-        sub256k(product_low, P, product_low, borrow, tmp);
+        carry = 0;
+        sub256k(product_low, P, product_low, carry, tmp);
     }
 }
 
@@ -438,8 +435,8 @@ void subModP256k(unsigned int a[8], unsigned int b[8], unsigned int c[8])
     sub256k(a, b, c, borrow, tmp);
     
     if (borrow) {
-        unsigned carry = 0;
-        add256k(c, P, c, carry, tmp);
+        borrow = 0;
+        add256k(c, P, c, borrow, tmp);
     }
 }
 
