@@ -825,7 +825,6 @@ void beginBatchAdd256k(uint256_t px, uint256_t x, __global uint256_t* chain, int
     // x = Gx - x
     subModP256k(px.v, x.v, t);
 
-
     // Keep a chain of multiples of the diff, i.e. c[0] = diff0, c[1] = diff0 * diff1,
     // c[2] = diff2 * diff1 * diff0, etc
     mulModP(inverse->v, t, inverse->v);
@@ -867,10 +866,11 @@ void completeBatchAdd256k(
 {
     int gid = get_local_size(0) * get_group_id(0) + get_local_id(0);
     int dim = get_global_size(0);
-		uint256_t x = xPtr[i];
-		uint256_t y = yPtr[i];
+    uint256_t x = xPtr[i];
+    uint256_t y = yPtr[i];
 	
     uint256_t s;
+    unsigned int tmp[8];
 
     if(batchIdx != 0) {
         uint256_t c;
@@ -878,29 +878,25 @@ void completeBatchAdd256k(
         c = chain[(batchIdx - 1) * dim + gid];
         mulModP(inverse->v, c.v, s.v);
 
-        uint256_t diff;
-        subModP256k(px.v, x.v, diff.v);
-        mulModP(diff.v, inverse->v, inverse->v);
+        subModP256k(px.v, x.v, tmp);
+        mulModP(tmp, inverse->v, inverse->v);
     } else {
         s = *inverse;
     }
 
-    uint256_t rise;
-		subModP256k(py.v, y.v, rise.v);
+	subModP256k(py.v, y.v, tmp);
 
-    mulModP(rise.v, s.v, s.v);
+    mulModP(tmp, s.v, s.v);
 
     // Rx = s^2 - Gx - Qx
-    uint256_t s2;
-    mulModP(s.v, s.v, s2.v);
+    mulModP(s.v, s.v, tmp);
 
-    subModP256k(s2.v, px.v, newX->v);
+    subModP256k(tmp, px.v, newX->v);
     subModP256k(newX->v, x.v, newX->v);
 
     // Ry = s(px - rx) - py
-    uint256_t k;
-		subModP256k(px.v, newX->v, k.v);
-    mulModP(s.v, k.v, newY->v);
+	subModP256k(px.v, newX->v, tmp);
+    mulModP(s.v, tmp, newY->v);
     subModP256k(newY->v, py.v, newY->v);
 }
 
@@ -1583,15 +1579,11 @@ __kernel void multiplyStepKernel(
     uint256_t inverse = { {0,0,0,0,0,0,0,1} };
 
     int batchIdx = 0;
-    unsigned int p;
     uint256_t x;
 
     for(; i < totalPoints; i += dim) {
-
-        p = readWord256k(privateKeys, i, 7 - step / 32);
-        x = xPtr[i];
-
-        if(( p & (1 << (step % 32))) != 0) {
+        if(( (readWord256k(privateKeys, i, 7 - step / 32)) & (1 << (step % 32))) != 0) {
+            x = xPtr[i];
             if(!isInfinity256k(x.v)) {
                 beginBatchAddWithDouble256k(gx, gy, xPtr, chain, i, batchIdx, &inverse);
                 batchIdx++;
@@ -1601,17 +1593,13 @@ __kernel void multiplyStepKernel(
 
     doBatchInverse256k(inverse.v);
 
+    uint256_t newX;
+    uint256_t newY;
     i -= dim;
     for(; i >= 0; i -= dim) {
-        uint256_t newX;
-        uint256_t newY;
+        x = xPtr[i];
 
-        unsigned int p;
-        p = readWord256k(privateKeys, i, 7 - step / 32);
-
-        uint256_t x = xPtr[i];
-
-        if((p & (1 << (step % 32))) != 0) {
+        if(((readWord256k(privateKeys, i, 7 - step / 32)) & (1 << (step % 32))) != 0) {
             if(!isInfinity256k(x.v)) {
                 batchIdx--;
                 completeBatchAddWithDouble256k(gx, gy, xPtr, yPtr, i, batchIdx, chain, &inverse, &newX, &newY);

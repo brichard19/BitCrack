@@ -61,15 +61,11 @@ __kernel void multiplyStepKernel(
     uint256_t inverse = { {0,0,0,0,0,0,0,1} };
 
     int batchIdx = 0;
-    unsigned int p;
     uint256_t x;
 
     for(; i < totalPoints; i += dim) {
-
-        p = readWord256k(privateKeys, i, 7 - step / 32);
-        x = xPtr[i];
-
-        if(( p & (1 << (step % 32))) != 0) {
+        if(( (readWord256k(privateKeys, i, 7 - step / 32)) & (1 << (step % 32))) != 0) {
+            x = xPtr[i];
             if(!isInfinity256k(x.v)) {
                 beginBatchAddWithDouble256k(gx, gy, xPtr, chain, i, batchIdx, &inverse);
                 batchIdx++;
@@ -79,17 +75,13 @@ __kernel void multiplyStepKernel(
 
     doBatchInverse256k(inverse.v);
 
+    uint256_t newX;
+    uint256_t newY;
     i -= dim;
     for(; i >= 0; i -= dim) {
-        uint256_t newX;
-        uint256_t newY;
+        x = xPtr[i];
 
-        unsigned int p;
-        p = readWord256k(privateKeys, i, 7 - step / 32);
-
-        uint256_t x = xPtr[i];
-
-        if((p & (1 << (step % 32))) != 0) {
+        if(((readWord256k(privateKeys, i, 7 - step / 32)) & (1 << (step % 32))) != 0) {
             if(!isInfinity256k(x.v)) {
                 batchIdx--;
                 completeBatchAddWithDouble256k(gx, gy, xPtr, yPtr, i, batchIdx, chain, &inverse, &newX, &newY);

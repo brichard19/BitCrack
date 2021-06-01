@@ -567,10 +567,11 @@ void completeBatchAdd256k(
 {
     int gid = get_local_size(0) * get_group_id(0) + get_local_id(0);
     int dim = get_global_size(0);
-		uint256_t x = xPtr[i];
-		uint256_t y = yPtr[i];
+    uint256_t x = xPtr[i];
+    uint256_t y = yPtr[i];
 	
     uint256_t s;
+    unsigned int tmp[8];
 
     if(batchIdx != 0) {
         uint256_t c;
@@ -578,29 +579,25 @@ void completeBatchAdd256k(
         c = chain[(batchIdx - 1) * dim + gid];
         mulModP(inverse->v, c.v, s.v);
 
-        uint256_t diff;
-        subModP256k(px.v, x.v, diff.v);
-        mulModP(diff.v, inverse->v, inverse->v);
+        subModP256k(px.v, x.v, tmp);
+        mulModP(tmp, inverse->v, inverse->v);
     } else {
         s = *inverse;
     }
 
-    uint256_t rise;
-		subModP256k(py.v, y.v, rise.v);
+	subModP256k(py.v, y.v, tmp);
 
-    mulModP(rise.v, s.v, s.v);
+    mulModP(tmp, s.v, s.v);
 
     // Rx = s^2 - Gx - Qx
-    uint256_t s2;
-    mulModP(s.v, s.v, s2.v);
+    mulModP(s.v, s.v, tmp);
 
-    subModP256k(s2.v, px.v, newX->v);
+    subModP256k(tmp, px.v, newX->v);
     subModP256k(newX->v, x.v, newX->v);
 
     // Ry = s(px - rx) - py
-    uint256_t k;
-		subModP256k(px.v, newX->v, k.v);
-    mulModP(s.v, k.v, newY->v);
+	subModP256k(px.v, newX->v, tmp);
+    mulModP(s.v, tmp, newY->v);
     subModP256k(newY->v, py.v, newY->v);
 }
 
