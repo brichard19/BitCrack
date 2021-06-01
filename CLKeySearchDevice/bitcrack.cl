@@ -7,6 +7,15 @@
 #define RIPEMD160_IV_3 (0x10325476)
 #define RIPEMD160_IV_4 (0xc3d2e1f0)
 
+#define K0 (0x5a827999);
+#define K1 (0x6ed9eba1);
+#define K2 (0x8f1bbcdc);
+#define K3 (0xa953fd4e);
+#define K4 (0x7a6d76e9);
+#define K5 (0x6d703ef3);
+#define K6 (0x5c4dd124);
+#define K7 (0x50a28be6);
+
 #define rotl(x, n) (((x) << (n)) | ((x) >> (32 - (n))))
 
 #define F(x, y, z) ((x) ^ (y) ^ (z))
@@ -25,22 +34,22 @@
     c = rotl((c), 10)
 
 #define GG(a, b, c, d, e, x, s)\
-    a += G((b), (c), (d)) + (x) + 0x5a827999;\
+    a += G((b), (c), (d)) + (x) + K0;\
     a = rotl((a), (s)) + (e);\
     c = rotl((c), 10)
 
 #define HH(a, b, c, d, e, x, s)\
-    a += H((b), (c), (d)) + (x) + 0x6ed9eba1;\
+    a += H((b), (c), (d)) + (x) + K1;\
     a = rotl((a), (s)) + (e);\
     c = rotl((c), 10)
 
 #define II(a, b, c, d, e, x, s)\
-    a += I((b), (c), (d)) + (x) + 0x8f1bbcdc;\
+    a += I((b), (c), (d)) + (x) + K2;\
     a = rotl((a), (s)) + e;\
     c = rotl((c), 10)
 
 #define JJ(a, b, c, d, e, x, s)\
-    a += J((b), (c), (d)) + (x) + 0xa953fd4e;\
+    a += J((b), (c), (d)) + (x) + K3;\
     a = rotl((a), (s)) + (e);\
     c = rotl((c), 10)
 
@@ -50,22 +59,22 @@
     c = rotl((c), 10)
 
 #define GGG(a, b, c, d, e, x, s)\
-    a += G((b), (c), (d)) + x + 0x7a6d76e9;\
+    a += G((b), (c), (d)) + x + K4;\
     a = rotl((a), (s)) + (e);\
     c = rotl((c), 10)
 
 #define HHH(a, b, c, d, e, x, s)\
-    a += H((b), (c), (d)) + (x) + 0x6d703ef3;\
+    a += H((b), (c), (d)) + (x) + K5;\
     a = rotl((a), (s)) + (e);\
     c = rotl((c), 10)
 
 #define III(a, b, c, d, e, x, s)\
-    a += I((b), (c), (d)) + (x) + 0x5c4dd124;\
+    a += I((b), (c), (d)) + (x) + K6;\
     a = rotl((a), (s)) + (e);\
     c = rotl((c), 10)
 
 #define JJJ(a, b, c, d, e, x, s)\
-    a += J((b), (c), (d)) + (x) + 0x50a28be6;\
+    a += J((b), (c), (d)) + (x) + K7;\
     a = rotl((a), (s)) + (e);\
     c = rotl((c), 10)
 
@@ -299,45 +308,42 @@ void ripemd160sha256NoFinal(const unsigned int x[8], unsigned int digest[5])
 #ifndef SECP256K1_CL
 #define SECP256K1_CL
 
-typedef unsigned long uint64_t;
-
 typedef struct uint256_t {
     unsigned int v[8];
 } uint256_t;
 
 /**
- Prime modulus 2^256 - 2^32 - 977
+ * Base point X
+ */
+__constant unsigned int GX[8] = {
+    0x79BE667E, 0xF9DCBBAC, 0x55A06295, 0xCE870B07, 0x029BFCDB, 0x2DCE28D9, 0x59F2815B, 0x16F81798
+};
+
+/**
+ * Base point Y
+ */
+__constant unsigned int GY[8] = {
+    0x483ADA77, 0x26A3C465, 0x5DA4FBFC, 0x0E1108A8, 0xFD17B448, 0xA6855419, 0x9C47D08F, 0xFB10D4B8
+};
+
+/**
+ * Group order
+ */
+__constant unsigned int N[8] = {
+    0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFE, 0xBAAEDCE6, 0xAF48A03B, 0xBFD25E8C, 0xD0364141
+};
+
+/**
+ * Prime modulus 2^256 - 2^32 - 977
  */
 __constant unsigned int P[8] = {
     0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFE, 0xFFFFFC2F
 };
 
-// Add with carry
-void addc(unsigned int *a, unsigned int *b, unsigned int *carry, unsigned int *sum)
-{
-    *sum = *a + *carry;
-
-    unsigned int c1 = (*sum < *a) * 1;
-
-    *sum = *sum + *b;
-    
-    *carry = c1 | ((*sum < *b) * 1);
-}
-
-// Subtract with borrow
-void subc(unsigned int *a, unsigned int *b, unsigned int *borrow, unsigned int *diff)
-{
-    unsigned int tmp = *a - *borrow;
-
-    *borrow = (tmp > *a) * 1;
-
-    *diff = tmp - *b;
-
-    *borrow |= (*diff > tmp) ? 1 : 0;
-}
+#define P6 (0xFFFFFFFE)
+#define P7 (0xFFFFFC2F)
 
 #ifdef DEVICE_VENDOR_INTEL
-
 // Intel devices have a mul_hi bug
 unsigned int mul_hi977(unsigned int x)
 {
@@ -356,11 +362,9 @@ void madd977(unsigned int *high, unsigned int *low, unsigned int *a, unsigned in
     *low = tmp;
     *high = mul_hi977(*a) + carry;
 }
-
 #else
 
-// 32 x 32 multiply-add
-void madd977(unsigned int *high, unsigned int *low, unsigned int *a, unsigned int *c)
+__inline void madd977(unsigned int *high, unsigned int *low, unsigned int *a, unsigned int *c)
 {
     *low = *a * 977;
     unsigned int tmp = *low + *c;
@@ -371,250 +375,316 @@ void madd977(unsigned int *high, unsigned int *low, unsigned int *a, unsigned in
 
 #endif
 
-uint256_t sub256k(uint256_t a, uint256_t b, unsigned int* borrow_ptr)
-{
-    unsigned int borrow = 0;
-    uint256_t c;
+// Add with carry
+#define addc(a, b, sum, carry, tmp)      \
+    sum = (a) + (carry);                 \
+    tmp = ((sum) < (a)) * 1;             \
+    sum = (sum) + (b);                   \
+    carry = (tmp) | (((sum) < (b)) * 1);
 
-    subc(&a.v[7], &b.v[7], &borrow, &c.v[7]);
-    subc(&a.v[6], &b.v[6], &borrow, &c.v[6]);
-    subc(&a.v[5], &b.v[5], &borrow, &c.v[5]);
-    subc(&a.v[4], &b.v[4], &borrow, &c.v[4]);
-    subc(&a.v[3], &b.v[3], &borrow, &c.v[3]);
-    subc(&a.v[2], &b.v[2], &borrow, &c.v[2]);
-    subc(&a.v[1], &b.v[1], &borrow, &c.v[1]);
-    subc(&a.v[0], &b.v[0], &borrow, &c.v[0]);
+// subtract with borrow
+#define subc(a, b, diff, borrow, tmp)    \
+    tmp = (a) - (borrow);                \
+    borrow = ((tmp) > (a)) * 1;          \
+    diff = (tmp) - (b);                  \
+    borrow |= ((diff) > (tmp)) ? 1 : 0;
 
-    *borrow_ptr = borrow;
+#define add256k(a, b, c, carry, tmp)    \
+    addc(a[7], b[7], c[7], carry, tmp); \
+    addc(a[6], b[6], c[6], carry, tmp); \
+    addc(a[5], b[5], c[5], carry, tmp); \
+    addc(a[4], b[4], c[4], carry, tmp); \
+    addc(a[3], b[3], c[3], carry, tmp); \
+    addc(a[2], b[2], c[2], carry, tmp); \
+    addc(a[1], b[1], c[1], carry, tmp); \
+    addc(a[0], b[0], c[0], carry, tmp);
 
-    return c;
-}
+#define sub256k( a, b, c, borrow, tmp)   \
+    subc(a[7], b[7], c[7], borrow, tmp); \
+    subc(a[6], b[6], c[6], borrow, tmp); \
+    subc(a[5], b[5], c[5], borrow, tmp); \
+    subc(a[4], b[4], c[4], borrow, tmp); \
+    subc(a[3], b[3], c[3], borrow, tmp); \
+    subc(a[2], b[2], c[2], borrow, tmp); \
+    subc(a[1], b[1], c[1], borrow, tmp); \
+    subc(a[0], b[0], c[0], borrow, tmp);
 
-bool greaterThanEqualToP(const unsigned int a[8])
-{
-    if(a[0] > P[0]) { return true; } 
-    if(a[0] < P[0]) { return false; }
+#define isInfinity256k(a)        \
+    (                           \
+        (a[0] == 0xffffffff) && \
+        (a[1] == 0xffffffff) && \
+        (a[2] == 0xffffffff) && \
+        (a[3] == 0xffffffff) && \
+        (a[4] == 0xffffffff) && \
+        (a[5] == 0xffffffff) && \
+        (a[6] == 0xffffffff) && \
+        (a[7] == 0xffffffff)    \
+    )
 
-    if(a[1] > P[1]) { return true; } 
-    if(a[1] < P[1]) { return false; }
-    
-    if(a[2] > P[2]) { return true; } 
-    if(a[2] < P[2]) { return false; }
-    
-    if(a[3] > P[3]) { return true; } 
-    if(a[3] < P[3]) { return false; }
-    
-    if(a[4] > P[4]) { return true; } 
-    if(a[4] < P[4]) { return false; }
-    
-    if(a[5] > P[5]) { return true; } 
-    if(a[5] < P[5]) { return false; }
-    
-    if(a[6] > P[6]) { return true; } 
-    if(a[6] < P[6]) { return false; }
-    
-    if(a[7] > P[7]) { return true; } 
-    if(a[7] < P[7]) { return false; }
+#define greaterOrEqualToP(a)    \
+    (a[6] >= P6 || a[7] >= P7)
 
-    return true;
-}
+#define equal256k(a, b)   \
+    (                     \
+        (a[0] == b[0]) && \
+        (a[1] == b[1]) && \
+        (a[2] == b[2]) && \
+        (a[3] == b[3]) && \
+        (a[4] == b[4]) && \
+        (a[5] == b[5]) && \
+        (a[6] == b[6]) && \
+        (a[7] == b[7])    \
+    )
 
 void multiply256(const unsigned int x[8], const unsigned int y[8], unsigned int out_high[8], unsigned int out_low[8])
 {
-    unsigned int z[16];
-    unsigned int high = 0;
-    uint64_t product = 0;
+    unsigned long product;
 
     // First round, overwrite z
-    for(int j = 7; j >= 0; j--) {
-
-        product = (uint64_t)x[7] * y[j] + high;
-
-        z[7 + j + 1] = (unsigned int)product;
-        high = (unsigned int)(product >> 32);
-    }
-    z[7] = high;
-
-    for(int i = 6; i >= 0; i--) {
-
-        high = 0;
-
-        for(int j = 7; j >= 0; j--) {
-
-            product = (uint64_t)x[i] * y[j] + z[i + j + 1] + high;
-
-            z[i + j + 1] = (unsigned int)product;
-
-            high = product >> 32;
-        }
-
-        z[i] = high;
-    }
-
-    for(int i = 0; i < 8; i++) {
-        out_high[i] = z[i];
-        out_low[i] = z[8 + i];
-    }
-}
-
-uint256_t add256k(uint256_t a, uint256_t b, unsigned int* carry_ptr)
-{
-    uint256_t c;
-    unsigned int carry = 0;
-
-    for(int i = 7; i >= 0; i--) {
-        addc(&a.v[i], &b.v[i], &carry, &c.v[i]);
-    }
-
-    *carry_ptr = carry;
-
-    return c;
-}
-
-bool isInfinity256k(const uint256_t *x)
-{
-    return (
-        (x->v[0] == 0xffffffff) &&
-        (x->v[1] == 0xffffffff) &&
-        (x->v[2] == 0xffffffff) &&
-        (x->v[3] == 0xffffffff) &&
-        (x->v[4] == 0xffffffff) &&
-        (x->v[5] == 0xffffffff) &&
-        (x->v[6] == 0xffffffff) &&
-        (x->v[7] == 0xffffffff)
-    );
-}
-
-bool equal256k(uint256_t *a, uint256_t *b)
-{
-    return (
-        (a->v[0] == b->v[0]) &&
-        (a->v[1] == b->v[1]) &&
-        (a->v[2] == b->v[2]) &&
-        (a->v[3] == b->v[3]) &&
-        (a->v[4] == b->v[4]) &&
-        (a->v[5] == b->v[5]) &&
-        (a->v[6] == b->v[6]) &&
-        (a->v[7] == b->v[7])
-    );
-}
-
-unsigned int readLSW256k(__global const uint256_t* ara, int idx)
-{
-    return ara[idx].v[7];
-}
-
-unsigned int readWord256k(__global const uint256_t* ara, int idx, int word)
-{
-    return ara[idx].v[word];
-}
-
-void addP(unsigned int a[8], unsigned int c[8])
-{
-    unsigned int carry = 0;
-    unsigned int P[8] = {
-        0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFE, 0xFFFFFC2F
-    };
-    addc(&a[7], &P[7], &carry, &c[7]);
-    addc(&a[6], &P[6], &carry, &c[6]);
-    addc(&a[5], &P[5], &carry, &c[5]);
-    addc(&a[4], &P[4], &carry, &c[4]);
-    addc(&a[3], &P[3], &carry, &c[3]);
-    addc(&a[2], &P[2], &carry, &c[2]);
-    addc(&a[1], &P[1], &carry, &c[1]);
-    addc(&a[0], &P[0], &carry, &c[0]);
-}
-
-void subP(unsigned int a[8], unsigned int c[8])
-{
-    unsigned int borrow = 0;
-    unsigned int P[8] = {
-        0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFE, 0xFFFFFC2F
-    };
-    subc(&a[7], &P[7], &borrow, &c[7]);
-    subc(&a[6], &P[6], &borrow, &c[6]);
-    subc(&a[5], &P[5], &borrow, &c[5]);
-    subc(&a[4], &P[4], &borrow, &c[4]);
-    subc(&a[3], &P[3], &borrow, &c[3]);
-    subc(&a[2], &P[2], &borrow, &c[2]);
-    subc(&a[1], &P[1], &borrow, &c[1]);
-    subc(&a[0], &P[0], &borrow, &c[0]);
-}
-
-/**
- * Subtraction mod p
- */
-uint256_t subModP256k(uint256_t a, uint256_t b)
-{
-    unsigned int borrow = 0;
-    uint256_t c = sub256k(a, b, &borrow);
-    if(borrow) {
-        addP(c.v, c.v);
-    }
-
-    return c;
-}
-
-void addModP256k(uint256_t *a, uint256_t *b, uint256_t *cP)
-{
-    unsigned int carry = 0;
-
-    uint256_t c = add256k(*a, *b, &carry);
-
-    if(carry) { subP(c.v, c.v); *cP = c; }
-
-    else if(c.v[0] > P[0]) { subP(c.v, c.v); *cP = c; } 
-    else if(c.v[0] < P[0]) { *cP = c; }
-
-    else if(c.v[1] > P[1]) { subP(c.v, c.v); *cP = c; } 
-    else if(c.v[1] < P[1]) { *cP = c; }
-
-    else if(c.v[2] > P[2]) { subP(c.v, c.v); *cP = c; } 
-    else if(c.v[2] < P[2]) { *cP = c; }
+    product = (unsigned long)x[7] * y[7];
+    out_low[7] = (unsigned int)product;
     
-    else if(c.v[3] > P[3]) { subP(c.v, c.v); *cP = c; } 
-    else if(c.v[3] < P[3]) { *cP = c; }
+    product = (unsigned long)x[7] * y[6] + (unsigned int)(product >> 32);
+    out_low[6] = (unsigned int)product;
     
-    else if(c.v[4] > P[4]) { subP(c.v, c.v); *cP = c; } 
-    else if(c.v[4] < P[4]) { *cP = c; }
+    product = (unsigned long)x[7] * y[5] + (unsigned int)(product >> 32);
+    out_low[5] = (unsigned int)product;
     
-    else if(c.v[5] > P[5]) { subP(c.v, c.v); *cP = c; } 
-    else if(c.v[5] < P[5]) { *cP = c; }
+    product = (unsigned long)x[7] * y[4] + (unsigned int)(product >> 32);
+    out_low[4] = (unsigned int)product;
     
-    else if(c.v[6] > P[6]) { subP(c.v, c.v); *cP = c; } 
-    else if(c.v[6] < P[6]) { *cP = c; }
+    product = (unsigned long)x[7] * y[3] + (unsigned int)(product >> 32);
+    out_low[3] = (unsigned int)product;
+    
+    product = (unsigned long)x[7] * y[2] + (unsigned int)(product >> 32);
+    out_low[2] = (unsigned int)product;
+        
+    product = (unsigned long)x[7] * y[1] + (unsigned int)(product >> 32);
+    out_low[1] = (unsigned int)product;
+        
+    product = (unsigned long)x[7] * y[0] + (unsigned int)(product >> 32);
+    out_low[0] = (unsigned int)product;
+    out_high[7] = (unsigned int)(product >> 32);
 
-    else if(c.v[7] > P[7]) { subP(c.v, c.v); *cP = c; } 
-    else { *cP = c; }
+    product = (unsigned long)x[6] * y[7] + out_low[6];
+    out_low[6] = (unsigned int)product;
+
+    /** round6 */
+    product = (unsigned long)x[6] * y[6] + out_low[5] + (product >> 32);
+    out_low[5] = (unsigned int)product;
+
+    product = (unsigned long)x[6] * y[5] + out_low[4] + (product >> 32);
+    out_low[4] = (unsigned int)product;
+
+    product = (unsigned long)x[6] * y[4] + out_low[3] + (product >> 32);
+    out_low[3] = (unsigned int)product;
+
+    product = (unsigned long)x[6] * y[3] + out_low[2] + (product >> 32);
+    out_low[2] = (unsigned int)product;
+
+    product = (unsigned long)x[6] * y[2] + out_low[1] + (product >> 32);
+    out_low[1] = (unsigned int)product;
+    
+    product = (unsigned long)x[6] * y[1] + out_low[0] + (product >> 32);
+    out_low[0] = (unsigned int)product;
+    
+    product = (unsigned long)x[6] * y[0] + out_high[7] + (product >> 32);
+    out_high[7] = (unsigned int)product;
+    out_high[6] = product >> 32;
+
+    /** round 5 */
+    product = (unsigned long)x[5] * y[7] + out_low[5];
+    out_low[5] = (unsigned int)product;
+
+    product = (unsigned long)x[5] * y[6] + out_low[4] + (product >> 32);
+    out_low[4] = (unsigned int)product;
+
+    product = (unsigned long)x[5] * y[5] + out_low[3] + (product >> 32);
+    out_low[3] = (unsigned int)product;
+
+    product = (unsigned long)x[5] * y[4] + out_low[2] + (product >> 32);
+    out_low[2] = (unsigned int)product;
+
+    product = (unsigned long)x[5] * y[3] + out_low[1] + (product >> 32);
+    out_low[1] = (unsigned int)product;
+
+    product = (unsigned long)x[5] * y[2] + out_low[0] + (product >> 32);
+    out_low[0] = (unsigned int)product;
+    
+    product = (unsigned long)x[5] * y[1] + out_high[7] + (product >> 32);
+    out_high[7] = (unsigned int)product;
+    
+    product = (unsigned long)x[5] * y[0] + out_high[6] + (product >> 32);
+    out_high[6] = (unsigned int)product;
+    out_high[5] = product >> 32;
+
+    /** round 4 */
+    product = (unsigned long)x[4] * y[7] + out_low[4];
+    out_low[4] = (unsigned int)product;
+
+    product = (unsigned long)x[4] * y[6] + out_low[3] + (product >> 32);
+    out_low[3] = (unsigned int)product;
+
+    product = (unsigned long)x[4] * y[5] + out_low[2] + (product >> 32);
+    out_low[2] = (unsigned int)product;
+
+    product = (unsigned long)x[4] * y[4] + out_low[1] + (product >> 32);
+    out_low[1] = (unsigned int)product;
+
+    product = (unsigned long)x[4] * y[3] + out_low[0] + (product >> 32);
+    out_low[0] = (unsigned int)product;
+
+    product = (unsigned long)x[4] * y[2] + out_high[7] + (product >> 32);
+    out_high[7] = (unsigned int)product;
+    
+    product = (unsigned long)x[4] * y[1] + out_high[6] + (product >> 32);
+    out_high[6] = (unsigned int)product;
+    
+    product = (unsigned long)x[4] * y[0] + out_high[5] + (product >> 32);
+    out_high[5] = (unsigned int)product;
+    out_high[4] = product >> 32;
+
+    /** round 3 */
+    product = (unsigned long)x[3] * y[7] + out_low[3];
+    out_low[3] = (unsigned int)product;
+
+    product = (unsigned long)x[3] * y[6] + out_low[2] + (product >> 32);
+    out_low[2] = (unsigned int)product;
+
+    product = (unsigned long)x[3] * y[5] + out_low[1] + (product >> 32);
+    out_low[1] = (unsigned int)product;
+
+    product = (unsigned long)x[3] * y[4] + out_low[0] + (product >> 32);
+    out_low[0] = (unsigned int)product;
+
+    product = (unsigned long)x[3] * y[3] + out_high[7] + (product >> 32);
+    out_high[7] = (unsigned int)product;
+
+    product = (unsigned long)x[3] * y[2] + out_high[6] + (product >> 32);
+    out_high[6] = (unsigned int)product;
+    
+    product = (unsigned long)x[3] * y[1] + out_high[5] + (product >> 32);
+    out_high[5] = (unsigned int)product;
+    
+    product = (unsigned long)x[3] * y[0] + out_high[4] + (product >> 32);
+    out_high[4] = (unsigned int)product;
+    out_high[3] = product >> 32;
+
+    /** round 2 */
+    product = (unsigned long)x[2] * y[7] + out_low[2];
+    out_low[2] = (unsigned int)product;
+
+    product = (unsigned long)x[2] * y[6] + out_low[1] + (product >> 32);
+    out_low[1] = (unsigned int)product;
+
+    product = (unsigned long)x[2] * y[5] + out_low[0] + (product >> 32);
+    out_low[0] = (unsigned int)product;
+
+    product = (unsigned long)x[2] * y[4] + out_high[7] + (product >> 32);
+    out_high[7] = (unsigned int)product;
+
+    product = (unsigned long)x[2] * y[3] + out_high[6] + (product >> 32);
+    out_high[6] = (unsigned int)product;
+
+    product = (unsigned long)x[2] * y[2] + out_high[5] + (product >> 32);
+    out_high[5] = (unsigned int)product;
+    
+    product = (unsigned long)x[2] * y[1] + out_high[4] + (product >> 32);
+    out_high[4] = (unsigned int)product;
+    
+    product = (unsigned long)x[2] * y[0] + out_high[3] + (product >> 32);
+    out_high[3] = (unsigned int)product;
+    out_high[2] = product >> 32;
+    
+    /** round 1 */
+    product = (unsigned long)x[1] * y[7] + out_low[1];
+    out_low[1] = (unsigned int)product;
+
+    product = (unsigned long)x[1] * y[6] + out_low[0] + (product >> 32);
+    out_low[0] = (unsigned int)product;
+
+    product = (unsigned long)x[1] * y[5] + out_high[7] + (product >> 32);
+    out_high[7] = (unsigned int)product;
+
+    product = (unsigned long)x[1] * y[4] + out_high[6] + (product >> 32);
+    out_high[6] = (unsigned int)product;
+
+    product = (unsigned long)x[1] * y[3] + out_high[5] + (product >> 32);
+    out_high[5] = (unsigned int)product;
+
+    product = (unsigned long)x[1] * y[2] + out_high[4] + (product >> 32);
+    out_high[4] = (unsigned int)product;
+    
+    product = (unsigned long)x[1] * y[1] + out_high[3] + (product >> 32);
+    out_high[3] = (unsigned int)product;
+    
+    product = (unsigned long)x[1] * y[0] + out_high[2] + (product >> 32);
+    out_high[2] = (unsigned int)product;
+    out_high[1] = product >> 32;
+
+    /** round 0 */
+    product = (unsigned long)x[0] * y[7] + out_low[0];
+    out_low[0] = (unsigned int)product;
+
+    product = (unsigned long)x[0] * y[6] + out_high[7] + (product >> 32);
+    out_high[7] = (unsigned int)product;
+
+    product = (unsigned long)x[0] * y[5] + out_high[6] + (product >> 32);
+    out_high[6] = (unsigned int)product;
+
+    product = (unsigned long)x[0] * y[4] + out_high[5] + (product >> 32);
+    out_high[5] = (unsigned int)product;
+
+    product = (unsigned long)x[0] * y[3] + out_high[4] + (product >> 32);
+    out_high[4] = (unsigned int)product;
+
+    product = (unsigned long)x[0] * y[2] + out_high[3] + (product >> 32);
+    out_high[3] = (unsigned int)product;
+    
+    product = (unsigned long)x[0] * y[1] + out_high[2] + (product >> 32);
+    out_high[2] = (unsigned int)product;
+    
+    product = (unsigned long)x[0] * y[0] + out_high[1] + (product >> 32);
+    out_high[1] = (unsigned int)product;
+    out_high[0] = product >> 32;
 }
-
 
 void mulModP(unsigned int a[8], unsigned int b[8], unsigned int product_low[8])
 {
-    unsigned int ZERO = 0;
     unsigned int high[8];
+    unsigned int low[8];
 
     unsigned int hWord = 0;
+    unsigned int borrow = 0;
     unsigned int carry = 0;
     unsigned int t = 0;
     unsigned int product6 = 0;
     unsigned int product7 = 0;
+    unsigned int tmp;
 
 
     // 256 x 256 multiply
-    multiply256(a, b, high, product_low);
+    multiply256(a, b, high, low);
+    product_low[7] = low[7];
+    product_low[6] = low[6];
+    product_low[5] = low[5];
+    product_low[4] = low[4];
+    product_low[3] = low[3];
+    product_low[2] = low[2];
+    product_low[1] = low[1];
+    product_low[0] = low[0];
 
     // Add 2^32 * high to the low 256 bits (shift left 1 word and add)
     // Affects product[14] to product[6]
-    addc(&product_low[6], &high[7], &carry, &product_low[6]);
-    addc(&product_low[5], &high[6], &carry, &product_low[5]);
-    addc(&product_low[4], &high[5], &carry, &product_low[4]);
-    addc(&product_low[3], &high[4], &carry, &product_low[3]);
-    addc(&product_low[2], &high[3], &carry, &product_low[2]);
-    addc(&product_low[1], &high[2], &carry, &product_low[1]);
-    addc(&product_low[0], &high[1], &carry, &product_low[0]);
+    addc(product_low[6], high[7], product_low[6], carry, tmp);
+    addc(product_low[5], high[6], product_low[5], carry, tmp);
+    addc(product_low[4], high[5], product_low[4], carry, tmp);
+    addc(product_low[3], high[4], product_low[3], carry, tmp);
+    addc(product_low[2], high[3], product_low[2], carry, tmp);
+    addc(product_low[1], high[2], product_low[1], carry, tmp);
+    addc(product_low[0], high[1], product_low[0], carry, tmp);
 
-    addc(&high[0], &ZERO, &carry, &product7);
+    addc(high[0], 0, product7, carry, tmp);
     product6 = carry;
 
     carry = 0;
@@ -623,140 +693,225 @@ void mulModP(unsigned int a[8], unsigned int b[8], unsigned int product_low[8])
     // Affects product[15] to product[5]
     for(int i = 7; i >= 0; i--) {
         madd977(&hWord, &t, &high[i], &hWord);
-        addc(&product_low[i], &t, &carry, &product_low[i]);
+        addc(product_low[i], t, product_low[i], carry, tmp);
         t = 0;
     }
-    addc(&product7, &hWord, &carry, &product7);
-    addc(&product6, &ZERO, &carry, &product6);
+    addc(product7, hWord, high[7], carry, tmp);
+    addc(product6, 0, high[6], carry, tmp);
 
     // Multiply high 2 words by 2^32 and add to low
     // Affects product[14] to product[7]
     carry = 0;
-    high[7] = product7;
-    high[6] = product6;
 
-    product7 = 0;
-    product6 = 0;
+    addc(product_low[6], high[7], product_low[6], carry, tmp);
+    addc(product_low[5], high[6], product_low[5], carry, tmp);
 
-    addc(&product_low[6], &high[7], &carry, &product_low[6]);
-    addc(&product_low[5], &high[6], &carry, &product_low[5]);
-
-    addc(&product_low[4], &ZERO, &carry, &product_low[4]);
-    addc(&product_low[3], &ZERO, &carry, &product_low[3]);
-    addc(&product_low[2], &ZERO, &carry, &product_low[2]);
-    addc(&product_low[1], &ZERO, &carry, &product_low[1]);
-    addc(&product_low[0], &ZERO, &carry, &product_low[0]);
-
-    product7 = carry;
+    addc(product_low[4], 0, product_low[4], carry, tmp);
+    addc(product_low[3], 0, product_low[3], carry, tmp);
+    addc(product_low[2], 0, product_low[2], carry, tmp);
+    addc(product_low[1], 0, product_low[1], carry, tmp);
+    addc(product_low[0], 0, product_low[0], carry, tmp);
 
     // Multiply top 2 words by 977 and add to low
     // Affects product[15] to product[7]
     carry = 0;
     hWord = 0;
     madd977(&hWord, &t, &high[7], &hWord);
-    addc(&product_low[7], &t, &carry, &product_low[7]);
+    addc(product_low[7], t, product_low[7], carry, tmp);
     madd977(&hWord, &t, &high[6], &hWord);
-    addc(&product_low[6], &t, &carry, &product_low[6]);
-    addc(&product_low[5], &hWord, &carry, &product_low[5]);
-
+    addc(product_low[6], t,  product_low[6], carry, tmp);
+    addc(product_low[5], hWord,  product_low[5], carry, tmp);
     // Propagate carry
-    addc(&product_low[4], &ZERO, &carry, &product_low[4]);
-    addc(&product_low[3], &ZERO, &carry, &product_low[3]);
-    addc(&product_low[2], &ZERO, &carry, &product_low[2]);
-    addc(&product_low[1], &ZERO, &carry, &product_low[1]);
-    addc(&product_low[0], &ZERO, &carry, &product_low[0]);
-    product7 = carry;
+    addc(product_low[4], 0, product_low[4], carry, tmp);
+    addc(product_low[3], 0, product_low[3], carry, tmp);
+    addc(product_low[2], 0, product_low[2], carry, tmp);
+    addc(product_low[1], 0, product_low[1], carry, tmp);
+    addc(product_low[0], 0, product_low[0], carry, tmp);
 
     // Reduce if >= P
-    if(product7 || greaterThanEqualToP(product_low)) {
-        subP(product_low, product_low);
+    if(carry || greaterOrEqualToP(product_low)) {
+        sub256k(product_low, P, product_low, borrow, tmp);
     }
 }
 
-void mulModP256k(uint256_t *a, uint256_t *b, uint256_t *c)
+/**
+ * Subtraction mod p
+ */
+void subModP256k(unsigned int a[8], unsigned int b[8], unsigned int c[8])
 {
-    mulModP(a->v, b->v, c->v);
-}
-
-void squareModP256k(uint256_t *a)
-{
-    mulModP(a->v, a->v, a->v);
+    unsigned int borrow = 0;
+    unsigned int tmp;
+    
+    sub256k(a, b, c, borrow, tmp);
+    
+    if (borrow) {
+        unsigned carry = 0;
+        add256k(c, P, c, carry, tmp);
+    }
 }
 
 /**
  * Multiplicative inverse mod P using Fermat's method of x^(p-2) mod p and addition chains
  */
-uint256_t invModP256k(uint256_t x)
+void invModP256k(unsigned int x[8], unsigned int result[8])
 {
-    uint256_t y = {{0, 0, 0, 0, 0, 0, 0, 1}};
+    unsigned int y[8] = {0, 0, 0, 0, 0, 0, 0, 1};
 
-    mulModP256k(&x, &y, &y);
-    squareModP256k(&x);
-    squareModP256k(&x);
-    mulModP256k(&x, &y, &y);
-    squareModP256k(&x);
-    mulModP256k(&x, &y, &y);
-    squareModP256k(&x);
-    squareModP256k(&x);
-    mulModP256k(&x, &y, &y);
+    mulModP(x, y, y);
+    mulModP(x, x, x);
+    mulModP(x, x, x);
+    mulModP(x, y, y);
+    mulModP(x, x, x);
+    mulModP(x, y, y);
+    mulModP(x, x, x);
+    mulModP(x, x, x);
+    mulModP(x, y, y);
 
     for(int i = 0; i < 5; i++) {
-        squareModP256k(&x);
+        mulModP(x, x, x);
     }
 
     for(int i = 0; i < 22; i++) {
-        mulModP256k(&x, &y, &y);
-        squareModP256k(&x);
+        mulModP(x, y, y);
+        mulModP(x, x, x);
     }
 
-    squareModP256k(&x);
+    mulModP(x, x, x);
 
     for(int i = 0; i < 222; i++) {
-        mulModP256k(&x, &y, &y);
-        squareModP256k(&x);
+        mulModP(x, y, y);
+        mulModP(x, x, x);
     }
 
-    mulModP256k(&x, &y, &x);
-    return x;
+    mulModP(x, y, result);
 }
 
+void addModP256k(unsigned int a[8], unsigned int b[8], unsigned int c[8])
+{
+    unsigned int borrow = 0;
+    unsigned int carry = 0;
+    unsigned int tmp = 0;
+
+    add256k(a, b, c, carry, tmp);
+
+    if(carry) { sub256k(c, P, c, borrow, tmp); }
+
+    else if(c[0] > P[0]) { sub256k(c, P, c, borrow, tmp); } 
+    else if(c[0] < P[0]) {  }
+
+    else if(c[1] > P[1]) { sub256k(c, P, c, borrow, tmp); } 
+    else if(c[1] < P[1]) {  }
+
+    else if(c[2] > P[2]) { sub256k(c, P, c, borrow, tmp); } 
+    else if(c[2] < P[2]) {  }
+    
+    else if(c[3] > P[3]) { sub256k(c, P, c, borrow, tmp); } 
+    else if(c[3] < P[3]) {  }
+    
+    else if(c[4] > P[4]) { sub256k(c, P, c, borrow, tmp); } 
+    else if(c[4] < P[4]) {  }
+    
+    else if(c[5] > P[5]) { sub256k(c, P, c, borrow, tmp); } 
+    else if(c[5] < P[5]) {  }
+    
+    else if(c[6] > P[6]) { sub256k(c, P, c, borrow, tmp); } 
+    else if(c[6] < P[6]) {  }
+
+    else if(c[7] > P[7]) { sub256k(c, P, c, borrow, tmp); } 
+}
+
+void doBatchInverse256k(unsigned int x[8], unsigned int result[8])
+{
+    invModP256k(x, result);
+}
 
 void beginBatchAdd256k(uint256_t px, uint256_t x, __global uint256_t* chain, int i, int batchIdx, uint256_t* inverse)
 {
     int gid = get_local_size(0) * get_group_id(0) + get_local_id(0);
     int dim = get_global_size(0);
 
+    unsigned int t[8];
+
     // x = Gx - x
-    uint256_t t = subModP256k(px, x);
+    subModP256k(px.v, x.v, t);
 
 
     // Keep a chain of multiples of the diff, i.e. c[0] = diff0, c[1] = diff0 * diff1,
     // c[2] = diff2 * diff1 * diff0, etc
-    mulModP256k(inverse, &t, inverse);
+    mulModP(inverse->v, t, inverse->v);
 
     chain[batchIdx * dim + gid] = *inverse;
 }
-
 
 void beginBatchAddWithDouble256k(uint256_t px, uint256_t py, __global uint256_t* xPtr, __global uint256_t* chain, int i, int batchIdx, uint256_t* inverse)
 {
     int gid = get_local_size(0) * get_group_id(0) + get_local_id(0);
     int dim = get_global_size(0);
-
     uint256_t x = xPtr[i];
 
-    if(equal256k(&px, &x)) {
-        addModP256k(&py,&py, &x);
+    if(equal256k(px.v, x.v)) {
+        addModP256k(py.v,py.v, x.v);
     } else {
         // x = Gx - x
-        x = subModP256k(px, x);
+        subModP256k(px.v, x.v, x.v);
     }
 
     // Keep a chain of multiples of the diff, i.e. c[0] = diff0, c[1] = diff0 * diff1,
     // c[2] = diff2 * diff1 * diff0, etc
-    mulModP256k(&x, inverse, inverse);
+    mulModP(x.v, inverse->v, inverse->v);
 
     chain[batchIdx * dim + gid] = *inverse;
+}
+
+void completeBatchAdd256k(
+    uint256_t px,
+    uint256_t py,
+    __global uint256_t* xPtr,
+    __global uint256_t* yPtr,
+    int i,
+    int batchIdx,
+    __global uint256_t* chain,
+    uint256_t* inverse,
+    uint256_t* newX,
+    uint256_t* newY)
+{
+    int gid = get_local_size(0) * get_group_id(0) + get_local_id(0);
+    int dim = get_global_size(0);
+		uint256_t x = xPtr[i];
+		uint256_t y = yPtr[i];
+	
+    uint256_t s;
+
+    if(batchIdx != 0) {
+        uint256_t c;
+
+        c = chain[(batchIdx - 1) * dim + gid];
+        mulModP(inverse->v, c.v, s.v);
+
+        uint256_t diff;
+        subModP256k(px.v, x.v, diff.v);
+        mulModP(diff.v, inverse->v, inverse->v);
+    } else {
+        s = *inverse;
+    }
+
+    uint256_t rise;
+		subModP256k(py.v, y.v, rise.v);
+
+    mulModP(rise.v, s.v, s.v);
+
+    // Rx = s^2 - Gx - Qx
+    uint256_t s2;
+    mulModP(s.v, s.v, s2.v);
+
+    subModP256k(s2.v, px.v, newX->v);
+    subModP256k(newX->v, x.v, newX->v);
+
+    // Ry = s(px - rx) - py
+    uint256_t k;
+		subModP256k(px.v, newX->v, k.v);
+    mulModP(s.v, k.v, newY->v);
+    subModP256k(newY->v, py.v, newY->v);
 }
 
 
@@ -786,121 +941,78 @@ void completeBatchAddWithDouble256k(
         uint256_t c;
 
         c = chain[(batchIdx - 1) * dim + gid];
-        mulModP256k(inverse, &c, &s);
+        mulModP(inverse->v, c.v, s.v);
 
         uint256_t diff;
-        if(equal256k(&px, &x)) {
-            addModP256k(&py, &py, &diff);
+        if(equal256k(px.v, x.v)) {
+            addModP256k(py.v, py.v, diff.v);
         } else {
-            diff = subModP256k(px, x);
+            subModP256k(px.v, x.v, diff.v);
         }
 
-        mulModP256k(&diff, inverse, inverse);
+        mulModP(diff.v, inverse->v, inverse->v);
     } else {
         s = *inverse;
     }
 
 
-    if(equal256k(&px, &x)) {
+    if(equal256k(px.v, x.v)) {
         // currently s = 1 / 2y
 
         uint256_t x2;
         uint256_t tx2;
 
         // 3x^2
-        mulModP256k(&x, &x, &x2);
-        addModP256k(&x2, &x2, &tx2);
-        addModP256k(&x2, &tx2, &tx2);
+        mulModP(x.v, x.v, x2.v);
+        addModP256k(x2.v, x2.v, tx2.v);
+        addModP256k(x2.v, tx2.v, tx2.v);
 
         // s = 3x^2 * 1/2y
-        mulModP256k(&tx2, &s, &s);
+        mulModP(tx2.v, s.v, s.v);
 
         // s^2
         uint256_t s2;
-        mulModP256k(&s, &s, &s2);
+        mulModP(s.v, s.v, s2.v);
 
         // Rx = s^2 - 2px
-        *newX = subModP256k(s2, x);
-        *newX = subModP256k(*newX, x);
-
-        // Ry = s(px - rx) - py
-        uint256_t k = subModP256k(px, *newX);
-        mulModP256k(&s, &k, newY);
-        *newY = subModP256k(*newY, py);
-    } else {
-
-        uint256_t rise;
-        rise = subModP256k(py, y);
-
-        mulModP256k(&rise, &s, &s);
-
-        // Rx = s^2 - Gx - Qx
-        uint256_t s2;
-        mulModP256k(&s, &s, &s2);
-
-        *newX = subModP256k(s2, px);
-        *newX = subModP256k(*newX, x);
+        subModP256k(s2.v, x.v, newX->v);
+        subModP256k(newX->v, x.v, newX->v);
 
         // Ry = s(px - rx) - py
         uint256_t k;
-        k = subModP256k(px, *newX);
-        mulModP256k(&s, &k, newY);
-        *newY = subModP256k(*newY, py);
-    }
-}
-
-
-void completeBatchAdd256k(
-    uint256_t px,
-    uint256_t py,
-    __global uint256_t* xPtr,
-    __global uint256_t* yPtr,
-    int i,
-    int batchIdx,
-    __global uint256_t* chain,
-    uint256_t* inverse,
-    uint256_t* newX,
-    uint256_t* newY)
-{
-    int gid = get_local_size(0) * get_group_id(0) + get_local_id(0);
-    int dim = get_global_size(0);
-
-    uint256_t s;
-
-    if(batchIdx != 0) {
-        uint256_t c;
-
-        c = chain[(batchIdx - 1) * dim + gid];
-        mulModP256k(inverse, &c, &s);
-
-        uint256_t diff;
-        diff = subModP256k(px, xPtr[i]);
-        mulModP256k(&diff, inverse, inverse);
+				subModP256k(px.v, newX->v, k.v);
+        mulModP(s.v, k.v, newY->v);
+        subModP256k(newY->v, py.v,newY->v);
     } else {
-        s = *inverse;
+
+        uint256_t rise;
+        subModP256k(py.v, y.v, rise.v);
+
+        mulModP(rise.v, s.v, s.v);
+
+        // Rx = s^2 - Gx - Qx
+        uint256_t s2;
+        mulModP(s.v, s.v, s2.v);
+
+        subModP256k(s2.v, px.v, newX->v);
+        subModP256k(newX->v, x.v,newX->v);
+
+        // Ry = s(px - rx) - py
+        uint256_t k;
+        subModP256k(px.v, newX->v, k.v);
+        mulModP(s.v, k.v, newY->v);
+        subModP256k(newY->v, py.v, newY->v);
     }
-
-    uint256_t rise = subModP256k(py, yPtr[i]);
-
-    mulModP256k(&rise, &s, &s);
-
-    // Rx = s^2 - Gx - Qx
-    uint256_t s2;
-    mulModP256k(&s, &s, &s2);
-
-    *newX = subModP256k(s2, px);
-    *newX = subModP256k(*newX, xPtr[i]);
-
-    // Ry = s(px - rx) - py
-    uint256_t k = subModP256k(px, *newX);
-    mulModP256k(&s, &k, newY);
-    *newY = subModP256k(*newY, py);
 }
 
-
-uint256_t doBatchInverse256k(uint256_t x)
+unsigned int readLSW256k(__global const uint256_t* ara, int idx)
 {
-    return invModP256k(x);
+    return ara[idx].v[7];
+}
+
+unsigned int readWord256k(__global const uint256_t* ara, int idx, int word)
+{
+    return ara[idx].v[word];
 }
 
 #endif
@@ -1490,14 +1602,14 @@ __kernel void multiplyStepKernel(
         x = xPtr[i];
 
         if(( p & (1 << (step % 32))) != 0) {
-            if(!isInfinity256k(&x)) {
+            if(!isInfinity256k(x.v)) {
                 beginBatchAddWithDouble256k(gx, gy, xPtr, chain, i, batchIdx, &inverse);
                 batchIdx++;
             }
         }
     }
 
-    inverse = doBatchInverse256k(inverse);
+    doBatchInverse256k(inverse.v, inverse.v);
 
     i -= dim;
     for(; i >= 0; i -= dim) {
@@ -1510,7 +1622,7 @@ __kernel void multiplyStepKernel(
         uint256_t x = xPtr[i];
 
         if((p & (1 << (step % 32))) != 0) {
-            if(!isInfinity256k(&x)) {
+            if(!isInfinity256k(x.v)) {
                 batchIdx--;
                 completeBatchAddWithDouble256k(gx, gy, xPtr, yPtr, i, batchIdx, chain, &inverse, &newX, &newY);
             } else {
@@ -1674,7 +1786,7 @@ __kernel void keyFinderKernel(
     }
 #endif
 
-    inverse = doBatchInverse256k(inverse);
+    doBatchInverse256k(inverse.v, inverse.v);
 
     i -= dim;
     uint256_t newX;
@@ -1755,7 +1867,7 @@ __kernel void keyFinderKernelWithDouble(
     }
 #endif
 
-    inverse = doBatchInverse256k(inverse);
+    doBatchInverse256k(inverse.v, inverse.v);
 
     i -= dim;
 

@@ -70,14 +70,14 @@ __kernel void multiplyStepKernel(
         x = xPtr[i];
 
         if(( p & (1 << (step % 32))) != 0) {
-            if(!isInfinity256k(&x)) {
+            if(!isInfinity256k(x.v)) {
                 beginBatchAddWithDouble256k(gx, gy, xPtr, chain, i, batchIdx, &inverse);
                 batchIdx++;
             }
         }
     }
 
-    inverse = doBatchInverse256k(inverse);
+    doBatchInverse256k(inverse.v, inverse.v);
 
     i -= dim;
     for(; i >= 0; i -= dim) {
@@ -90,7 +90,7 @@ __kernel void multiplyStepKernel(
         uint256_t x = xPtr[i];
 
         if((p & (1 << (step % 32))) != 0) {
-            if(!isInfinity256k(&x)) {
+            if(!isInfinity256k(x.v)) {
                 batchIdx--;
                 completeBatchAddWithDouble256k(gx, gy, xPtr, yPtr, i, batchIdx, chain, &inverse, &newX, &newY);
             } else {
@@ -254,7 +254,7 @@ __kernel void keyFinderKernel(
     }
 #endif
 
-    inverse = doBatchInverse256k(inverse);
+    doBatchInverse256k(inverse.v, inverse.v);
 
     i -= dim;
     uint256_t newX;
@@ -335,7 +335,7 @@ __kernel void keyFinderKernelWithDouble(
     }
 #endif
 
-    inverse = doBatchInverse256k(inverse);
+    doBatchInverse256k(inverse.v, inverse.v);
 
     i -= dim;
 
