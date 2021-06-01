@@ -77,7 +77,7 @@ __kernel void multiplyStepKernel(
         }
     }
 
-    doBatchInverse256k(inverse.v, inverse.v);
+    doBatchInverse256k(inverse.v);
 
     i -= dim;
     for(; i >= 0; i -= dim) {
@@ -254,7 +254,7 @@ __kernel void keyFinderKernel(
     }
 #endif
 
-    doBatchInverse256k(inverse.v, inverse.v);
+    doBatchInverse256k(inverse.v);
 
     i -= dim;
     uint256_t newX;
@@ -335,7 +335,7 @@ __kernel void keyFinderKernelWithDouble(
     }
 #endif
 
-    doBatchInverse256k(inverse.v, inverse.v);
+    doBatchInverse256k(inverse.v);
 
     i -= dim;
 

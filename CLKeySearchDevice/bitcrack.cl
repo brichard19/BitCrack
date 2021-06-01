@@ -753,7 +753,7 @@ void subModP256k(unsigned int a[8], unsigned int b[8], unsigned int c[8])
 /**
  * Multiplicative inverse mod P using Fermat's method of x^(p-2) mod p and addition chains
  */
-void invModP256k(unsigned int x[8], unsigned int result[8])
+void invModP256k(unsigned int x[8])
 {
     unsigned int y[8] = {0, 0, 0, 0, 0, 0, 0, 1};
 
@@ -783,7 +783,7 @@ void invModP256k(unsigned int x[8], unsigned int result[8])
         mulModP(x, x, x);
     }
 
-    mulModP(x, y, result);
+    mulModP(x, y, x);
 }
 
 void addModP256k(unsigned int a[8], unsigned int b[8], unsigned int c[8])
@@ -820,9 +820,9 @@ void addModP256k(unsigned int a[8], unsigned int b[8], unsigned int c[8])
     else if(c[7] > P[7]) { sub256k(c, P, c, borrow, tmp); } 
 }
 
-void doBatchInverse256k(unsigned int x[8], unsigned int result[8])
+void doBatchInverse256k(unsigned int x[8])
 {
-    invModP256k(x, result);
+    invModP256k(x);
 }
 
 void beginBatchAdd256k(uint256_t px, uint256_t x, __global uint256_t* chain, int i, int batchIdx, uint256_t* inverse)
@@ -1609,7 +1609,7 @@ __kernel void multiplyStepKernel(
         }
     }
 
-    doBatchInverse256k(inverse.v, inverse.v);
+    doBatchInverse256k(inverse.v);
 
     i -= dim;
     for(; i >= 0; i -= dim) {
@@ -1786,7 +1786,7 @@ __kernel void keyFinderKernel(
     }
 #endif
 
-    doBatchInverse256k(inverse.v, inverse.v);
+    doBatchInverse256k(inverse.v);
 
     i -= dim;
     uint256_t newX;
@@ -1867,7 +1867,7 @@ __kernel void keyFinderKernelWithDouble(
     }
 #endif
 
-    doBatchInverse256k(inverse.v, inverse.v);
+    doBatchInverse256k(inverse.v);
 
     i -= dim;
 
