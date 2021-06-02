@@ -1348,15 +1348,7 @@ void sha256PublicKey(const unsigned int x[8], const unsigned int y[8], unsigned 
 
 void sha256PublicKeyCompressed(const unsigned int x[8], unsigned int yParity, unsigned int digest[8])
 {
-    unsigned int a = _IV[0];
-    unsigned int b = _IV[1];
-    unsigned int c = _IV[2];
-    unsigned int d = _IV[3];
-    unsigned int e = _IV[4];
-    unsigned int f = _IV[5];
-    unsigned int g = _IV[6];
-    unsigned int h = _IV[7];
-
+    unsigned int a, b, c, d, e, f, g, h;
     unsigned int w[16];
     unsigned int t;
 
@@ -1372,6 +1364,15 @@ void sha256PublicKeyCompressed(const unsigned int x[8], unsigned int yParity, un
     w[7] = (x[7] >> 8) | (x[6] << 24);
     w[8] = (x[7] << 24) | 0x00800000;
     w[15] = 264; // 33 * 8
+
+    a = _IV[0];
+    b = _IV[1];
+    c = _IV[2];
+    d = _IV[3];
+    e = _IV[4];
+    f = _IV[5];
+    g = _IV[6];
+    h = _IV[7];
 
     roundSha(a, b, c, d, e, f, g, h, w[0], _K[0]);
     roundSha(h, a, b, c, d, e, f, g, w[1], _K[1]);

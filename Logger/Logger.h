@@ -8,7 +8,8 @@ namespace LogLevel {
 		Info = 1,
 		Error = 2,
 		Debug = 4,
-        Warning = 8
+        Warning = 8,
+		Notify = 16,
 	};
 
 	bool isValid(int level);

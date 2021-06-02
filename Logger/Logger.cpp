@@ -27,6 +27,7 @@ bool LogLevel::isValid(int level)
 		case Error:
 		case Debug:
 		case Warning:
+		case Notify:
 			return true;
 		default:
 			return false;
@@ -44,6 +45,8 @@ std::string LogLevel::toString(int level)
 			return "Debug";
         case Warning:
             return "Warning";
+		case Notify:
+			return "Notify";
 		default:
 			return "";
 	}
@@ -92,6 +95,8 @@ std::string Logger::formatLog(int logLevel, std::string msg)
 void Logger::log(int logLevel, std::string msg)
 {
 	std::string str = formatLog(logLevel, msg);
-
+	if (logLevel == LogLevel::Level::Notify) {
+		fprintf(stdout, "\a");
+	}
 	fprintf(stderr, "%s\n", str.c_str());
 }
