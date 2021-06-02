@@ -825,6 +825,7 @@ void beginBatchAdd256k(uint256_t px, uint256_t x, __global uint256_t* chain, int
     // x = Gx - x
     subModP256k(px.v, x.v, t);
 
+
     // Keep a chain of multiples of the diff, i.e. c[0] = diff0, c[1] = diff0 * diff1,
     // c[2] = diff2 * diff1 * diff0, etc
     mulModP(inverse->v, t, inverse->v);
@@ -1005,7 +1006,6 @@ unsigned int readWord256k(__global const uint256_t* ara, int idx, int word)
 #ifndef _SHA256_CL
 #define _SHA256_CL
 
-
 __constant unsigned int _K[64] = {
     0x428a2f98, 0x71374491, 0xb5c0fbcf, 0xe9b5dba5, 0x3956c25b, 0x59f111f1, 0x923f82a4, 0xab1c5ed5,
     0xd807aa98, 0x12835b01, 0x243185be, 0x550c7dc3, 0x72be5d74, 0x80deb1fe, 0x9bdc06a7, 0xc19bf174,
@@ -1030,7 +1030,6 @@ __constant unsigned int _IV[8] = {
 
 #define rotr(x, n) ((x) >> (n)) ^ ((x) << (32 - (n)))
 
-
 #define MAJ(a, b, c) (((a) & (b)) ^ ((a) & (c)) ^ ((b) & (c)))
 
 #define CH(e, f, g) (((e) & (f)) ^ (~(e) & (g)))
@@ -1044,12 +1043,20 @@ __constant unsigned int _IV[8] = {
     (d) += (t) + (h);\
     (h) += (t) + MAJ((a), (b), (c)) + (rotr((a), 2) ^ rotr((a), 13) ^ rotr((a), 22))
 
-
 void sha256PublicKey(const unsigned int x[8], const unsigned int y[8], unsigned int digest[8])
 {
     unsigned int a, b, c, d, e, f, g, h;
     unsigned int w[16];
     unsigned int t;
+
+    a = _IV[0];
+    b = _IV[1];
+    c = _IV[2];
+    d = _IV[3];
+    e = _IV[4];
+    f = _IV[5];
+    g = _IV[6];
+    h = _IV[7];
 
     // 0x04 || x || y
     w[0] = (x[0] >> 8) | 0x04000000;
@@ -1068,15 +1075,6 @@ void sha256PublicKey(const unsigned int x[8], const unsigned int y[8], unsigned 
     w[13] = (y[5] >> 8) | (y[4] << 24);
     w[14] = (y[6] >> 8) | (y[5] << 24);
     w[15] = (y[7] >> 8) | (y[6] << 24);
-
-    a = _IV[0];
-    b = _IV[1];
-    c = _IV[2];
-    d = _IV[3];
-    e = _IV[4];
-    f = _IV[5];
-    g = _IV[6];
-    h = _IV[7];
 
     roundSha(a, b, c, d, e, f, g, h, w[0], _K[0]);
     roundSha(h, a, b, c, d, e, f, g, w[1], _K[1]);
@@ -1207,15 +1205,14 @@ void sha256PublicKey(const unsigned int x[8], const unsigned int y[8], unsigned 
     h += _IV[7];
 
     // store the intermediate hash value
-    unsigned int tmp[8];
-    tmp[0] = a;
-    tmp[1] = b;
-    tmp[2] = c;
-    tmp[3] = d;
-    tmp[4] = e;
-    tmp[5] = f;
-    tmp[6] = g;
-    tmp[7] = h;
+    digest[0] = a;
+    digest[1] = b;
+    digest[2] = c;
+    digest[3] = d;
+    digest[4] = e;
+    digest[5] = f;
+    digest[6] = g;
+    digest[7] = h;
 
     w[0] = (y[7] << 24) | 0x00800000;
     w[15] = 520; // 65 * 8
@@ -1339,19 +1336,27 @@ void sha256PublicKey(const unsigned int x[8], const unsigned int y[8], unsigned 
     roundSha(c, d, e, f, g, h, a, b, w[14], _K[62]);
     roundSha(b, c, d, e, f, g, h, a, w[15], _K[63]);
 
-    digest[0] = tmp[0] + a;
-    digest[1] = tmp[1] + b;
-    digest[2] = tmp[2] + c;
-    digest[3] = tmp[3] + d;
-    digest[4] = tmp[4] + e;
-    digest[5] = tmp[5] + f;
-    digest[6] = tmp[6] + g;
-    digest[7] = tmp[7] + h;
+    digest[0] += a;
+    digest[1] += b;
+    digest[2] += c;
+    digest[3] += d;
+    digest[4] += e;
+    digest[5] += f;
+    digest[6] += g;
+    digest[7] += h;
 }
 
 void sha256PublicKeyCompressed(const unsigned int x[8], unsigned int yParity, unsigned int digest[8])
 {
-    unsigned int a, b, c, d, e, f, g, h;
+    unsigned int a = _IV[0];
+    unsigned int b = _IV[1];
+    unsigned int c = _IV[2];
+    unsigned int d = _IV[3];
+    unsigned int e = _IV[4];
+    unsigned int f = _IV[5];
+    unsigned int g = _IV[6];
+    unsigned int h = _IV[7];
+
     unsigned int w[16];
     unsigned int t;
 
@@ -1367,15 +1372,6 @@ void sha256PublicKeyCompressed(const unsigned int x[8], unsigned int yParity, un
     w[7] = (x[7] >> 8) | (x[6] << 24);
     w[8] = (x[7] << 24) | 0x00800000;
     w[15] = 264; // 33 * 8
-
-    a = _IV[0];
-    b = _IV[1];
-    c = _IV[2];
-    d = _IV[3];
-    e = _IV[4];
-    f = _IV[5];
-    g = _IV[6];
-    h = _IV[7];
 
     roundSha(a, b, c, d, e, f, g, h, w[0], _K[0]);
     roundSha(h, a, b, c, d, e, f, g, w[1], _K[1]);
@@ -1497,23 +1493,14 @@ void sha256PublicKeyCompressed(const unsigned int x[8], unsigned int yParity, un
     roundSha(c, d, e, f, g, h, a, b, w[14], _K[62]);
     roundSha(b, c, d, e, f, g, h, a, w[15], _K[63]);
 
-    a += _IV[0];
-    b += _IV[1];
-    c += _IV[2];
-    d += _IV[3];
-    e += _IV[4];
-    f += _IV[5];
-    g += _IV[6];
-    h += _IV[7];
-
-    digest[0] = a;
-    digest[1] = b;
-    digest[2] = c;
-    digest[3] = d;
-    digest[4] = e;
-    digest[5] = f;
-    digest[6] = g;
-    digest[7] = h;
+    digest[0] = a + _IV[0];
+    digest[1] = b + _IV[1];
+    digest[2] = c + _IV[2];
+    digest[3] = d + _IV[3];
+    digest[4] = e + _IV[4];
+    digest[5] = f + _IV[5];
+    digest[6] = g + _IV[6];
+    digest[7] = h + _IV[7];
 }
 #endif
 #define COMPRESSED 0
