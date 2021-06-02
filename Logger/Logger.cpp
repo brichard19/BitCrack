@@ -6,7 +6,7 @@
 
 inline tm localtime_xp(time_t timer)
 {
-	tm bt{};
+	tm bt;
 #if defined(__unix__)
 	localtime_r(&timer, &bt);
 #elif defined(_MSC_VER)
@@ -18,7 +18,6 @@ inline tm localtime_xp(time_t timer)
 #endif
 	return bt;
 }
-
 
 bool LogLevel::isValid(int level)
 {
@@ -70,9 +69,7 @@ std::string Logger::formatLog(int logLevel, std::string msg)
 
 	std::string prefix = "[" + dateTime + "] [" + LogLevel::toString(logLevel) + "] ";
 
-	size_t prefixLen = prefix.length();
-
-	std::string padding(prefixLen, ' ');
+	std::string padding(prefix.length(), ' ');
 
 	if(msg.find('\n', 0) != std::string::npos) {
  		size_t pos = 0;
@@ -91,12 +88,11 @@ std::string Logger::formatLog(int logLevel, std::string msg)
 	return prefix;
 }
 
-
 void Logger::log(int logLevel, std::string msg)
 {
 	std::string str = formatLog(logLevel, msg);
 	if (logLevel == LogLevel::Level::Notify) {
-		fprintf(stdout, "\a");
+		fprintf(stderr, "\a");
 	}
 	fprintf(stderr, "%s\n", str.c_str());
 }

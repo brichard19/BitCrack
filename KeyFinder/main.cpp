@@ -199,10 +199,10 @@ void usage()
  Finds default parameters depending on the device
  */
 typedef struct {
-	int threads;
-	int blocks;
-	int pointsPerThread;
-    int compressionMode;
+	unsigned int threads;
+	unsigned int blocks;
+	unsigned int pointsPerThread;
+    unsigned int compressionMode;
 }DeviceParameters;
 
 DeviceParameters getDefaultParameters(const DeviceManager::DeviceInfo &device)
