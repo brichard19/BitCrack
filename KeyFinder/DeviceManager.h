@@ -1,5 +1,5 @@
-#ifndef _DEVICE_MANAGER_H
-#define _DEVICE_MANAGER_H
+#ifndef DEVICE_MANAGER_H
+#define DEVICE_MANAGER_H
 
 #include <stdint.h>
 #include <string>
@@ -25,7 +25,6 @@ public:
     };
 };
 
-
 typedef struct {
     int type;
     int id;
@@ -41,6 +40,5 @@ typedef struct {
 std::vector<DeviceInfo> getDevices();
 
 }
-
 
 #endif

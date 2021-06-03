@@ -1,5 +1,5 @@
-#ifndef _KEY_FINDER_H
-#define _KEY_FINDER_H
+#ifndef KEY_FINDER_H
+#define KEY_FINDER_H
 
 #include <stdint.h>
 #include <vector>

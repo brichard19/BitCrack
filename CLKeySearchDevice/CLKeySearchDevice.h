@@ -1,5 +1,5 @@
-#ifndef _CL_KEYSEARCH_DEVICE_H
-#define _CL_KEYSEARCH_DEVICE_H
+#ifndef CL_KEYSEARCH_DEVICE_H
+#define CL_KEYSEARCH_DEVICE_H
 
 #include "KeySearchDevice.h"
 #include "clContext.h"
@@ -138,4 +138,3 @@ public:
 };
 
 #endif
-

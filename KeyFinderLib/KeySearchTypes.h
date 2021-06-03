@@ -1,8 +1,8 @@
-#ifndef _KEY_FINDER_TYPES
-#define _KEY_FINDER_TYPES
+#ifndef KEY_FINDER_TYPES
+#define KEY_FINDER_TYPES
 
-#include<stdint.h>
-#include<string>
+#include <stdint.h>
+#include <string>
 #include "secp256k1.h"
 
 namespace PointCompressionType {

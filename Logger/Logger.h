@@ -22,7 +22,7 @@ class Logger {
 private:
 	static std::string _logFile;
 
-	static std::string formatLog(int logLevel, std::string msg);
+	static std::string formatLog(LogLevel::Level logLevel, std::string msg);
 
 	static std::string getDateTimeString();
 
@@ -32,7 +32,7 @@ public:
 	{
 	}
 
-	static void log(int logLevel, std::string msg);
+	static void log(LogLevel::Level level, std::string msg);
 
 };
 

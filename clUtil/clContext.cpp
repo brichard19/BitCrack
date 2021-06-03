@@ -15,7 +15,7 @@ cl::CLContext::CLContext(cl_device_id device)
     _ctx = clCreateContext(0, 1, &_device, NULL, NULL, &err);
     clCall(err);
 
-    _queue = clCreateCommandQueueWithProperties(_ctx, _device, 0, &err);
+    _queue = clCreateCommandQueueWithProperties(_ctx, _device, NULL, &err);
     clCall(err);
 }
 

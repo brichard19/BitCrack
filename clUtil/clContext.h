@@ -57,9 +57,6 @@ public:
     cl_program getProgram();
 
     CLContext& getContext();
-
-    std::string getBuildLog();
-
 };
 
 

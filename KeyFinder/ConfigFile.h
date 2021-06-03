@@ -1,5 +1,5 @@
-#ifndef _CONFIG_FILE_H
-#define _CONFIG_FILE_H
+#ifndef CONFIG_FILE_H
+#define CONFIG_FILE_H
 
 #include <string>
 #include <map>

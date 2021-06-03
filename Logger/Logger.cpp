@@ -63,7 +63,7 @@ std::string Logger::getDateTimeString()
 	return std::string(buf);
 }
 
-std::string Logger::formatLog(int logLevel, std::string msg)
+std::string Logger::formatLog(LogLevel::Level logLevel, std::string msg)
 {
 	std::string dateTime = getDateTimeString();
 
@@ -88,10 +88,10 @@ std::string Logger::formatLog(int logLevel, std::string msg)
 	return prefix;
 }
 
-void Logger::log(int logLevel, std::string msg)
+void Logger::log(LogLevel::Level level, std::string msg)
 {
-	std::string str = formatLog(logLevel, msg);
-	if (logLevel == LogLevel::Level::Notify) {
+	std::string str = formatLog(level, msg);
+	if (level == LogLevel::Level::Notify) {
 		fprintf(stderr, "\a");
 	}
 	fprintf(stderr, "%s\n", str.c_str());

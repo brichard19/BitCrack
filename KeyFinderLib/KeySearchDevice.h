@@ -1,5 +1,5 @@
-#ifndef _KEY_SEARCH_DEVICE_H
-#define _KEY_SEARCH_DEVICE_H
+#ifndef KEY_SEARCH_DEVICE_H
+#define KEY_SEARCH_DEVICE_H
 
 #include <vector>
 #include <set>
