@@ -1,6 +1,8 @@
 #include <stdio.h>
 #include <fstream>
 #include <iostream>
+#include <string> 
+
 
 #include "KeyFinder.h"
 #include "AddressUtil.h"
@@ -339,6 +341,8 @@ void readCheckpointFile()
 
 int run()
 {
+    Logger::log(LogLevel::Info, "BitCrackOpenCL");
+
     if(_config.device < 0 || _config.device >= _devices.size()) {
         Logger::log(LogLevel::Error, "device " + util::format(_config.device) + " does not exist");
         return 1;
@@ -369,6 +373,10 @@ int run()
             _config.pointsPerThread = params.pointsPerThread;
         }
 
+        Logger::log(LogLevel::Info, "Threads: " + std::to_string(_config.threads));
+        Logger::log(LogLevel::Info, "Blocks: " + std::to_string(_config.blocks));
+        Logger::log(LogLevel::Info, "Points per Thread: " + std::to_string(_config.pointsPerThread));
+            
         // Get device context
         KeySearchDevice *keySearchDevice = getDeviceContext(_devices[_config.device], _config.blocks, _config.threads, _config.pointsPerThread, _config.compressionMode);
 
