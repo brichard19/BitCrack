@@ -29,7 +29,7 @@ bool isInBloomFilter(unsigned int hash[5], __global unsigned int *targetList, ul
     );
 }
 
-void doRMD160FinalRound(const unsigned int hIn[5], unsigned int hOut[5])
+inline void doRMD160FinalRound(const unsigned int hIn[5], unsigned int hOut[5])
 {
     hOut[0] = endian(hIn[0] + 0xefcdab89);
     hOut[1] = endian(hIn[1] + 0x98badcfe);
@@ -97,7 +97,7 @@ __kernel void multiplyStepKernel(
 }
 
 
-void hashPublicKey(uint256_t x, uint256_t y, unsigned int* digestOut)
+void hashPublicKey(uint256_t x, uint256_t y, unsigned int digest[5])
 {
     unsigned int hash[8];
 
@@ -113,10 +113,10 @@ void hashPublicKey(uint256_t x, uint256_t y, unsigned int* digestOut)
     hash[6] = endian(hash[6]);
     hash[7] = endian(hash[7]);
 
-    ripemd160sha256NoFinal(hash, digestOut);
+    ripemd160sha256NoFinal(hash, digest);
 }
 
-void hashPublicKeyCompressed(uint256_t x, unsigned int yParity, unsigned int* digestOut)
+void hashPublicKeyCompressed(uint256_t x, unsigned int yParity, unsigned int digest[5])
 {
     unsigned int hash[8];
 
@@ -132,15 +132,7 @@ void hashPublicKeyCompressed(uint256_t x, unsigned int yParity, unsigned int* di
     hash[6] = endian(hash[6]);
     hash[7] = endian(hash[7]);
 
-    ripemd160sha256NoFinal(hash, digestOut);
-
-}
-
-void atomicListAdd(__global CLDeviceResult *results, __global unsigned int *numResults, CLDeviceResult *r)
-{
-    unsigned int count = atomic_add(numResults, 1);
-
-    results[count] = *r;
+    ripemd160sha256NoFinal(hash, digest);
 }
 
 void setResultFound(int idx, bool compressed, uint256_t x, uint256_t y, unsigned int digest[5], __global CLDeviceResult* results, __global unsigned int* numResults)
@@ -176,12 +168,11 @@ void setResultFound(int idx, bool compressed, uint256_t x, uint256_t y, unsigned
 
     doRMD160FinalRound(digest, r.digest);
 
-    atomicListAdd(results, numResults, &r);
+    results[atomic_add(numResults, 1)] = r;
 }
 
 __kernel void keyFinderKernel(
     unsigned int totalPoints,
-    int compression,
     __global uint256_t* chain,
     __global uint256_t* xPtr,
     __global uint256_t* yPtr,
@@ -263,7 +254,6 @@ __kernel void keyFinderKernel(
 
 __kernel void keyFinderKernelWithDouble(
     unsigned int totalPoints,
-    int compression,
     __global uint256_t* chain,
     __global uint256_t* xPtr,
     __global uint256_t* yPtr,

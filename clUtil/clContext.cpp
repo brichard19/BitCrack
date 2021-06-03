@@ -97,9 +97,6 @@ cl::CLProgram::CLProgram(cl::CLContext &ctx, std::string srcFile, std::string op
         options += " -DDEVICE_VENDOR_INTEL";
     }
 
-    // disable optimization as codeXL shows it will result in higher throughput
-    options += " -O0";
-
     _prog = clCreateProgramWithSource(ctx.getContext(), 1, &ptr, &len, &err);
     clCall(err);
 

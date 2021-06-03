@@ -231,7 +231,6 @@ void CLKeySearchDevice::doStep()
 
             _stepKernelWithDouble->set_args(
                 _points,
-                _compression,
                 _chain,
                 _x,
                 _y,
@@ -247,7 +246,6 @@ void CLKeySearchDevice::doStep()
 
             _stepKernel->set_args(
                 _points,
-                _compression,
                 _chain,
                 _x,
                 _y,
