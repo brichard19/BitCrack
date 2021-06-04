@@ -18,15 +18,7 @@ public:
     }
 };
 
-class DeviceType {
-public:
-    enum {
-        OpenCL
-    };
-};
-
 typedef struct {
-    int type;
     int id;
 
     // General device info

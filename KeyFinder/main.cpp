@@ -220,11 +220,7 @@ DeviceParameters getDefaultParameters(const DeviceManager::DeviceInfo &device)
 
 static KeySearchDevice *getDeviceContext(DeviceManager::DeviceInfo &device, int blocks, int threads, int pointsPerThread, int compressionMode)
 {
-    if(device.type == DeviceManager::DeviceType::OpenCL) {
-        return new CLKeySearchDevice(device.physicalId, threads, pointsPerThread, blocks, compressionMode);
-    }
-
-    return NULL;
+     return new CLKeySearchDevice(device.physicalId, threads, pointsPerThread, blocks, compressionMode);
 }
 
 static void printDeviceList(const std::vector<DeviceManager::DeviceInfo> &devices)
