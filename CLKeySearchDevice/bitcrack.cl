@@ -303,11 +303,11 @@ void ripemd160sha256NoFinal(const unsigned int x[8], unsigned int digest[5])
 
 void doRMD160FinalRound(const unsigned int hIn[5], unsigned int hOut[5])
 {
-    hOut[0] = endian(hIn[0] + 0xefcdab89);
-    hOut[1] = endian(hIn[1] + 0x98badcfe);
-    hOut[2] = endian(hIn[2] + 0x10325476);
-    hOut[3] = endian(hIn[3] + 0xc3d2e1f0);
-    hOut[4] = endian(hIn[4] + 0x67452301);
+    hOut[0] = endian(hIn[0] + RIPEMD160_IV[1]);
+    hOut[1] = endian(hIn[1] + RIPEMD160_IV[2]);
+    hOut[2] = endian(hIn[2] + RIPEMD160_IV[3]);
+    hOut[3] = endian(hIn[3] + RIPEMD160_IV[4]);
+    hOut[4] = endian(hIn[4] + RIPEMD160_IV[0]);
 }
 
 #endif
@@ -348,7 +348,7 @@ __constant unsigned int P[8] = {
 
 #ifdef DEVICE_VENDOR_INTEL
 // Intel devices have a mul_hi bug
-unsigned int mul_hi977(unsigned int x)
+inline unsigned int mul_hi977(unsigned int x)
 {
     unsigned int high = x >> 16;
     unsigned int low = x & 0xffff;
@@ -357,7 +357,7 @@ unsigned int mul_hi977(unsigned int x)
 }
 
 // 32 x 32 multiply-add
-void madd977(unsigned int *high, unsigned int *low, unsigned int *a, unsigned int *c)
+inline void madd977(unsigned int *high, unsigned int *low, unsigned int *a, unsigned int *c)
 {
     *low = *a * 977;
     unsigned int tmp = *low + *c;
@@ -367,7 +367,7 @@ void madd977(unsigned int *high, unsigned int *low, unsigned int *a, unsigned in
 }
 #else
 
-void madd977(unsigned int *high, unsigned int *low, unsigned int *a, unsigned int *c)
+inline void madd977(unsigned int *high, unsigned int *low, unsigned int *a, unsigned int *c)
 {
     *low = *a * 977;
     unsigned int tmp = *low + *c;
@@ -1516,13 +1516,16 @@ void sha256PublicKeyCompressed(const unsigned int x[8], unsigned int yParity, un
     digest[7] = h + _IV[7];
 }
 #endif
+#ifndef BITCOIN_CL
+#define BITCOIN_CL
+
 #ifndef endian
 #define endian(x) ((x) << 24) | (((x) << 8) & 0x00ff0000) | (((x) >> 8) & 0x0000ff00) | ((x) >> 24)
 #endif
 
 void hashPublicKeyCompressed(uint256_t x, unsigned int yParity, unsigned int digest[5])
 {
-    unsigned int hash[8];
+    __private unsigned int hash[8];
 
     sha256PublicKeyCompressed(x.v, yParity, hash);
 
@@ -1541,7 +1544,7 @@ void hashPublicKeyCompressed(uint256_t x, unsigned int yParity, unsigned int dig
 
 void hashPublicKey(uint256_t x, uint256_t y, unsigned int digest[5])
 {
-    unsigned int hash[8];
+    __private unsigned int hash[8];
 
     sha256PublicKey(x.v, y.v, hash);
 
@@ -1557,6 +1560,11 @@ void hashPublicKey(uint256_t x, uint256_t y, unsigned int digest[5])
 
     ripemd160sha256NoFinal(hash, digest);
 }
+
+#endif
+#ifndef BLOOMFILTER_CL
+#define BLOOMFILTER_CL
+
 bool isInBloomFilter(unsigned int hash[5], __global unsigned int *targetList, ulong *mask)
 {
     unsigned int h5 = hash[0] + hash[1] + hash[2] + hash[3] + hash[4];
@@ -1571,13 +1579,11 @@ bool isInBloomFilter(unsigned int hash[5], __global unsigned int *targetList, ul
         )
     );
 }
+
+#endif
 #define COMPRESSED 0
 #define UNCOMPRESSED 1
 #define BOTH 2
-
-#ifndef endian
-#define endian(x) ((x) << 24) | (((x) << 8) & 0x00ff0000) | (((x) >> 8) & 0x0000ff00) | ((x) >> 24)
-#endif
 
 typedef struct {
     int idx;
@@ -1605,7 +1611,6 @@ __kernel void multiplyStepKernel(
     gx = gxPtr[step];
     gy = gyPtr[step];
 
-    // Multiply together all (_Gx - x) and then invert
     uint256_t inverse = { {0,0,0,0,0,0,0,1} };
 
     int batchIdx = 0;

@@ -81,9 +81,6 @@ private:
 
     void initializeBasePoints();
 
-    int getIndex(int block, int thread, int idx);
-
-    void splatBigInt(unsigned int *dest, int block, int thread, int idx, const secp256k1::uint256 &i);
     void splatBigInt(unsigned int *dest, int idx, secp256k1::uint256 &k);
     secp256k1::uint256 readBigInt(unsigned int *src, int idx);
 
@@ -100,8 +97,6 @@ private:
     bool isTargetInList(const unsigned int hash[5]);
 
     void removeTargetFromList(const unsigned int hash[5]);
-
-    uint32_t getPrivateKeyOffset(int thread, int block, int idx);
 
     void initializeBloomFilter(const std::vector<struct hash160> &targets, uint64_t mask);
 

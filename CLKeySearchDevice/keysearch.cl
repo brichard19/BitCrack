@@ -2,10 +2,6 @@
 #define UNCOMPRESSED 1
 #define BOTH 2
 
-#ifndef endian
-#define endian(x) ((x) << 24) | (((x) << 8) & 0x00ff0000) | (((x) >> 8) & 0x0000ff00) | ((x) >> 24)
-#endif
-
 typedef struct {
     int idx;
     bool compressed;
@@ -32,7 +28,6 @@ __kernel void multiplyStepKernel(
     gx = gxPtr[step];
     gy = gyPtr[step];
 
-    // Multiply together all (_Gx - x) and then invert
     uint256_t inverse = { {0,0,0,0,0,0,0,1} };
 
     int batchIdx = 0;

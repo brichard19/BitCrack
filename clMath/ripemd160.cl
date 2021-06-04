@@ -303,11 +303,11 @@ void ripemd160sha256NoFinal(const unsigned int x[8], unsigned int digest[5])
 
 void doRMD160FinalRound(const unsigned int hIn[5], unsigned int hOut[5])
 {
-    hOut[0] = endian(hIn[0] + 0xefcdab89);
-    hOut[1] = endian(hIn[1] + 0x98badcfe);
-    hOut[2] = endian(hIn[2] + 0x10325476);
-    hOut[3] = endian(hIn[3] + 0xc3d2e1f0);
-    hOut[4] = endian(hIn[4] + 0x67452301);
+    hOut[0] = endian(hIn[0] + RIPEMD160_IV[1]);
+    hOut[1] = endian(hIn[1] + RIPEMD160_IV[2]);
+    hOut[2] = endian(hIn[2] + RIPEMD160_IV[3]);
+    hOut[3] = endian(hIn[3] + RIPEMD160_IV[4]);
+    hOut[4] = endian(hIn[4] + RIPEMD160_IV[0]);
 }
 
 #endif

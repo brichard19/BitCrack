@@ -1,10 +1,13 @@
+#ifndef BITCOIN_CL
+#define BITCOIN_CL
+
 #ifndef endian
 #define endian(x) ((x) << 24) | (((x) << 8) & 0x00ff0000) | (((x) >> 8) & 0x0000ff00) | ((x) >> 24)
 #endif
 
 void hashPublicKeyCompressed(uint256_t x, unsigned int yParity, unsigned int digest[5])
 {
-    unsigned int hash[8];
+    __private unsigned int hash[8];
 
     sha256PublicKeyCompressed(x.v, yParity, hash);
 
@@ -23,7 +26,7 @@ void hashPublicKeyCompressed(uint256_t x, unsigned int yParity, unsigned int dig
 
 void hashPublicKey(uint256_t x, uint256_t y, unsigned int digest[5])
 {
-    unsigned int hash[8];
+    __private unsigned int hash[8];
 
     sha256PublicKey(x.v, y.v, hash);
 
@@ -39,3 +42,5 @@ void hashPublicKey(uint256_t x, uint256_t y, unsigned int digest[5])
 
     ripemd160sha256NoFinal(hash, digest);
 }
+
+#endif

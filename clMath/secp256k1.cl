@@ -35,7 +35,7 @@ __constant unsigned int P[8] = {
 
 #ifdef DEVICE_VENDOR_INTEL
 // Intel devices have a mul_hi bug
-unsigned int mul_hi977(unsigned int x)
+inline unsigned int mul_hi977(unsigned int x)
 {
     unsigned int high = x >> 16;
     unsigned int low = x & 0xffff;
@@ -44,7 +44,7 @@ unsigned int mul_hi977(unsigned int x)
 }
 
 // 32 x 32 multiply-add
-void madd977(unsigned int *high, unsigned int *low, unsigned int *a, unsigned int *c)
+inline void madd977(unsigned int *high, unsigned int *low, unsigned int *a, unsigned int *c)
 {
     *low = *a * 977;
     unsigned int tmp = *low + *c;
@@ -54,7 +54,7 @@ void madd977(unsigned int *high, unsigned int *low, unsigned int *a, unsigned in
 }
 #else
 
-void madd977(unsigned int *high, unsigned int *low, unsigned int *a, unsigned int *c)
+inline void madd977(unsigned int *high, unsigned int *low, unsigned int *a, unsigned int *c)
 {
     *low = *a * 977;
     unsigned int tmp = *low + *c;

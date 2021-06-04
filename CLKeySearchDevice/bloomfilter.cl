@@ -1,3 +1,6 @@
+#ifndef BLOOMFILTER_CL
+#define BLOOMFILTER_CL
+
 bool isInBloomFilter(unsigned int hash[5], __global unsigned int *targetList, ulong *mask)
 {
     unsigned int h5 = hash[0] + hash[1] + hash[2] + hash[3] + hash[4];
@@ -12,3 +15,5 @@ bool isInBloomFilter(unsigned int hash[5], __global unsigned int *targetList, ul
         )
     );
 }
+
+#endif
