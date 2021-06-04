@@ -14,31 +14,6 @@ typedef struct {
     unsigned int digest[5];
 }CLDeviceResult;
 
-bool isInBloomFilter(unsigned int hash[5], __global unsigned int *targetList, ulong *mask)
-{
-    unsigned int h5 = hash[0] + hash[1] + hash[2] + hash[3] + hash[4];
-
-    return (false == 
-        (
-            (targetList[(((hash[0] << 6) | (h5 & 0x3f)) & *mask) / 32] & (0x01 << ((((hash[0] << 6) | (h5 & 0x3f)) & *mask) % 32))) == 0 ||
-            (targetList[(((hash[1] << 6) | ((h5 >> 6) & 0x3f)) & *mask) / 32] & (0x01 << ((((hash[1] << 6) | ((h5 >> 6) & 0x3f)) & *mask) % 32))) == 0 ||
-            (targetList[(((hash[2] << 6) | ((h5 >> 12) & 0x3f)) & *mask) / 32] & (0x01 << ((((hash[2] << 6) | ((h5 >> 12) & 0x3f)) & *mask) % 32))) == 0 ||
-            (targetList[(((hash[3] << 6) | ((h5 >> 18) & 0x3f)) & *mask) / 32] & (0x01 << ((((hash[3] << 6) | ((h5 >> 18) & 0x3f)) & *mask) % 32))) == 0 || 
-            (targetList[ (((hash[4] << 6) | ((h5 >> 24) & 0x3f)) & *mask) / 32] & (0x01 << ( (((hash[4] << 6) | ((h5 >> 24) & 0x3f)) & *mask) % 32))) == 0
-        )
-    );
-}
-
-inline void doRMD160FinalRound(const unsigned int hIn[5], unsigned int hOut[5])
-{
-    hOut[0] = endian(hIn[0] + 0xefcdab89);
-    hOut[1] = endian(hIn[1] + 0x98badcfe);
-    hOut[2] = endian(hIn[2] + 0x10325476);
-    hOut[3] = endian(hIn[3] + 0xc3d2e1f0);
-    hOut[4] = endian(hIn[4] + 0x67452301);
-}
-
-
 __kernel void multiplyStepKernel(
     int totalPoints,
     int step,
@@ -94,45 +69,6 @@ __kernel void multiplyStepKernel(
             yPtr[i] = newY;
         }
     }
-}
-
-
-void hashPublicKey(uint256_t x, uint256_t y, unsigned int digest[5])
-{
-    unsigned int hash[8];
-
-    sha256PublicKey(x.v, y.v, hash);
-
-    // Swap to little-endian
-    hash[0] = endian(hash[0]);
-    hash[1] = endian(hash[1]);
-    hash[2] = endian(hash[2]);
-    hash[3] = endian(hash[3]);
-    hash[4] = endian(hash[4]);
-    hash[5] = endian(hash[5]);
-    hash[6] = endian(hash[6]);
-    hash[7] = endian(hash[7]);
-
-    ripemd160sha256NoFinal(hash, digest);
-}
-
-void hashPublicKeyCompressed(uint256_t x, unsigned int yParity, unsigned int digest[5])
-{
-    unsigned int hash[8];
-
-    sha256PublicKeyCompressed(x.v, yParity, hash);
-
-    // Swap to little-endian
-    hash[0] = endian(hash[0]);
-    hash[1] = endian(hash[1]);
-    hash[2] = endian(hash[2]);
-    hash[3] = endian(hash[3]);
-    hash[4] = endian(hash[4]);
-    hash[5] = endian(hash[5]);
-    hash[6] = endian(hash[6]);
-    hash[7] = endian(hash[7]);
-
-    ripemd160sha256NoFinal(hash, digest);
 }
 
 void setResultFound(int idx, bool compressed, uint256_t x, uint256_t y, unsigned int digest[5], __global CLDeviceResult* results, __global unsigned int* numResults)

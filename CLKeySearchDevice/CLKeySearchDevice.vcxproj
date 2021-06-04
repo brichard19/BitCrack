@@ -124,7 +124,7 @@
       </Command>
     </PostBuildEvent>
     <PreBuildEvent>
-      <Command>type $(SolutionDir)clMath\ripemd160.cl $(SolutionDir)clMath\secp256k1.cl $(SolutionDir)clMath\sha256.cl $(SolutionDir)CLKeySearchDevice\keysearch.cl &gt; bitcrack.cl
+      <Command>type $(SolutionDir)clMath\ripemd160.cl $(SolutionDir)clMath\secp256k1.cl $(SolutionDir)clMath\sha256.cl $(SolutionDir)CLKeySearchDevice\bitcoin.cl $(SolutionDir)CLKeySearchDevice\bloomfilter.cl $(SolutionDir)CLKeySearchDevice\keysearch.cl &gt; bitcrack.cl
 $(SolutionDir)\tools\embedcl.exe bitcrack.cl bitcrack_cl.cpp _bitcrack_cl</Command>
       <Message>Embed bitcrack.cl into bitcrack_cl.cpp</Message>
     </PreBuildEvent>
@@ -139,7 +139,7 @@ $(SolutionDir)\tools\embedcl.exe bitcrack.cl bitcrack_cl.cpp _bitcrack_cl</Comma
       <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <PreBuildEvent>
-      <Command>type $(SolutionDir)clMath\ripemd160.cl $(SolutionDir)clMath\secp256k1.cl $(SolutionDir)clMath\sha256.cl $(SolutionDir)CLKeySearchDevice\keysearch.cl &gt; bitcrack.cl
+      <Command>type $(SolutionDir)clMath\ripemd160.cl $(SolutionDir)clMath\secp256k1.cl $(SolutionDir)clMath\sha256.cl $(SolutionDir)CLKeySearchDevice\bitcoin.cl $(SolutionDir)CLKeySearchDevice\bloomfilter.cl $(SolutionDir)CLKeySearchDevice\keysearch.cl &gt; bitcrack.cl
 $(SolutionDir)\tools\embedcl.exe bitcrack.cl bitcrack_cl.cpp _bitcrack_cl</Command>
       <Message>Embed bitcrack.cl into bitcrack_cl.cpp</Message>
     </PreBuildEvent>
@@ -154,7 +154,7 @@ $(SolutionDir)\tools\embedcl.exe bitcrack.cl bitcrack_cl.cpp _bitcrack_cl</Comma
       <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <PreBuildEvent>
-      <Command>type $(SolutionDir)clMath\ripemd160.cl $(SolutionDir)clMath\secp256k1.cl $(SolutionDir)clMath\sha256.cl $(SolutionDir)CLKeySearchDevice\keysearch.cl &gt; bitcrack.cl
+      <Command>type $(SolutionDir)clMath\ripemd160.cl $(SolutionDir)clMath\secp256k1.cl $(SolutionDir)clMath\sha256.cl $(SolutionDir)CLKeySearchDevice\bitcoin.cl $(SolutionDir)CLKeySearchDevice\bloomfilter.cl $(SolutionDir)CLKeySearchDevice\keysearch.cl &gt; bitcrack.cl
 $(SolutionDir)\tools\embedcl.exe bitcrack.cl bitcrack_cl.cpp _bitcrack_cl</Command>
       <Message>Embed bitcrack.cl into bitcrack_cl.cpp</Message>
     </PreBuildEvent>
@@ -173,7 +173,7 @@ $(SolutionDir)\tools\embedcl.exe bitcrack.cl bitcrack_cl.cpp _bitcrack_cl</Comma
       </Command>
     </PostBuildEvent>
     <PreBuildEvent>
-      <Command>type $(SolutionDir)clMath\ripemd160.cl $(SolutionDir)clMath\secp256k1.cl $(SolutionDir)clMath\sha256.cl $(SolutionDir)CLKeySearchDevice\keysearch.cl &gt; bitcrack.cl
+      <Command>type $(SolutionDir)clMath\ripemd160.cl $(SolutionDir)clMath\secp256k1.cl $(SolutionDir)clMath\sha256.cl $(SolutionDir)CLKeySearchDevice\bitcoin.cl $(SolutionDir)CLKeySearchDevice\bloomfilter.cl $(SolutionDir)CLKeySearchDevice\keysearch.cl &gt; bitcrack.cl
 $(SolutionDir)\tools\embedcl.exe bitcrack.cl bitcrack_cl.cpp _bitcrack_cl</Command>
       <Message>Embed bitcrack.cl into bitcrack_cl.cpp</Message>
     </PreBuildEvent>
@@ -199,7 +199,7 @@ $(SolutionDir)\tools\embedcl.exe bitcrack.cl bitcrack_cl.cpp _bitcrack_cl</Comma
       </Command>
     </PostBuildEvent>
     <PreBuildEvent>
-      <Command>type $(SolutionDir)clMath\ripemd160.cl $(SolutionDir)clMath\secp256k1.cl $(SolutionDir)clMath\sha256.cl $(SolutionDir)CLKeySearchDevice\keysearch.cl &gt; bitcrack.cl
+      <Command>type $(SolutionDir)clMath\ripemd160.cl $(SolutionDir)clMath\secp256k1.cl $(SolutionDir)clMath\sha256.cl $(SolutionDir)CLKeySearchDevice\bitcoin.cl $(SolutionDir)CLKeySearchDevice\bloomfilter.cl $(SolutionDir)CLKeySearchDevice\keysearch.cl &gt; bitcrack.cl
 $(SolutionDir)\tools\embedcl.exe bitcrack.cl bitcrack_cl.cpp _bitcrack_cl</Command>
       <Message>Embed bitcrack.cl into bitcrack_cl.cpp</Message>
     </PreBuildEvent>
@@ -220,7 +220,7 @@ $(SolutionDir)\tools\embedcl.exe bitcrack.cl bitcrack_cl.cpp _bitcrack_cl</Comma
       <OptimizeReferences>true</OptimizeReferences>
     </Link>
     <PreBuildEvent>
-      <Command>type $(SolutionDir)clMath\ripemd160.cl $(SolutionDir)clMath\secp256k1.cl $(SolutionDir)clMath\sha256.cl $(SolutionDir)CLKeySearchDevice\keysearch.cl &gt; bitcrack.cl
+      <Command>type $(SolutionDir)clMath\ripemd160.cl $(SolutionDir)clMath\secp256k1.cl $(SolutionDir)clMath\sha256.cl $(SolutionDir)CLKeySearchDevice\bitcoin.cl $(SolutionDir)CLKeySearchDevice\bloomfilter.cl $(SolutionDir)CLKeySearchDevice\keysearch.cl &gt; bitcrack.cl
 $(SolutionDir)\tools\embedcl.exe bitcrack.cl bitcrack_cl.cpp _bitcrack_cl</Command>
       <Message>Embed bitcrack.cl into bitcrack_cl.cpp</Message>
     </PreBuildEvent>

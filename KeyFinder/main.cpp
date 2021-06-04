@@ -341,7 +341,7 @@ void readCheckpointFile()
 
 int run()
 {
-    Logger::log(LogLevel::Info, "BitCrackOpenCL");
+    Logger::log(LogLevel::Info, "BitCrackOpenCL\n");
 
     if(_config.device < 0 || _config.device >= _devices.size()) {
         Logger::log(LogLevel::Error, "device " + util::format(_config.device) + " does not exist");
@@ -351,7 +351,7 @@ int run()
     Logger::log(LogLevel::Info, "Compression: " + getCompressionString(_config.compressionMode));
     Logger::log(LogLevel::Info, "Starting at: " + _config.nextKey.toString());
     Logger::log(LogLevel::Info, "Ending at:   " + _config.endKey.toString());
-    Logger::log(LogLevel::Info, "Counting by: " + _config.stride.toString());
+    Logger::log(LogLevel::Info, "Counting by: " + _config.stride.toString() + "\n");
 
     try {
 

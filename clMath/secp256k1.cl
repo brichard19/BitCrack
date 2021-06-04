@@ -351,7 +351,6 @@ void mulModP(unsigned int a[8], unsigned int b[8], unsigned int product_low[8])
     unsigned int product7 = 0;
     unsigned int tmp;
 
-
     // 256 x 256 multiply
     multiply256(a, b, high, low);
     product_low[7] = low[7];

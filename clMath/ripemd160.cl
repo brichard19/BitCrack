@@ -1,6 +1,10 @@
 #ifndef RIPEMD160_CL
 #define RIPEMD160_CL
 
+#ifndef endian
+#define endian(x) ((x) << 24) | (((x) << 8) & 0x00ff0000) | (((x) >> 8) & 0x0000ff00) | ((x) >> 24)
+#endif
+
 __constant unsigned int RIPEMD160_IV[5] = {
     0x67452301, 0xefcdab89, 0x98badcfe, 0x10325476, 0xc3d2e1f0,
 };
@@ -295,6 +299,15 @@ void ripemd160sha256NoFinal(const unsigned int x[8], unsigned int digest[5])
     digest[3] = digest1[3] + digest2[3];
     digest[4] = digest1[4] + digest2[4];
 
+}
+
+void doRMD160FinalRound(const unsigned int hIn[5], unsigned int hOut[5])
+{
+    hOut[0] = endian(hIn[0] + 0xefcdab89);
+    hOut[1] = endian(hIn[1] + 0x98badcfe);
+    hOut[2] = endian(hIn[2] + 0x10325476);
+    hOut[3] = endian(hIn[3] + 0xc3d2e1f0);
+    hOut[4] = endian(hIn[4] + 0x67452301);
 }
 
 #endif
