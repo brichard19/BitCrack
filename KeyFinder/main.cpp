@@ -99,26 +99,18 @@ void statusCallback(KeySearchStatus info)
 
 	std::string timeStr = "[" + util::formatSeconds((unsigned int)((_config.elapsed + info.totalTime) / 1000)) + "]";
 
-	std::string usedMemStr = util::format((info.deviceMemory - info.freeMemory) /(1024 * 1024));
-
-	std::string totalMemStr = util::format(info.deviceMemory / (1024 * 1024));
-
     std::string targetStr = util::format(info.targets) + " target" + (info.targets > 1 ? "s" : "");
 
-
 	// Fit device name in 16 characters, pad with spaces if less
-	std::string devName = info.deviceName.substr(0, 16);
-	devName += std::string(16 - devName.length(), ' ');
-
     const char *formatStr = NULL;
 
     if(_config.follow) {
-        formatStr = "%s %s/%sMB | %s %s %s %s\n";
+        formatStr = "%s %s %s %s\n";
     } else {
-        formatStr = "\r%s %s / %sMB | %s %s %s %s";
+        formatStr = "\r%s %s %s %s";
     }
 
-	printf(formatStr, devName.c_str(), usedMemStr.c_str(), totalMemStr.c_str(), targetStr.c_str(), speedStr.c_str(), totalStr.c_str(), timeStr.c_str());
+	printf(formatStr, targetStr.c_str(), speedStr.c_str(), totalStr.c_str(), timeStr.c_str());
 
     if(_config.checkpointFile.length() > 0) {
         uint64_t t = util::getSystemTime();

@@ -186,15 +186,6 @@ void KeyFinder::run()
 
 			info.totalTime = _totalTime;
 
-			uint64_t freeMem = 0;
-
-			uint64_t totalMem = 0;
-
-			_device->getMemoryInfo(freeMem, totalMem);
-
-			info.freeMemory = freeMem;
-			info.deviceMemory = totalMem;
-			info.deviceName = _device->getDeviceName();
 			info.targets = _targets.size();
             info.nextKey = getNextKey();
 

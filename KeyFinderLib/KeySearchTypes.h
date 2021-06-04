@@ -29,9 +29,6 @@ typedef struct {
     double speed;
     uint64_t total;
     uint64_t totalTime;
-    std::string deviceName;
-    uint64_t freeMemory;
-    uint64_t deviceMemory;
     uint64_t targets;
     secp256k1::uint256 nextKey;
 }KeySearchStatus;
