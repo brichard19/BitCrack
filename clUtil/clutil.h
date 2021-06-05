@@ -20,7 +20,7 @@ namespace cl {
         int cores;
         uint64_t mem;
         std::string name;
-
+        size_t maxWorkingGroupSize;
     }CLDeviceInfo;
 
     class CLException {

@@ -26,6 +26,7 @@ typedef struct {
     std::string name;
     uint64_t memory;
     int computeUnits;
+    int maxWorkingGroupSize;
 
 }DeviceInfo;
 
