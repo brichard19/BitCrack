@@ -14,7 +14,6 @@ typedef struct {
     unsigned int digest[5];
 }CLDeviceResult;
 
-
 static void undoRMD160FinalRound(const unsigned int hIn[5], unsigned int hOut[5])
 {
     unsigned int iv[5] = {
@@ -436,52 +435,6 @@ void CLKeySearchDevice::getResultsInternal()
     }
 }
 
-void CLKeySearchDevice::selfTest()
-{
-    uint64_t numPoints = (uint64_t)_points;
-    std::vector<secp256k1::uint256> privateKeys;
-
-    // Generate key pairs for k, k+1, k+2 ... k + <total points in parallel - 1>
-    secp256k1::uint256 privKey = _start;
-
-    privateKeys.push_back(_start);
-
-    for(uint64_t i = 1; i < numPoints; i++) {
-        privKey = privKey.add(_stride);
-        privateKeys.push_back(privKey);
-    }
-
-    unsigned int *xBuf = new unsigned int[numPoints * 8];
-    unsigned int *yBuf = new unsigned int[numPoints * 8];
-
-    _clContext->copyDeviceToHost(_x, xBuf, sizeof(unsigned int) * 8 * numPoints);
-    _clContext->copyDeviceToHost(_y, yBuf, sizeof(unsigned int) * 8 * numPoints);
-
-    for(int index = 0; index < _points; index++) {
-        secp256k1::uint256 privateKey = privateKeys[index];
-
-        secp256k1::uint256 x = readBigInt(xBuf, index);
-        secp256k1::uint256 y = readBigInt(yBuf, index);
-
-        secp256k1::ecpoint p1(x, y);
-        secp256k1::ecpoint p2 = secp256k1::multiplyPoint(privateKey, secp256k1::G());
-
-        if(!secp256k1::pointExists(p1)) {
-            throw std::string("Validation failed: invalid point");
-        }
-
-        if(!secp256k1::pointExists(p2)) {
-            throw std::string("Validation failed: invalid point");
-        }
-
-        if(!(p1 == p2)) {
-            throw std::string("Validation failed: points do not match");
-        }
-    }
-}
-
-
-
 secp256k1::uint256 CLKeySearchDevice::readBigInt(unsigned int *src, int idx)
 {
     unsigned int value[8] = {0};
@@ -539,28 +492,21 @@ void CLKeySearchDevice::generateStartingPoints()
     uint64_t totalPoints = (uint64_t)_points;
     uint64_t totalMemory = totalPoints * 40;
 
-    std::vector<secp256k1::uint256> exponents;
-
     initializeBasePoints();
 
     _pointsMemSize = totalPoints * sizeof(unsigned int) * 16 + _points * sizeof(unsigned int) * 8;
 
     Logger::log(LogLevel::Info, "Generating " + util::formatThousands(totalPoints) + " starting points (" + util::format("%.1f", (double)totalMemory / (double)(1024 * 1024)) + "MB)");
 
-    // Generate key pairs for k, k+1, k+2 ... k + <total points in parallel - 1>
-    secp256k1::uint256 privKey = _start;
-
-    exponents.push_back(privKey);
-
-    for(uint64_t i = 1; i < totalPoints; i++) {
-        privKey = privKey.add(_stride);
-        exponents.push_back(privKey);
-    }
-
     unsigned int *privateKeys = new unsigned int[8 * totalPoints];
 
-    for(int index = 0; index < _points; index++) {
-        splatBigInt(privateKeys, index, exponents[index]);
+    // Generate key pairs for k, k+1, k+2 ... k + <total points in parallel - 1>
+    secp256k1::uint256 privKey = _start;
+    splatBigInt(privateKeys, 0, privKey);
+    
+    for(uint64_t i = 1; i < totalPoints; i++) {
+        privKey = privKey.add(_stride);
+        splatBigInt(privateKeys, i, privKey);
     }
 
     // Copy to device

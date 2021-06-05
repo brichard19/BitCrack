@@ -84,8 +84,6 @@ private:
     void splatBigInt(unsigned int *dest, int idx, secp256k1::uint256 &k);
     secp256k1::uint256 readBigInt(unsigned int *src, int idx);
 
-    void selfTest();
-
     bool _useBloomFilter = false;
 
     void setTargetsInternal();
