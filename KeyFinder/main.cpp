@@ -202,7 +202,7 @@ typedef struct {
 DeviceParameters getDefaultParameters(const DeviceManager::DeviceInfo &device)
 {
 	DeviceParameters parameters;
-	parameters.threads = device.maxWorkingGroupSize;
+	parameters.threads = 256;
     parameters.blocks = 32;
 	parameters.pointsPerThread = 32;
     parameters.compressionMode = PointCompressionType::COMPRESSED;
