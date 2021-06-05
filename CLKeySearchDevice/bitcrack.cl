@@ -298,10 +298,9 @@ void ripemd160sha256NoFinal(const unsigned int x[8], unsigned int digest[5])
     digest[2] = digest1[2] + digest2[2];
     digest[3] = digest1[3] + digest2[3];
     digest[4] = digest1[4] + digest2[4];
-
 }
 
-void doRMD160FinalRound(const unsigned int hIn[5], unsigned int hOut[5])
+void ripemd160FinalRound(const unsigned int hIn[5], unsigned int hOut[5])
 {
     hOut[0] = endian(hIn[0] + RIPEMD160_IV[1]);
     hOut[1] = endian(hIn[1] + RIPEMD160_IV[2]);
@@ -1593,6 +1592,36 @@ typedef struct {
     unsigned int digest[5];
 }CLDeviceResult;
 
+void setResultFound(int idx, bool compressed, uint256_t x, uint256_t y, unsigned int digest[5], __global CLDeviceResult* results, __global unsigned int* numResults)
+{
+    CLDeviceResult r;
+
+    r.idx = idx;
+    r.compressed = compressed;
+
+    r.x[0] = x.v[0];
+    r.x[1] = x.v[1];
+    r.x[2] = x.v[2];
+    r.x[3] = x.v[3];
+    r.x[4] = x.v[4];
+    r.x[5] = x.v[5];
+    r.x[6] = x.v[6];
+    r.x[7] = x.v[7];
+
+    r.y[0] = y.v[0];
+    r.y[1] = y.v[1];
+    r.y[2] = y.v[2];
+    r.y[3] = y.v[3];
+    r.y[4] = y.v[4];
+    r.y[5] = y.v[5];
+    r.y[6] = y.v[6];
+    r.y[7] = y.v[7];
+
+    ripemd160FinalRound(digest, r.digest);
+
+    results[atomic_add(numResults, 1)] = r;
+}
+
 __kernel void _initKeysKernel(
     int totalPoints,
     int step,
@@ -1647,42 +1676,6 @@ __kernel void _initKeysKernel(
             yPtr[i] = newY;
         }
     }
-}
-
-void setResultFound(int idx, bool compressed, uint256_t x, uint256_t y, unsigned int digest[5], __global CLDeviceResult* results, __global unsigned int* numResults)
-{
-    CLDeviceResult r;
-
-    r.idx = idx;
-    r.compressed = compressed;
-
-    r.x[0] = x.v[0];
-    r.y[0] = y.v[0];
-
-    r.x[1] = x.v[1];
-    r.y[1] = y.v[1];
-    
-    r.x[2] = x.v[2];
-    r.y[2] = y.v[2];
-    
-    r.x[3] = x.v[3];
-    r.y[3] = y.v[3];
-
-    r.x[4] = x.v[4];
-    r.y[4] = y.v[4];
-    
-    r.x[5] = x.v[5];
-    r.y[5] = y.v[5];
-    
-    r.x[6] = x.v[6];
-    r.y[6] = y.v[6];
-    
-    r.x[7] = x.v[7];
-    r.y[7] = y.v[7];
-
-    doRMD160FinalRound(digest, r.digest);
-
-    results[atomic_add(numResults, 1)] = r;
 }
 
 __kernel void _stepKernel(

@@ -298,10 +298,9 @@ void ripemd160sha256NoFinal(const unsigned int x[8], unsigned int digest[5])
     digest[2] = digest1[2] + digest2[2];
     digest[3] = digest1[3] + digest2[3];
     digest[4] = digest1[4] + digest2[4];
-
 }
 
-void doRMD160FinalRound(const unsigned int hIn[5], unsigned int hOut[5])
+void ripemd160FinalRound(const unsigned int hIn[5], unsigned int hOut[5])
 {
     hOut[0] = endian(hIn[0] + RIPEMD160_IV[1]);
     hOut[1] = endian(hIn[1] + RIPEMD160_IV[2]);
