@@ -10,7 +10,7 @@ typedef struct {
     unsigned int digest[5];
 }CLDeviceResult;
 
-__kernel void multiplyStepKernel(
+__kernel void _initKeysKernel(
     int totalPoints,
     int step,
     __global uint256_t* privateKeys,

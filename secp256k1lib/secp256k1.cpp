@@ -5,7 +5,6 @@
 #include "CryptoUtil.h"
 #include "secp256k1.h"
 
-
 using namespace secp256k1;
 
 static uint256 _ONE(1);
@@ -780,7 +779,7 @@ void secp256k1::generateKeyPairsBulk(unsigned int count, const ecpoint &basePoin
 
 void secp256k1::generateKeyPairsBulk(const ecpoint &basePoint, std::vector<uint256> &privKeys, std::vector<ecpoint> &pubKeysOut)
 {
-	unsigned int count = (unsigned int)privKeys.size();
+	size_t count = privKeys.size();
 
 	//privKeysOut.clear();
 	pubKeysOut.clear();
@@ -789,12 +788,14 @@ void secp256k1::generateKeyPairsBulk(const ecpoint &basePoint, std::vector<uint2
 	std::vector<ecpoint> table;
 
 	table.push_back(basePoint);
-	for(int i = 1; i < 256; i++) {
+	for(size_t i = 1; i < 256; i++) {
 
 		ecpoint p = doublePoint(table[i-1]);
+#ifdef DEBUG
 		if(!pointExists(p)) {
 			throw std::string("Point does not exist!");
 		}
+#endif
 		table.push_back(p);
 	}
 
@@ -848,13 +849,18 @@ void secp256k1::generateKeyPairsBulk(const ecpoint &basePoint, std::vector<uint2
 					uint256 ry = subModP(multiplyModP(s, subModP(pubKeysOut[j].x, rx)), pubKeysOut[j].y);
 
 					ecpoint r(rx, ry);
+#ifdef DEBUG
 					if(!pointExists(r)) {
 						throw std::string("Point does not exist");
 					}
+#endif
 					pubKeysOut[j] = r;
 				}
 			}
 		}
+
+		table.clear();
+		table.shrink_to_fit();
 	}
 }
 
@@ -864,11 +870,11 @@ void secp256k1::generateKeyPairsBulk(const ecpoint &basePoint, std::vector<uint2
 secp256k1::ecpoint secp256k1::parsePublicKey(const std::string &pubKeyString)
 {
 	if(pubKeyString.length() != 130) {
-		throw std::string("Invalid public key");
+		throw std::string("Invalid public key. Length of public key is not 130 characters.");
 	}
 
 	if(pubKeyString[0] != '0' || pubKeyString[1] != '4') {
-		throw std::string("Invalid public key");
+		throw std::string("Invalid public key. Expecting uncompressed format.");
 	}
 
 	std::string xString = pubKeyString.substr(2, 64);
@@ -880,7 +886,7 @@ secp256k1::ecpoint secp256k1::parsePublicKey(const std::string &pubKeyString)
 	ecpoint p(x, y);
 
 	if(!pointExists(p)) {
-		throw std::string("Invalid public key");
+		throw std::string("Invalid public key. Point is not on secp256k1-curve.");
 	}
 
 	return p;

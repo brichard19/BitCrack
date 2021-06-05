@@ -65,7 +65,7 @@ CLKeySearchDevice::CLKeySearchDevice(uint64_t device, int threads, int pointsPer
         _clProgram = new cl::CLProgram(*_clContext, _bitcrack_cl, options);
 
         // Load the kernels
-        _initKeysKernel = new cl::CLKernel(*_clProgram, "multiplyStepKernel");
+        _initKeysKernel = new cl::CLKernel(*_clProgram, "_initKeysKernel");
         _stepKernel = new cl::CLKernel(*_clProgram, "keyFinderKernel");
         _stepKernelWithDouble = new cl::CLKernel(*_clProgram, "keyFinderKernelWithDouble");
 
@@ -454,38 +454,43 @@ void CLKeySearchDevice::initializeBasePoints()
     std::vector<secp256k1::ecpoint> table;
 
     table.push_back(secp256k1::G());
-    for(uint64_t i = 1; i < 256; i++) {
+    for (uint64_t i = 1; i < 256; i++) {
 
         secp256k1::ecpoint p = doublePoint(table[i - 1]);
-        if(!pointExists(p)) {
+#ifdef DEBUG
+        if (!pointExists(p)) {
             throw std::string("Point does not exist!");
         }
+#endif
         table.push_back(p);
     }
 
     size_t count = 256;
 
-    unsigned int *tmpX = new unsigned int[count * 8];
-    unsigned int *tmpY = new unsigned int[count * 8];
+    unsigned int* tmpX = new unsigned int[count * 8];
+    unsigned int* tmpY = new unsigned int[count * 8];
 
-    for(int i = 0; i < 256; i++) {
+    for (int i = 0; i < 256; i++) {
         unsigned int bufX[8];
         unsigned int bufY[8];
         table[i].x.exportWords(bufX, 8, secp256k1::uint256::BigEndian);
         table[i].y.exportWords(bufY, 8, secp256k1::uint256::BigEndian);
 
-        for(int j = 0; j < 8; j++) {
+        for (int j = 0; j < 8; j++) {
             tmpX[i * 8 + j] = bufX[j];
             tmpY[i * 8 + j] = bufY[j];
         }
     }
 
+    table.clear();
+    table.shrink_to_fit();
+
     _clContext->copyHostToDevice(tmpX, _xTable, count * 8 * sizeof(unsigned int));
+    delete[] tmpX;
 
     _clContext->copyHostToDevice(tmpY, _yTable, count * 8 * sizeof(unsigned int));
+    delete[] tmpY;
 }
-
-
 
 void CLKeySearchDevice::generateStartingPoints()
 {
