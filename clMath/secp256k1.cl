@@ -613,7 +613,6 @@ void completeBatchAdd256k(
     subModP256k(newY->v, py.v, newY->v);
 }
 
-
 void completeBatchAddWithDouble256k(
     const uint256_t px,
     const uint256_t py,
@@ -702,11 +701,6 @@ void completeBatchAddWithDouble256k(
         mulModP(s.v, k.v, newY->v);
         subModP256k(newY->v, py.v, newY->v);
     }
-}
-
-unsigned int readLSW256k(__global const uint256_t* ara, const int idx)
-{
-    return ara[idx].v[7];
 }
 
 unsigned int readWord256k(__global const uint256_t* ara, const int idx, const int word)

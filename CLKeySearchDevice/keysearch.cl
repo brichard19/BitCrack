@@ -131,14 +131,12 @@ __kernel void _stepKernel(
        
 #if defined(COMPRESSION_UNCOMPRESSED) || defined(COMPRESSION_BOTH)
         hashPublicKey(xPtr[i], yPtr[i], digest);
-
         if(isInBloomFilter(digest, targetList, &mask)) {
             setResultFound(i, false, xPtr[i], yPtr[i], digest, results, numResults);
         }
 #endif
 #if defined(COMPRESSION_COMPRESSED) || defined(COMPRESSION_BOTH)
-        hashPublicKeyCompressed(xPtr[i], readLSW256k(yPtr, i), digest);
-
+        hashPublicKeyCompressed(xPtr[i], yPtr[i].v[7], digest);
         if(isInBloomFilter(digest, targetList, &mask)) {
             setResultFound(i, true, xPtr[i], yPtr[i], digest, results, numResults);
         }
@@ -187,6 +185,7 @@ __kernel void _stepKernelWithDouble(
     unsigned int digest[5];
 
     for(; i < totalPoints; i += dim) {
+
 #if defined(COMPRESSION_UNCOMPRESSED) || defined(COMPRESSION_BOTH)
         hashPublicKey(xPtr[i], yPtr[i], digest);
         if(isInBloomFilter(digest, targetList, &mask)) {
@@ -194,7 +193,7 @@ __kernel void _stepKernelWithDouble(
         }
 #endif
 #if defined(COMPRESSION_COMPRESSED) || defined(COMPRESSION_BOTH)
-        hashPublicKeyCompressed(xPtr[i], readLSW256k(yPtr, i), digest);
+        hashPublicKeyCompressed(xPtr[i], yPtr[i].v[7], digest);
         if(isInBloomFilter(digest, targetList, &mask)) {
             setResultFound(i, true, xPtr[i], yPtr[i], digest, results, numResults);
         }
