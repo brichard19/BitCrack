@@ -212,9 +212,7 @@ void CLKeySearchDevice::init(const secp256k1::uint256 &start, int compression, c
         generateStartingPoints();
 
         // Set the incrementor
-        secp256k1::ecpoint g = secp256k1::G();
-        secp256k1::ecpoint p = secp256k1::multiplyPoint(secp256k1::uint256((uint64_t)_points ) * _stride, g);
-
+        secp256k1::ecpoint p = secp256k1::multiplyPoint(secp256k1::uint256((uint64_t)_points ) * _stride, secp256k1::G());
         setIncrementor(p);
     } catch(cl::CLException ex) {
         throw KeySearchException(ex.msg, ex.description);

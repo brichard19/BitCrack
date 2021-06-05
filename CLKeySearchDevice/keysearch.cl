@@ -10,8 +10,15 @@ typedef struct {
     unsigned int digest[5];
 }CLDeviceResult;
 
-void setResultFound(int idx, bool compressed, uint256_t x, uint256_t y, unsigned int digest[5], __global CLDeviceResult* results, __global unsigned int* numResults)
-{
+void setResultFound(
+    const int idx,
+    const bool compressed,
+    const uint256_t x,
+    const uint256_t y,
+    const unsigned int digest[5],
+    __global CLDeviceResult* results,
+    __global unsigned int* numResults
+) {
     CLDeviceResult r;
 
     r.idx = idx;
@@ -41,8 +48,8 @@ void setResultFound(int idx, bool compressed, uint256_t x, uint256_t y, unsigned
 }
 
 __kernel void _initKeysKernel(
-    int totalPoints,
-    int step,
+    const unsigned int totalPoints,
+    const unsigned int step,
     __global uint256_t* privateKeys,
     __global uint256_t* chain,
     __global uint256_t* gxPtr,
@@ -97,14 +104,14 @@ __kernel void _initKeysKernel(
 }
 
 __kernel void _stepKernel(
-    unsigned int totalPoints,
+    const unsigned int totalPoints,
     __global uint256_t* chain,
     __global uint256_t* xPtr,
     __global uint256_t* yPtr,
     __global uint256_t* incXPtr,
     __global uint256_t* incYPtr,
     __global unsigned int* targetList,
-    ulong mask,
+    const ulong mask,
     __global CLDeviceResult *results,
     __global unsigned int *numResults)
 {
@@ -177,14 +184,14 @@ __kernel void _stepKernel(
 }
 
 __kernel void _stepKernelWithDouble(
-    unsigned int totalPoints,
+    const unsigned int totalPoints,
     __global uint256_t* chain,
     __global uint256_t* xPtr,
     __global uint256_t* yPtr,
     __global uint256_t* incXPtr,
     __global uint256_t* incYPtr,
     __global unsigned int* targetList,
-    ulong mask,
+    const ulong mask,
     __global CLDeviceResult *results,
     __global unsigned int *numResults)
 {

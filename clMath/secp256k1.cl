@@ -128,7 +128,7 @@ inline void madd977(unsigned int *high, unsigned int *low, unsigned int *a, unsi
 
 void multiply256(const unsigned int x[8], const unsigned int y[8], unsigned int out_high[8], unsigned int out_low[8])
 {
-    unsigned long product;
+    __private unsigned long product;
 
     // First round, overwrite z
     product = (unsigned long)x[7] * y[7];
@@ -341,15 +341,15 @@ void multiply256(const unsigned int x[8], const unsigned int y[8], unsigned int 
 
 void mulModP(unsigned int a[8], unsigned int b[8], unsigned int product_low[8])
 {
-    unsigned int high[8];
-    unsigned int low[8];
+    __private unsigned int high[8];
+    __private unsigned int low[8];
 
-    unsigned int hWord = 0;
-    unsigned int carry = 0;
-    unsigned int t = 0;
-    unsigned int product6 = 0;
-    unsigned int product7 = 0;
-    unsigned int tmp;
+    __private unsigned int hWord = 0;
+    __private unsigned int carry = 0;
+    __private unsigned int t = 0;
+    __private unsigned int product6 = 0;
+    __private unsigned int product7 = 0;
+    __private unsigned int tmp;
 
     // 256 x 256 multiply
     multiply256(a, b, high, low);
@@ -428,8 +428,8 @@ void mulModP(unsigned int a[8], unsigned int b[8], unsigned int product_low[8])
  */
 void subModP256k(unsigned int a[8], unsigned int b[8], unsigned int c[8])
 {
-    unsigned int borrow = 0;
-    unsigned int tmp;
+    __private unsigned int borrow = 0;
+    __private unsigned int tmp;
     
     sub256k(a, b, c, borrow, tmp);
     
@@ -444,7 +444,7 @@ void subModP256k(unsigned int a[8], unsigned int b[8], unsigned int c[8])
  */
 void invModP256k(unsigned int x[8])
 {
-    unsigned int y[8] = {0, 0, 0, 0, 0, 0, 0, 1};
+    __private unsigned int y[8] = {0, 0, 0, 0, 0, 0, 0, 1};
 
     mulModP(x, y, y);
     mulModP(x, x, x);
@@ -475,11 +475,11 @@ void invModP256k(unsigned int x[8])
     mulModP(x, y, x);
 }
 
-void addModP256k(unsigned int a[8], unsigned int b[8], unsigned int c[8])
+void addModP256k(const unsigned int a[8], const unsigned int b[8], unsigned int c[8])
 {
-    unsigned int borrow = 0;
-    unsigned int carry = 0;
-    unsigned int tmp = 0;
+    __private unsigned int borrow = 0;
+    __private unsigned int carry = 0;
+    __private unsigned int tmp = 0;
 
     add256k(a, b, c, carry, tmp);
 
@@ -514,12 +514,18 @@ void doBatchInverse256k(unsigned int x[8])
     invModP256k(x);
 }
 
-void beginBatchAdd256k(uint256_t px, uint256_t x, __global uint256_t* chain, int i, int batchIdx, uint256_t* inverse)
-{
-    int gid = get_local_size(0) * get_group_id(0) + get_local_id(0);
-    int dim = get_global_size(0);
+void beginBatchAdd256k(
+    const uint256_t px,
+    const uint256_t x,
+    __global uint256_t* chain,
+    const int i,
+    const int batchIdx,
+    uint256_t* inverse
+) {
+    __private int gid = get_local_size(0) * get_group_id(0) + get_local_id(0);
+    __private int dim = get_global_size(0);
 
-    unsigned int t[8];
+    __private unsigned int t[8];
 
     // x = Gx - x
     subModP256k(px.v, x.v, t);
@@ -532,11 +538,18 @@ void beginBatchAdd256k(uint256_t px, uint256_t x, __global uint256_t* chain, int
     chain[batchIdx * dim + gid] = *inverse;
 }
 
-void beginBatchAddWithDouble256k(uint256_t px, uint256_t py, __global uint256_t* xPtr, __global uint256_t* chain, int i, int batchIdx, uint256_t* inverse)
-{
-    int gid = get_local_size(0) * get_group_id(0) + get_local_id(0);
-    int dim = get_global_size(0);
-    uint256_t x = xPtr[i];
+void beginBatchAddWithDouble256k(
+    const uint256_t px,
+    const uint256_t py,
+    __global uint256_t* xPtr,
+    __global uint256_t* chain,
+    const int i,
+    const int batchIdx,
+    uint256_t* inverse
+) {
+    __private int gid = get_local_size(0) * get_group_id(0) + get_local_id(0);
+    __private int dim = get_global_size(0);
+    __private uint256_t x = xPtr[i];
 
     if(equal256k(px.v, x.v)) {
         addModP256k(py.v,py.v, x.v);
@@ -553,24 +566,24 @@ void beginBatchAddWithDouble256k(uint256_t px, uint256_t py, __global uint256_t*
 }
 
 void completeBatchAdd256k(
-    uint256_t px,
-    uint256_t py,
+    const uint256_t px,
+    const uint256_t py,
     __global uint256_t* xPtr,
     __global uint256_t* yPtr,
-    int i,
-    int batchIdx,
+    const int i,
+    const int batchIdx,
     __global uint256_t* chain,
     uint256_t* inverse,
     uint256_t* newX,
     uint256_t* newY)
 {
-    int gid = get_local_size(0) * get_group_id(0) + get_local_id(0);
-    int dim = get_global_size(0);
-    uint256_t x = xPtr[i];
-    uint256_t y = yPtr[i];
+    __private int gid = get_local_size(0) * get_group_id(0) + get_local_id(0);
+    __private int dim = get_global_size(0);
+    __private uint256_t x = xPtr[i];
+    __private uint256_t y = yPtr[i];
 	
     uint256_t s;
-    unsigned int tmp[8];
+    __private unsigned int tmp[8];
 
     if(batchIdx != 0) {
         uint256_t c;
@@ -602,29 +615,29 @@ void completeBatchAdd256k(
 
 
 void completeBatchAddWithDouble256k(
-    uint256_t px,
-    uint256_t py,
+    const uint256_t px,
+    const uint256_t py,
     __global const uint256_t* xPtr,
     __global const uint256_t* yPtr,
-    int i,
-    int batchIdx,
+    const int i,
+    const int batchIdx,
     __global uint256_t* chain,
     uint256_t* inverse,
     uint256_t* newX,
     uint256_t* newY)
 {
-    int gid = get_local_size(0) * get_group_id(0) + get_local_id(0);
-    int dim = get_global_size(0);
-    uint256_t s;
-    uint256_t x;
-    uint256_t y;
+    __private int gid = get_local_size(0) * get_group_id(0) + get_local_id(0);
+    __private int dim = get_global_size(0);
+    __private uint256_t s;
+    __private uint256_t x;
+    __private uint256_t y;
 
     x = xPtr[i];
     y = yPtr[i];
 
     if(batchIdx >= 1) {
 
-        uint256_t c;
+        __private uint256_t c;
 
         c = chain[(batchIdx - 1) * dim + gid];
         mulModP(inverse->v, c.v, s.v);
@@ -645,8 +658,8 @@ void completeBatchAddWithDouble256k(
     if(equal256k(px.v, x.v)) {
         // currently s = 1 / 2y
 
-        uint256_t x2;
-        uint256_t tx2;
+        __private uint256_t x2;
+        __private uint256_t tx2;
 
         // 3x^2
         mulModP(x.v, x.v, x2.v);
@@ -657,7 +670,7 @@ void completeBatchAddWithDouble256k(
         mulModP(tx2.v, s.v, s.v);
 
         // s^2
-        uint256_t s2;
+        __private uint256_t s2;
         mulModP(s.v, s.v, s2.v);
 
         // Rx = s^2 - 2px
@@ -665,38 +678,38 @@ void completeBatchAddWithDouble256k(
         subModP256k(newX->v, x.v, newX->v);
 
         // Ry = s(px - rx) - py
-        uint256_t k;
+        __private uint256_t k;
 				subModP256k(px.v, newX->v, k.v);
         mulModP(s.v, k.v, newY->v);
         subModP256k(newY->v, py.v,newY->v);
     } else {
 
-        uint256_t rise;
+        __private uint256_t rise;
         subModP256k(py.v, y.v, rise.v);
 
         mulModP(rise.v, s.v, s.v);
 
         // Rx = s^2 - Gx - Qx
-        uint256_t s2;
+        __private uint256_t s2;
         mulModP(s.v, s.v, s2.v);
 
         subModP256k(s2.v, px.v, newX->v);
         subModP256k(newX->v, x.v,newX->v);
 
         // Ry = s(px - rx) - py
-        uint256_t k;
+        __private uint256_t k;
         subModP256k(px.v, newX->v, k.v);
         mulModP(s.v, k.v, newY->v);
         subModP256k(newY->v, py.v, newY->v);
     }
 }
 
-unsigned int readLSW256k(__global const uint256_t* ara, int idx)
+unsigned int readLSW256k(__global const uint256_t* ara, const int idx)
 {
     return ara[idx].v[7];
 }
 
-unsigned int readWord256k(__global const uint256_t* ara, int idx, int word)
+unsigned int readWord256k(__global const uint256_t* ara, const int idx, const int word)
 {
     return ara[idx].v[word];
 }

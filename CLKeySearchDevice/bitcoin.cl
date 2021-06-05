@@ -5,7 +5,7 @@
 #define endian(x) ((x) << 24) | (((x) << 8) & 0x00ff0000) | (((x) >> 8) & 0x0000ff00) | ((x) >> 24)
 #endif
 
-void hashPublicKeyCompressed(uint256_t x, unsigned int yParity, unsigned int digest[5])
+void hashPublicKeyCompressed(const uint256_t x, const unsigned int yParity, unsigned int digest[5])
 {
     __private unsigned int hash[8];
 
@@ -24,7 +24,7 @@ void hashPublicKeyCompressed(uint256_t x, unsigned int yParity, unsigned int dig
     ripemd160sha256NoFinal(hash, digest);
 }
 
-void hashPublicKey(uint256_t x, uint256_t y, unsigned int digest[5])
+void hashPublicKey(const uint256_t x, const uint256_t y, unsigned int digest[5])
 {
     __private unsigned int hash[8];
 

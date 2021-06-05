@@ -77,11 +77,11 @@ __constant unsigned int K[8] = {
 
 void ripemd160p1(const unsigned int x[8], unsigned int digest[5])
 {
-    unsigned int a = RIPEMD160_IV[0];
-    unsigned int b = RIPEMD160_IV[1];
-    unsigned int c = RIPEMD160_IV[2];
-    unsigned int d = RIPEMD160_IV[3];
-    unsigned int e = RIPEMD160_IV[4];
+    __private unsigned int a = RIPEMD160_IV[0];
+    __private unsigned int b = RIPEMD160_IV[1];
+    __private unsigned int c = RIPEMD160_IV[2];
+    __private unsigned int d = RIPEMD160_IV[3];
+    __private unsigned int e = RIPEMD160_IV[4];
 
     /* round 1 */
     FF(a, b, c, d, e, x[0], 11);
@@ -182,11 +182,11 @@ void ripemd160p1(const unsigned int x[8], unsigned int digest[5])
 
 void ripemd160p2(const unsigned int x[8], unsigned int digest[5])
 {
-    unsigned int a = RIPEMD160_IV[0];
-    unsigned int b = RIPEMD160_IV[1];
-    unsigned int c = RIPEMD160_IV[2];
-    unsigned int d = RIPEMD160_IV[3];
-    unsigned int e = RIPEMD160_IV[4];
+    __private unsigned int a = RIPEMD160_IV[0];
+    __private unsigned int b = RIPEMD160_IV[1];
+    __private unsigned int c = RIPEMD160_IV[2];
+    __private unsigned int d = RIPEMD160_IV[3];
+    __private unsigned int e = RIPEMD160_IV[4];
 
     /* parallel round 1 */
     JJJ(a, b, c, d, e, x[5], 8);
@@ -287,8 +287,8 @@ void ripemd160p2(const unsigned int x[8], unsigned int digest[5])
 
 void ripemd160sha256NoFinal(const unsigned int x[8], unsigned int digest[5])
 {
-    unsigned int digest1[5];
-    unsigned int digest2[5];
+    __private unsigned int digest1[5];
+    __private unsigned int digest2[5];
 
     ripemd160p1(x, digest1);
     ripemd160p2(x, digest2);
@@ -440,7 +440,7 @@ inline void madd977(unsigned int *high, unsigned int *low, unsigned int *a, unsi
 
 void multiply256(const unsigned int x[8], const unsigned int y[8], unsigned int out_high[8], unsigned int out_low[8])
 {
-    unsigned long product;
+    __private unsigned long product;
 
     // First round, overwrite z
     product = (unsigned long)x[7] * y[7];
@@ -653,15 +653,15 @@ void multiply256(const unsigned int x[8], const unsigned int y[8], unsigned int 
 
 void mulModP(unsigned int a[8], unsigned int b[8], unsigned int product_low[8])
 {
-    unsigned int high[8];
-    unsigned int low[8];
+    __private unsigned int high[8];
+    __private unsigned int low[8];
 
-    unsigned int hWord = 0;
-    unsigned int carry = 0;
-    unsigned int t = 0;
-    unsigned int product6 = 0;
-    unsigned int product7 = 0;
-    unsigned int tmp;
+    __private unsigned int hWord = 0;
+    __private unsigned int carry = 0;
+    __private unsigned int t = 0;
+    __private unsigned int product6 = 0;
+    __private unsigned int product7 = 0;
+    __private unsigned int tmp;
 
     // 256 x 256 multiply
     multiply256(a, b, high, low);
@@ -740,8 +740,8 @@ void mulModP(unsigned int a[8], unsigned int b[8], unsigned int product_low[8])
  */
 void subModP256k(unsigned int a[8], unsigned int b[8], unsigned int c[8])
 {
-    unsigned int borrow = 0;
-    unsigned int tmp;
+    __private unsigned int borrow = 0;
+    __private unsigned int tmp;
     
     sub256k(a, b, c, borrow, tmp);
     
@@ -756,7 +756,7 @@ void subModP256k(unsigned int a[8], unsigned int b[8], unsigned int c[8])
  */
 void invModP256k(unsigned int x[8])
 {
-    unsigned int y[8] = {0, 0, 0, 0, 0, 0, 0, 1};
+    __private unsigned int y[8] = {0, 0, 0, 0, 0, 0, 0, 1};
 
     mulModP(x, y, y);
     mulModP(x, x, x);
@@ -787,11 +787,11 @@ void invModP256k(unsigned int x[8])
     mulModP(x, y, x);
 }
 
-void addModP256k(unsigned int a[8], unsigned int b[8], unsigned int c[8])
+void addModP256k(const unsigned int a[8], const unsigned int b[8], unsigned int c[8])
 {
-    unsigned int borrow = 0;
-    unsigned int carry = 0;
-    unsigned int tmp = 0;
+    __private unsigned int borrow = 0;
+    __private unsigned int carry = 0;
+    __private unsigned int tmp = 0;
 
     add256k(a, b, c, carry, tmp);
 
@@ -826,12 +826,18 @@ void doBatchInverse256k(unsigned int x[8])
     invModP256k(x);
 }
 
-void beginBatchAdd256k(uint256_t px, uint256_t x, __global uint256_t* chain, int i, int batchIdx, uint256_t* inverse)
-{
-    int gid = get_local_size(0) * get_group_id(0) + get_local_id(0);
-    int dim = get_global_size(0);
+void beginBatchAdd256k(
+    const uint256_t px,
+    const uint256_t x,
+    __global uint256_t* chain,
+    const int i,
+    const int batchIdx,
+    uint256_t* inverse
+) {
+    __private int gid = get_local_size(0) * get_group_id(0) + get_local_id(0);
+    __private int dim = get_global_size(0);
 
-    unsigned int t[8];
+    __private unsigned int t[8];
 
     // x = Gx - x
     subModP256k(px.v, x.v, t);
@@ -844,11 +850,18 @@ void beginBatchAdd256k(uint256_t px, uint256_t x, __global uint256_t* chain, int
     chain[batchIdx * dim + gid] = *inverse;
 }
 
-void beginBatchAddWithDouble256k(uint256_t px, uint256_t py, __global uint256_t* xPtr, __global uint256_t* chain, int i, int batchIdx, uint256_t* inverse)
-{
-    int gid = get_local_size(0) * get_group_id(0) + get_local_id(0);
-    int dim = get_global_size(0);
-    uint256_t x = xPtr[i];
+void beginBatchAddWithDouble256k(
+    const uint256_t px,
+    const uint256_t py,
+    __global uint256_t* xPtr,
+    __global uint256_t* chain,
+    const int i,
+    const int batchIdx,
+    uint256_t* inverse
+) {
+    __private int gid = get_local_size(0) * get_group_id(0) + get_local_id(0);
+    __private int dim = get_global_size(0);
+    __private uint256_t x = xPtr[i];
 
     if(equal256k(px.v, x.v)) {
         addModP256k(py.v,py.v, x.v);
@@ -865,24 +878,24 @@ void beginBatchAddWithDouble256k(uint256_t px, uint256_t py, __global uint256_t*
 }
 
 void completeBatchAdd256k(
-    uint256_t px,
-    uint256_t py,
+    const uint256_t px,
+    const uint256_t py,
     __global uint256_t* xPtr,
     __global uint256_t* yPtr,
-    int i,
-    int batchIdx,
+    const int i,
+    const int batchIdx,
     __global uint256_t* chain,
     uint256_t* inverse,
     uint256_t* newX,
     uint256_t* newY)
 {
-    int gid = get_local_size(0) * get_group_id(0) + get_local_id(0);
-    int dim = get_global_size(0);
-    uint256_t x = xPtr[i];
-    uint256_t y = yPtr[i];
+    __private int gid = get_local_size(0) * get_group_id(0) + get_local_id(0);
+    __private int dim = get_global_size(0);
+    __private uint256_t x = xPtr[i];
+    __private uint256_t y = yPtr[i];
 	
     uint256_t s;
-    unsigned int tmp[8];
+    __private unsigned int tmp[8];
 
     if(batchIdx != 0) {
         uint256_t c;
@@ -914,29 +927,29 @@ void completeBatchAdd256k(
 
 
 void completeBatchAddWithDouble256k(
-    uint256_t px,
-    uint256_t py,
+    const uint256_t px,
+    const uint256_t py,
     __global const uint256_t* xPtr,
     __global const uint256_t* yPtr,
-    int i,
-    int batchIdx,
+    const int i,
+    const int batchIdx,
     __global uint256_t* chain,
     uint256_t* inverse,
     uint256_t* newX,
     uint256_t* newY)
 {
-    int gid = get_local_size(0) * get_group_id(0) + get_local_id(0);
-    int dim = get_global_size(0);
-    uint256_t s;
-    uint256_t x;
-    uint256_t y;
+    __private int gid = get_local_size(0) * get_group_id(0) + get_local_id(0);
+    __private int dim = get_global_size(0);
+    __private uint256_t s;
+    __private uint256_t x;
+    __private uint256_t y;
 
     x = xPtr[i];
     y = yPtr[i];
 
     if(batchIdx >= 1) {
 
-        uint256_t c;
+        __private uint256_t c;
 
         c = chain[(batchIdx - 1) * dim + gid];
         mulModP(inverse->v, c.v, s.v);
@@ -957,8 +970,8 @@ void completeBatchAddWithDouble256k(
     if(equal256k(px.v, x.v)) {
         // currently s = 1 / 2y
 
-        uint256_t x2;
-        uint256_t tx2;
+        __private uint256_t x2;
+        __private uint256_t tx2;
 
         // 3x^2
         mulModP(x.v, x.v, x2.v);
@@ -969,7 +982,7 @@ void completeBatchAddWithDouble256k(
         mulModP(tx2.v, s.v, s.v);
 
         // s^2
-        uint256_t s2;
+        __private uint256_t s2;
         mulModP(s.v, s.v, s2.v);
 
         // Rx = s^2 - 2px
@@ -977,38 +990,38 @@ void completeBatchAddWithDouble256k(
         subModP256k(newX->v, x.v, newX->v);
 
         // Ry = s(px - rx) - py
-        uint256_t k;
+        __private uint256_t k;
 				subModP256k(px.v, newX->v, k.v);
         mulModP(s.v, k.v, newY->v);
         subModP256k(newY->v, py.v,newY->v);
     } else {
 
-        uint256_t rise;
+        __private uint256_t rise;
         subModP256k(py.v, y.v, rise.v);
 
         mulModP(rise.v, s.v, s.v);
 
         // Rx = s^2 - Gx - Qx
-        uint256_t s2;
+        __private uint256_t s2;
         mulModP(s.v, s.v, s2.v);
 
         subModP256k(s2.v, px.v, newX->v);
         subModP256k(newX->v, x.v,newX->v);
 
         // Ry = s(px - rx) - py
-        uint256_t k;
+        __private uint256_t k;
         subModP256k(px.v, newX->v, k.v);
         mulModP(s.v, k.v, newY->v);
         subModP256k(newY->v, py.v, newY->v);
     }
 }
 
-unsigned int readLSW256k(__global const uint256_t* ara, int idx)
+unsigned int readLSW256k(__global const uint256_t* ara, const int idx)
 {
     return ara[idx].v[7];
 }
 
-unsigned int readWord256k(__global const uint256_t* ara, int idx, int word)
+unsigned int readWord256k(__global const uint256_t* ara, const int idx, const int word)
 {
     return ara[idx].v[word];
 }
@@ -1056,9 +1069,9 @@ __constant unsigned int _IV[8] = {
 
 void sha256PublicKey(const unsigned int x[8], const unsigned int y[8], unsigned int digest[8])
 {
-    unsigned int a, b, c, d, e, f, g, h;
-    unsigned int w[16];
-    unsigned int t;
+    __private unsigned int a, b, c, d, e, f, g, h;
+    __private unsigned int w[16];
+    __private unsigned int t;
 
     a = _IV[0];
     b = _IV[1];
@@ -1359,9 +1372,9 @@ void sha256PublicKey(const unsigned int x[8], const unsigned int y[8], unsigned 
 
 void sha256PublicKeyCompressed(const unsigned int x[8], unsigned int yParity, unsigned int digest[8])
 {
-    unsigned int a, b, c, d, e, f, g, h;
-    unsigned int w[16];
-    unsigned int t;
+    __private unsigned int a, b, c, d, e, f, g, h;
+    __private unsigned int w[16];
+    __private unsigned int t;
 
     // 0x03 || x  or  0x02 || x
     w[0] = 0x02000000 | ((yParity & 1) << 24) | (x[0] >> 8);
@@ -1522,7 +1535,7 @@ void sha256PublicKeyCompressed(const unsigned int x[8], unsigned int yParity, un
 #define endian(x) ((x) << 24) | (((x) << 8) & 0x00ff0000) | (((x) >> 8) & 0x0000ff00) | ((x) >> 24)
 #endif
 
-void hashPublicKeyCompressed(uint256_t x, unsigned int yParity, unsigned int digest[5])
+void hashPublicKeyCompressed(const uint256_t x, const unsigned int yParity, unsigned int digest[5])
 {
     __private unsigned int hash[8];
 
@@ -1541,7 +1554,7 @@ void hashPublicKeyCompressed(uint256_t x, unsigned int yParity, unsigned int dig
     ripemd160sha256NoFinal(hash, digest);
 }
 
-void hashPublicKey(uint256_t x, uint256_t y, unsigned int digest[5])
+void hashPublicKey(const uint256_t x, const uint256_t y, unsigned int digest[5])
 {
     __private unsigned int hash[8];
 
@@ -1564,7 +1577,7 @@ void hashPublicKey(uint256_t x, uint256_t y, unsigned int digest[5])
 #ifndef BLOOMFILTER_CL
 #define BLOOMFILTER_CL
 
-bool isInBloomFilter(unsigned int hash[5], __global unsigned int *targetList, ulong *mask)
+bool isInBloomFilter(const unsigned int hash[5], __global unsigned int *targetList, const ulong *mask)
 {
     unsigned int h5 = hash[0] + hash[1] + hash[2] + hash[3] + hash[4];
 
@@ -1592,8 +1605,15 @@ typedef struct {
     unsigned int digest[5];
 }CLDeviceResult;
 
-void setResultFound(int idx, bool compressed, uint256_t x, uint256_t y, unsigned int digest[5], __global CLDeviceResult* results, __global unsigned int* numResults)
-{
+void setResultFound(
+    const int idx,
+    const bool compressed,
+    const uint256_t x,
+    const uint256_t y,
+    const unsigned int digest[5],
+    __global CLDeviceResult* results,
+    __global unsigned int* numResults
+) {
     CLDeviceResult r;
 
     r.idx = idx;
@@ -1623,8 +1643,8 @@ void setResultFound(int idx, bool compressed, uint256_t x, uint256_t y, unsigned
 }
 
 __kernel void _initKeysKernel(
-    int totalPoints,
-    int step,
+    const unsigned int totalPoints,
+    const unsigned int step,
     __global uint256_t* privateKeys,
     __global uint256_t* chain,
     __global uint256_t* gxPtr,
@@ -1679,14 +1699,14 @@ __kernel void _initKeysKernel(
 }
 
 __kernel void _stepKernel(
-    unsigned int totalPoints,
+    const unsigned int totalPoints,
     __global uint256_t* chain,
     __global uint256_t* xPtr,
     __global uint256_t* yPtr,
     __global uint256_t* incXPtr,
     __global uint256_t* incYPtr,
     __global unsigned int* targetList,
-    ulong mask,
+    const ulong mask,
     __global CLDeviceResult *results,
     __global unsigned int *numResults)
 {
@@ -1759,14 +1779,14 @@ __kernel void _stepKernel(
 }
 
 __kernel void _stepKernelWithDouble(
-    unsigned int totalPoints,
+    const unsigned int totalPoints,
     __global uint256_t* chain,
     __global uint256_t* xPtr,
     __global uint256_t* yPtr,
     __global uint256_t* incXPtr,
     __global uint256_t* incYPtr,
     __global unsigned int* targetList,
-    ulong mask,
+    const ulong mask,
     __global CLDeviceResult *results,
     __global unsigned int *numResults)
 {

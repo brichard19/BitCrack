@@ -77,11 +77,11 @@ __constant unsigned int K[8] = {
 
 void ripemd160p1(const unsigned int x[8], unsigned int digest[5])
 {
-    unsigned int a = RIPEMD160_IV[0];
-    unsigned int b = RIPEMD160_IV[1];
-    unsigned int c = RIPEMD160_IV[2];
-    unsigned int d = RIPEMD160_IV[3];
-    unsigned int e = RIPEMD160_IV[4];
+    __private unsigned int a = RIPEMD160_IV[0];
+    __private unsigned int b = RIPEMD160_IV[1];
+    __private unsigned int c = RIPEMD160_IV[2];
+    __private unsigned int d = RIPEMD160_IV[3];
+    __private unsigned int e = RIPEMD160_IV[4];
 
     /* round 1 */
     FF(a, b, c, d, e, x[0], 11);
@@ -182,11 +182,11 @@ void ripemd160p1(const unsigned int x[8], unsigned int digest[5])
 
 void ripemd160p2(const unsigned int x[8], unsigned int digest[5])
 {
-    unsigned int a = RIPEMD160_IV[0];
-    unsigned int b = RIPEMD160_IV[1];
-    unsigned int c = RIPEMD160_IV[2];
-    unsigned int d = RIPEMD160_IV[3];
-    unsigned int e = RIPEMD160_IV[4];
+    __private unsigned int a = RIPEMD160_IV[0];
+    __private unsigned int b = RIPEMD160_IV[1];
+    __private unsigned int c = RIPEMD160_IV[2];
+    __private unsigned int d = RIPEMD160_IV[3];
+    __private unsigned int e = RIPEMD160_IV[4];
 
     /* parallel round 1 */
     JJJ(a, b, c, d, e, x[5], 8);
@@ -287,8 +287,8 @@ void ripemd160p2(const unsigned int x[8], unsigned int digest[5])
 
 void ripemd160sha256NoFinal(const unsigned int x[8], unsigned int digest[5])
 {
-    unsigned int digest1[5];
-    unsigned int digest2[5];
+    __private unsigned int digest1[5];
+    __private unsigned int digest2[5];
 
     ripemd160p1(x, digest1);
     ripemd160p2(x, digest2);
