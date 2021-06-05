@@ -1657,12 +1657,10 @@ __kernel void _initKeysKernel(
     uint256_t inverse = { {0,0,0,0,0,0,0,1} };
 
     int batchIdx = 0;
-    uint256_t x;
 
     for(; i < totalPoints; i += dim) {
         if(( (readWord256k(privateKeys, i, 7 - step / 32)) & (1 << (step % 32))) != 0) {
-            x = xPtr[i];
-            if(!isInfinity256k(x.v)) {
+            if(!isInfinity256k(xPtr[i].v)) {
                 beginBatchAddWithDouble256k(gx, gy, xPtr, chain, i, batchIdx, &inverse);
                 batchIdx++;
             }
@@ -1675,10 +1673,8 @@ __kernel void _initKeysKernel(
     uint256_t newY;
     i -= dim;
     for(; i >= 0; i -= dim) {
-        x = xPtr[i];
-
         if(((readWord256k(privateKeys, i, 7 - step / 32)) & (1 << (step % 32))) != 0) {
-            if(!isInfinity256k(x.v)) {
+            if(!isInfinity256k(xPtr[i].v)) {
                 batchIdx--;
                 completeBatchAddWithDouble256k(gx, gy, xPtr, yPtr, i, batchIdx, chain, &inverse, &newX, &newY);
             } else {
