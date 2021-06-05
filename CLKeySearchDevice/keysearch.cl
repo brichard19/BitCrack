@@ -102,7 +102,7 @@ void setResultFound(int idx, bool compressed, uint256_t x, uint256_t y, unsigned
     results[atomic_add(numResults, 1)] = r;
 }
 
-__kernel void keyFinderKernel(
+__kernel void _stepKernel(
     unsigned int totalPoints,
     __global uint256_t* chain,
     __global uint256_t* xPtr,
@@ -110,7 +110,6 @@ __kernel void keyFinderKernel(
     __global uint256_t* incXPtr,
     __global uint256_t* incYPtr,
     __global unsigned int* targetList,
-    ulong numTargets,
     ulong mask,
     __global CLDeviceResult *results,
     __global unsigned int *numResults)
@@ -183,7 +182,7 @@ __kernel void keyFinderKernel(
     }
 }
 
-__kernel void keyFinderKernelWithDouble(
+__kernel void _stepKernelWithDouble(
     unsigned int totalPoints,
     __global uint256_t* chain,
     __global uint256_t* xPtr,
@@ -191,7 +190,6 @@ __kernel void keyFinderKernelWithDouble(
     __global uint256_t* incXPtr,
     __global uint256_t* incYPtr,
     __global unsigned int* targetList,
-    ulong numTargets,
     ulong mask,
     __global CLDeviceResult *results,
     __global unsigned int *numResults)

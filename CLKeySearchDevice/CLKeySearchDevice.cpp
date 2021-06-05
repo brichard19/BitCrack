@@ -66,8 +66,8 @@ CLKeySearchDevice::CLKeySearchDevice(uint64_t device, int threads, int pointsPer
 
         // Load the kernels
         _initKeysKernel = new cl::CLKernel(*_clProgram, "_initKeysKernel");
-        _stepKernel = new cl::CLKernel(*_clProgram, "keyFinderKernel");
-        _stepKernelWithDouble = new cl::CLKernel(*_clProgram, "keyFinderKernelWithDouble");
+        _stepKernel = new cl::CLKernel(*_clProgram, "_stepKernel");
+        _stepKernelWithDouble = new cl::CLKernel(*_clProgram, "_stepKernelWithDouble");
 
         _globalMemSize = _clContext->getGlobalMemorySize();
 
@@ -236,7 +236,6 @@ void CLKeySearchDevice::doStep()
                 _xInc,
                 _yInc,
                 _deviceTargetList.ptr,
-                _deviceTargetList.size,
                 _deviceTargetList.mask,
                 _deviceResults,
                 _deviceResultsCount);
@@ -251,7 +250,6 @@ void CLKeySearchDevice::doStep()
                 _xInc,
                 _yInc,
                 _deviceTargetList.ptr,
-                _deviceTargetList.size,
                 _deviceTargetList.mask,
                 _deviceResults,
                 _deviceResultsCount);
