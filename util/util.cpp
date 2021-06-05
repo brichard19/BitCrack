@@ -8,7 +8,7 @@
 #include"util.h"
 
 #ifdef _WIN32
-#include<windows.h>
+#include <windows.h>
 #else
 #include<unistd.h>
 #include<sys/stat.h>
