@@ -60,6 +60,7 @@ void KeyFinder::setTargets(std::vector<std::string> &targets)
 void KeyFinder::setTargets(std::string targetsFile)
 {
 	std::ifstream inFile(targetsFile.c_str());
+	unsigned int invalidAddressCount = 0;
 
 	if(!inFile.is_open()) {
 		Logger::log(LogLevel::Error, "Unable to open '" + targetsFile + "'");
@@ -74,10 +75,10 @@ void KeyFinder::setTargets(std::string targetsFile)
 		util::removeNewline(line);
         line = util::trim(line);
 
-		if(line.length() > 0) {
+		if(line.length() != 0) {
 			if(!Address::verifyAddress(line)) {
-				Logger::log(LogLevel::Error, "Invalid address '" + line + "'");
-				throw KeySearchException();
+				invalidAddressCount++;
+				continue;
 			}
 
 			KeySearchTarget t;
@@ -87,8 +88,9 @@ void KeyFinder::setTargets(std::string targetsFile)
 			_targets.insert(t);
 		}
 	}
-	Logger::log(LogLevel::Info, util::formatThousands(_targets.size()) + " addresses loaded ("
-		+ util::format("%.1f", (double)(sizeof(KeySearchTarget) * _targets.size()) / (double)(1024 * 1024)) + "MB)");
+	Logger::log(LogLevel::Info, util::formatThousands(_targets.size()) + " address(es) loaded ("
+		+ util::format("%.1f", (double)(sizeof(KeySearchTarget) * _targets.size()) / (double)(1024 * 1024)) + "MB)"
+		+ "\n" + util::formatThousands(invalidAddressCount) + " address(es) ignored");
 
     _device->setTargets(_targets);
 }

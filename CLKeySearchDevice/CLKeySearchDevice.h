@@ -22,6 +22,7 @@ private:
 
     uint64_t _globalMemSize = 0;
     uint64_t _pointsMemSize = 0;
+    uint64_t _bufferMemSize = 0;
     uint64_t _targetMemSize = 0;
 
     CLTargetList _deviceTargetList;

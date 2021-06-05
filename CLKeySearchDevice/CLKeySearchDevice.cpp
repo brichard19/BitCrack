@@ -36,7 +36,6 @@ CLKeySearchDevice::CLKeySearchDevice(uint64_t device, int threads, int pointsPer
     _points = pointsPerThread * threads * blocks;
     _device = (cl_device_id)device;
 
-
     if(threads <= 0 || threads % 32 != 0) {
         throw KeySearchException("KEYSEARCH_THREAD_MULTIPLE_EXCEPTION", "The number of threads must be a multiple of 32");
     }
@@ -108,6 +107,9 @@ uint64_t CLKeySearchDevice::getOptimalBloomFilterMask(double p, size_t n)
 void CLKeySearchDevice::initializeBloomFilter(const std::vector<struct hash160> &targets, uint64_t mask)
 {
     size_t sizeInWords = (mask + 1) / 32;
+    _targetMemSize = sizeInWords * sizeof(uint32_t);
+
+    Logger::log(LogLevel::Info, "Initializing BloomFilter (" + util::format("%.1f", (double)_targetMemSize / (double)(1024 * 1024)) + "MB)");
 
     uint32_t *buf = new uint32_t[sizeInWords];
 
@@ -140,13 +142,10 @@ void CLKeySearchDevice::initializeBloomFilter(const std::vector<struct hash160> 
         }
     }
 
-
-    _targetMemSize = sizeInWords * sizeof(uint32_t);
-
     _deviceTargetList.mask = mask;
-    _deviceTargetList.ptr = _clContext->malloc(sizeInWords * sizeof(uint32_t));
+    _deviceTargetList.ptr = _clContext->malloc(_targetMemSize);
     _deviceTargetList.size = targets.size();
-    _clContext->copyHostToDevice(buf, _deviceTargetList.ptr, sizeInWords * sizeof(uint32_t));
+    _clContext->copyHostToDevice(buf, _deviceTargetList.ptr, _targetMemSize);
 
     delete[] buf;
 }
@@ -155,6 +154,20 @@ void CLKeySearchDevice::allocateBuffers()
 {
     size_t numKeys = (size_t)_points;
     size_t size = numKeys * 8 * sizeof(unsigned int);
+
+    _bufferMemSize = 
+        size +                           // _x
+        size +                           // _y
+        size +                           // _chain
+        size +                           // _privateKeys
+        256 * 8 * sizeof(unsigned int) + // _xTable
+        256 * 8 * sizeof(unsigned int) + // _yTable
+        8 * sizeof(unsigned int) +       // _xInc
+        8 * sizeof(unsigned int) +       // _yInc
+        128 * sizeof(CLDeviceResult) +   // _deviceResults
+        sizeof(unsigned int);            // _deviceResultsCount
+
+    Logger::log(LogLevel::Info, "Allocating Memory for Buffers (" + util::format("%.1f", (double)_bufferMemSize / (double)(1024 * 1024)) + "MB)");
 
     // X values
     _x = _clContext->malloc(size);
@@ -263,25 +276,6 @@ void CLKeySearchDevice::doStep()
     }
 }
 
-void CLKeySearchDevice::setTargetsList()
-{
-    size_t count = _targetList.size();
-
-    _targets = _clContext->malloc(5 * sizeof(unsigned int) * count);
-
-    for(size_t i = 0; i < count; i++) {
-        unsigned int h[5];
-
-        undoRMD160FinalRound(_targetList[i].h, h);
-
-        _clContext->copyHostToDevice(h, _targets, i * 5 * sizeof(unsigned int), 5 * sizeof(unsigned int));
-    }
-
-    _targetMemSize = count * 5 * sizeof(unsigned int);
-    _deviceTargetList.ptr = _targets;
-    _deviceTargetList.size = count;
-}
-
 void CLKeySearchDevice::setBloomFilter()
 {
     uint64_t bloomFilterMask = getOptimalBloomFilterMask(1.0e-9, _targetList.size());
@@ -296,11 +290,7 @@ void CLKeySearchDevice::setTargetsInternal()
         _clContext->free(_deviceTargetList.ptr);
     }
 
-    if(_targetList.size() < 16) {
-        setTargetsList();
-    } else {
-        setBloomFilter();
-    }
+    setBloomFilter();
 }
 
 void CLKeySearchDevice::setTargets(const std::set<KeySearchTarget> &targets)
@@ -342,7 +332,7 @@ std::string CLKeySearchDevice::getDeviceName()
 
 void CLKeySearchDevice::getMemoryInfo(uint64_t &freeMem, uint64_t &totalMem)
 {
-    freeMem = _globalMemSize - _targetMemSize - _pointsMemSize;
+    freeMem = _globalMemSize - _targetMemSize - _pointsMemSize - _bufferMemSize;
     totalMem = _globalMemSize;
 }
 
@@ -382,7 +372,6 @@ void CLKeySearchDevice::removeTargetFromList(const unsigned int hash[5])
         count--;
     }
 }
-
 
 void CLKeySearchDevice::getResultsInternal()
 {
@@ -491,6 +480,7 @@ void CLKeySearchDevice::initializeBasePoints()
 void CLKeySearchDevice::generateStartingPoints()
 {
     uint64_t totalPoints = (uint64_t)_points;
+    // TODO: Magic Number 40?
     uint64_t totalMemory = totalPoints * 40;
 
     initializeBasePoints();
