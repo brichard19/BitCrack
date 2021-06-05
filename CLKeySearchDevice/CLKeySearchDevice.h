@@ -18,7 +18,6 @@ private:
     cl::CLProgram *_clProgram = NULL;
     cl::CLKernel *_initKeysKernel = NULL;
     cl::CLKernel *_stepKernel = NULL;
-    cl::CLKernel *_stepKernelWithDouble = NULL;
 
     uint64_t _globalMemSize = 0;
     uint64_t _pointsMemSize = 0;

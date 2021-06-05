@@ -67,7 +67,6 @@ CLKeySearchDevice::CLKeySearchDevice(uint64_t device, int threads, int pointsPer
         // Load the kernels
         _initKeysKernel = new cl::CLKernel(*_clProgram, "_initKeysKernel");
         _stepKernel = new cl::CLKernel(*_clProgram, "_stepKernel");
-        _stepKernelWithDouble = new cl::CLKernel(*_clProgram, "_stepKernelWithDouble");
 
         _globalMemSize = _clContext->getGlobalMemorySize();
 
@@ -91,7 +90,6 @@ CLKeySearchDevice::~CLKeySearchDevice()
     _clContext->free(_deviceResultsCount);
 
     delete _stepKernel;
-    delete _stepKernelWithDouble;
     delete _initKeysKernel;
     delete _clContext;
 }
@@ -222,37 +220,18 @@ void CLKeySearchDevice::init(const secp256k1::uint256 &start, int compression, c
 void CLKeySearchDevice::doStep()
 {
     try {
-        uint64_t numKeys = (uint64_t)_points;
-
-        if(_iterations < 2 && _start.cmp(numKeys) <= 0) {
-
-            _stepKernelWithDouble->set_args(
-                _points,
-                _chain,
-                _x,
-                _y,
-                _xInc,
-                _yInc,
-                _deviceTargetList.ptr,
-                _deviceTargetList.mask,
-                _deviceResults,
-                _deviceResultsCount);
-            _stepKernelWithDouble->call(_blocks, _threads);
-        } else {
-
-            _stepKernel->set_args(
-                _points,
-                _chain,
-                _x,
-                _y,
-                _xInc,
-                _yInc,
-                _deviceTargetList.ptr,
-                _deviceTargetList.mask,
-                _deviceResults,
-                _deviceResultsCount);
-            _stepKernel->call(_blocks, _threads);
-        }
+        _stepKernel->set_args(
+            _points,
+            _chain,
+            _x,
+            _y,
+            _xInc,
+            _yInc,
+            _deviceTargetList.ptr,
+            _deviceTargetList.mask,
+            _deviceResults,
+            _deviceResultsCount);
+        _stepKernel->call(_blocks, _threads);
         fflush(stdout);
 
         getResultsInternal();
