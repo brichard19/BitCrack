@@ -1,5 +1,5 @@
-#ifndef _UTIL_H
-#define _UTIL_H
+#ifndef UTIL_H
+#define UTIL_H
 
 #include <string>
 #include <vector>
@@ -27,6 +27,8 @@ std::string formatSeconds(unsigned int seconds);
 uint32_t parseUInt32(std::string s);
 uint64_t parseUInt64(std::string s);
 bool isHex(const std::string &s);
+
+long getFileSize(const std::string& fileName);
 bool appendToFile(const std::string &fileName, const std::string &s);
 bool readLinesFromStream(std::istream &in, std::vector<std::string> &lines);
 bool readLinesFromStream(const std::string &fileName, std::vector<std::string> &lines);

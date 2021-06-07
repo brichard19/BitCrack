@@ -4,12 +4,29 @@
 #include "Logger.h"
 #include "util.h"
 
+inline tm localtime_xp(time_t timer)
+{
+	tm bt;
+#if defined(__unix__)
+	localtime_r(&timer, &bt);
+#elif defined(_MSC_VER)
+	localtime_s(&bt, &timer);
+#else
+	static std::mutex mtx;
+	std::lock_guard<std::mutex> lock(mtx);
+	bt = *std::localtime(&timer);
+#endif
+	return bt;
+}
+
 bool LogLevel::isValid(int level)
 {
 	switch(level) {
 		case Info:
 		case Error:
 		case Debug:
+		case Warning:
+		case Notify:
 			return true;
 		default:
 			return false;
@@ -27,9 +44,11 @@ std::string LogLevel::toString(int level)
 			return "Debug";
         case Warning:
             return "Warning";
+		case Notify:
+			return "Notify";
+		default:
+			return "";
 	}
-
-	return "";
 }
 
 std::string Logger::getDateTimeString()
@@ -37,22 +56,20 @@ std::string Logger::getDateTimeString()
 	time_t     now = time(0);
 	struct tm  tstruct;
 	char       buf[80];
-	tstruct = *localtime(&now);
+	tstruct = localtime_xp(now);
 
 	strftime(buf, sizeof(buf), "%Y-%m-%d.%X", &tstruct);
 
 	return std::string(buf);
 }
 
-std::string Logger::formatLog(int logLevel, std::string msg)
+std::string Logger::formatLog(LogLevel::Level logLevel, std::string msg)
 {
 	std::string dateTime = getDateTimeString();
 
 	std::string prefix = "[" + dateTime + "] [" + LogLevel::toString(logLevel) + "] ";
 
-	size_t prefixLen = prefix.length();
-
-	std::string padding(prefixLen, ' ');
+	std::string padding(prefix.length(), ' ');
 
 	if(msg.find('\n', 0) != std::string::npos) {
  		size_t pos = 0;
@@ -71,15 +88,11 @@ std::string Logger::formatLog(int logLevel, std::string msg)
 	return prefix;
 }
 
-
-void Logger::log(int logLevel, std::string msg)
+void Logger::log(LogLevel::Level level, std::string msg)
 {
-	std::string str = formatLog(logLevel, msg);
-
+	std::string str = formatLog(level, msg);
+	if (level == LogLevel::Level::Notify) {
+		fprintf(stderr, "\a");
+	}
 	fprintf(stderr, "%s\n", str.c_str());
-}
-
-void Logger::setLogFile(std::string path)
-{
-
 }

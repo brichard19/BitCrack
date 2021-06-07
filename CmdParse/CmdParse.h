@@ -1,5 +1,5 @@
-#ifndef _CMD_PARSE
-#define _CMD_PARSE
+#ifndef CMD_PARSE_H
+#define CMD_PARSE_H
 
 #include <string>
 #include <vector>

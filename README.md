@@ -1,4 +1,4 @@
-# BitCrack
+# BitCrackOpenCL
 
 A tool for brute-forcing Bitcoin private keys. The main purpose of this project is to contribute to the effort of solving the [Bitcoin puzzle transaction](https://blockchain.info/tx/08389f34c98c606322740c0be6a7125d9860bb8d5cb182c02f98461e5fa6cd15): A transaction with 32 addresses that become increasingly difficult to crack.
 
@@ -135,7 +135,7 @@ kernel to run longer, but more keys will be processed.
 
 Visual Studio 2019 (if on Windows)
 
-For CUDA: CUDA Toolkit 10.1
+For CUDA: CUDA Toolkit 11.3
 
 For OpenCL: An OpenCL SDK (The CUDA toolkit contains an OpenCL SDK).
 

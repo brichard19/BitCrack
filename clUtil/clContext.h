@@ -1,5 +1,5 @@
-#ifndef _CL_CONTEXT_H
-#define _CL_CONTEXT_H
+#ifndef CL_CONTEXT_H
+#define CL_CONTEXT_H
 
 #include <string>
 #include "clutil.h"
@@ -57,9 +57,6 @@ public:
     cl_program getProgram();
 
     CLContext& getContext();
-
-    std::string getBuildLog();
-
 };
 
 
@@ -115,7 +112,7 @@ public:
         clCall(clSetKernelArg(_kernel, 2, sizeof(arg3), &arg3));
         clCall(clSetKernelArg(_kernel, 3, sizeof(arg4), &arg4));
         clCall(clSetKernelArg(_kernel, 4, sizeof(arg5), &arg5));
-        clCall(clSetKernelArg(_kernel, 4, sizeof(arg6), &arg6));
+        clCall(clSetKernelArg(_kernel, 5, sizeof(arg6), &arg6));
     }
 
     template<typename T1, typename T2, typename T3, typename T4, typename T5, typename T6, typename T7, typename T8>
@@ -226,30 +223,6 @@ public:
              typename T9, typename T10, typename T11, typename T12, typename T13, typename T14, typename T15, typename T16>
     void set_args(T1 arg1, T2 arg2, T3 arg3, T4 arg4, T5 arg5, T6 arg6, T7 arg7, T8 arg8, T9 arg9, T10 arg10, T11 arg11, T12 arg12,
         T13 arg13, T14 arg14, T15 arg15, T16 arg16)
-    {
-        clCall(clSetKernelArg(_kernel, 0, sizeof(T1), &arg1));
-        clCall(clSetKernelArg(_kernel, 1, sizeof(T2), &arg2));
-        clCall(clSetKernelArg(_kernel, 2, sizeof(T3), &arg3));
-        clCall(clSetKernelArg(_kernel, 3, sizeof(T4), &arg4));
-        clCall(clSetKernelArg(_kernel, 4, sizeof(T5), &arg5));
-        clCall(clSetKernelArg(_kernel, 5, sizeof(T6), &arg6));
-        clCall(clSetKernelArg(_kernel, 6, sizeof(T7), &arg7));
-        clCall(clSetKernelArg(_kernel, 7, sizeof(T8), &arg8));
-        clCall(clSetKernelArg(_kernel, 8, sizeof(T9), &arg9));
-        clCall(clSetKernelArg(_kernel, 9, sizeof(T10), &arg10));
-        clCall(clSetKernelArg(_kernel, 10, sizeof(T11), &arg11));
-        clCall(clSetKernelArg(_kernel, 11, sizeof(T12), &arg12));
-        clCall(clSetKernelArg(_kernel, 12, sizeof(T13), &arg13));
-        clCall(clSetKernelArg(_kernel, 13, sizeof(T14), &arg14));
-        clCall(clSetKernelArg(_kernel, 14, sizeof(T15), &arg15));
-        clCall(clSetKernelArg(_kernel, 15, sizeof(T16), &arg16));
-    }
-
-    template<typename T1, typename T2, typename T3, typename T4, typename T5, typename T6, typename T7, typename T8,
-        typename T9, typename T10, typename T11, typename T12, typename T13, typename T14, typename T15, typename T16,
-        typename T17>
-        void set_args(T1 arg1, T2 arg2, T3 arg3, T4 arg4, T5 arg5, T6 arg6, T7 arg7, T8 arg8, T9 arg9, T10 arg10, T11 arg11, T12 arg12,
-            T13 arg13, T14 arg14, T15 arg15, T16 arg16)
     {
         clCall(clSetKernelArg(_kernel, 0, sizeof(T1), &arg1));
         clCall(clSetKernelArg(_kernel, 1, sizeof(T2), &arg2));

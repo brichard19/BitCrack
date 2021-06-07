@@ -1,10 +1,9 @@
-#include<string.h>
-#include<stdio.h>
-#include<stdlib.h>
-#include"CryptoUtil.h"
+#include <string.h>
+#include <stdio.h>
+#include <stdlib.h>
 
+#include "CryptoUtil.h"
 #include "secp256k1.h"
-
 
 using namespace secp256k1;
 
@@ -12,28 +11,26 @@ static uint256 _ONE(1);
 static uint256 _ZERO;
 static crypto::Rng _rng;
 
-static inline void addc(unsigned int a, unsigned int b, unsigned int carryIn, unsigned int &sum, int &carryOut)
+static inline void addc(unsigned int a, unsigned int b, int& carry, unsigned int &sum)
 {
-	uint64_t sum64 = (uint64_t)a + b + carryIn;
+	uint64_t sum64 = (uint64_t)a + b + carry;
 
 	sum = (unsigned int)sum64;
-	carryOut = (int)(sum64 >> 32) & 1;
+	carry = (int)(sum64 >> 32) & 1;
 }
 
 
-static inline void subc(unsigned int a, unsigned int b, unsigned int borrowIn, unsigned int &diff, int &borrowOut)
+static inline void subc(unsigned int a, unsigned int b, int& borrow, unsigned int &diff)
 {
-	uint64_t diff64 = (uint64_t)a - b - borrowIn;
+	uint64_t diff64 = (uint64_t)a - b - borrow;
 
 	diff = (unsigned int)diff64;
-	borrowOut = (int)((diff64 >> 32) & 1);
+	borrow = (int)((diff64 >> 32) & 1);
 }
 
-
-
-static bool lessThanEqualTo(const unsigned int *a, const unsigned int *b, int len)
+static bool lessThanEqualTo(const unsigned int *a, const unsigned int *b)
 {
-	for(int i = len - 1; i >= 0; i--) {
+	for(int i = 7; i >= 0; i--) {
 		if(a[i] < b[i]) {
 			// is greater than
 			return true;
@@ -68,7 +65,7 @@ static int add(const unsigned int *a, const unsigned int *b, unsigned int *c, in
 	int carry = 0;
 
 	for(int i = 0; i < len; i++) {
-		addc(a[i], b[i], carry, c[i], carry);
+		addc(a[i], b[i], carry, c[i]);
 	}
 
 	return carry;
@@ -79,7 +76,7 @@ static int sub(const unsigned int *a, const unsigned int *b, unsigned int *c, in
 	int borrow = 0;
 
 	for(int i = 0; i < len; i++) {
-		subc(a[i], b[i], borrow, c[i], borrow);
+		subc(a[i], b[i], borrow, c[i]);
 	}
 
 	return borrow & 1;
@@ -386,7 +383,7 @@ uint256 secp256k1::invModP(const uint256 &x)
 			}
 		}
 
-		if(lessThanEqualTo(v.v, u.v, 8)) {
+		if(lessThanEqualTo(v.v, u.v)) {
 			sub(u.v, v.v, u.v, 8);
 
 			// x1 = x1 - x2
@@ -613,7 +610,7 @@ uint256 secp256k1::multiplyModN(const uint256 &a, const uint256 &b)
 	return r;
 }
 
-std::string secp256k1::uint256::toString(int base)
+std::string secp256k1::uint256::toString()
 {
 	std::string s = "";
 
@@ -731,17 +728,6 @@ ecpoint secp256k1::multiplyPoint(const uint256 &k, const ecpoint &p)
 	return sum;
 }
 
-uint256 generatePrivateKey()
-{
-	uint256 k;
-
-	for(int i = 0; i < 8; i++) {
-		k.v[i] = ((unsigned int)rand() | ((unsigned int)rand()) << 17);
-	}
-
-	return k;
-}
-
 bool secp256k1::pointExists(const ecpoint &p)
 {
 	uint256 y = multiplyModP(p.y, p.y);
@@ -767,14 +753,15 @@ static void bulkInversionModP(std::vector<uint256> &in)
 
 	uint256 inverse = secp256k1::invModP(total);
 
-	for(int i = (int)in.size() - 1; i >= 0; i--) {
+	for(size_t i = in.size() - 1;; i--) {
 
-		if(i > 0) {
+		if(i != 0) {
 			uint256 newValue = secp256k1::multiplyModP(products[i - 1], inverse);
 			inverse = multiplyModP(inverse, in[i]);
 			in[i] = newValue;
 		} else {
-			in[i] = inverse;
+			in[0] = inverse;
+			break;
 		}
 	}
 }
@@ -792,7 +779,7 @@ void secp256k1::generateKeyPairsBulk(unsigned int count, const ecpoint &basePoin
 
 void secp256k1::generateKeyPairsBulk(const ecpoint &basePoint, std::vector<uint256> &privKeys, std::vector<ecpoint> &pubKeysOut)
 {
-	unsigned int count = (unsigned int)privKeys.size();
+	size_t count = privKeys.size();
 
 	//privKeysOut.clear();
 	pubKeysOut.clear();
@@ -801,12 +788,14 @@ void secp256k1::generateKeyPairsBulk(const ecpoint &basePoint, std::vector<uint2
 	std::vector<ecpoint> table;
 
 	table.push_back(basePoint);
-	for(int i = 1; i < 256; i++) {
+	for(size_t i = 1; i < 256; i++) {
 
 		ecpoint p = doublePoint(table[i-1]);
+#ifdef DEBUG
 		if(!pointExists(p)) {
 			throw std::string("Point does not exist!");
 		}
+#endif
 		table.push_back(p);
 	}
 
@@ -860,13 +849,18 @@ void secp256k1::generateKeyPairsBulk(const ecpoint &basePoint, std::vector<uint2
 					uint256 ry = subModP(multiplyModP(s, subModP(pubKeysOut[j].x, rx)), pubKeysOut[j].y);
 
 					ecpoint r(rx, ry);
+#ifdef DEBUG
 					if(!pointExists(r)) {
 						throw std::string("Point does not exist");
 					}
+#endif
 					pubKeysOut[j] = r;
 				}
 			}
 		}
+
+		table.clear();
+		table.shrink_to_fit();
 	}
 }
 
@@ -876,11 +870,11 @@ void secp256k1::generateKeyPairsBulk(const ecpoint &basePoint, std::vector<uint2
 secp256k1::ecpoint secp256k1::parsePublicKey(const std::string &pubKeyString)
 {
 	if(pubKeyString.length() != 130) {
-		throw std::string("Invalid public key");
+		throw std::string("Invalid public key. Length of public key is not 130 characters.");
 	}
 
 	if(pubKeyString[0] != '0' || pubKeyString[1] != '4') {
-		throw std::string("Invalid public key");
+		throw std::string("Invalid public key. Expecting uncompressed format.");
 	}
 
 	std::string xString = pubKeyString.substr(2, 64);
@@ -892,7 +886,7 @@ secp256k1::ecpoint secp256k1::parsePublicKey(const std::string &pubKeyString)
 	ecpoint p(x, y);
 
 	if(!pointExists(p)) {
-		throw std::string("Invalid public key");
+		throw std::string("Invalid public key. Point is not on secp256k1-curve.");
 	}
 
 	return p;

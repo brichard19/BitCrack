@@ -1,24 +1,17 @@
-#ifndef _RIPEMD160_CL
-#define _RIPEMD160_CL
+#ifndef RIPEMD160_CL
+#define RIPEMD160_CL
 
+#ifndef endian
+#define endian(x) ((x) << 24) | (((x) << 8) & 0x00ff0000) | (((x) >> 8) & 0x0000ff00) | ((x) >> 24)
+#endif
 
-__constant unsigned int _RIPEMD160_IV[5] = {
-    0x67452301,
-    0xefcdab89,
-    0x98badcfe,
-    0x10325476,
-    0xc3d2e1f0
+__constant unsigned int RIPEMD160_IV[5] = {
+    0x67452301, 0xefcdab89, 0x98badcfe, 0x10325476, 0xc3d2e1f0,
 };
 
-__constant unsigned int _K0 = 0x5a827999;
-__constant unsigned int _K1 = 0x6ed9eba1;
-__constant unsigned int _K2 = 0x8f1bbcdc;
-__constant unsigned int _K3 = 0xa953fd4e;
-
-__constant unsigned int _K4 = 0x7a6d76e9;
-__constant unsigned int _K5 = 0x6d703ef3;
-__constant unsigned int _K6 = 0x5c4dd124;
-__constant unsigned int _K7 = 0x50a28be6;
+__constant unsigned int K[8] = {
+    0x5a827999, 0x6ed9eba1, 0x8f1bbcdc, 0xa953fd4e, 0x7a6d76e9, 0x6d703ef3, 0x5c4dd124, 0x50a28be6
+};
 
 #define rotl(x, n) (((x) << (n)) | ((x) >> (32 - (n))))
 
@@ -38,22 +31,22 @@ __constant unsigned int _K7 = 0x50a28be6;
     c = rotl((c), 10)
 
 #define GG(a, b, c, d, e, x, s)\
-    a += G((b), (c), (d)) + (x) + _K0;\
+    a += G((b), (c), (d)) + (x) + K[0];\
     a = rotl((a), (s)) + (e);\
     c = rotl((c), 10)
 
 #define HH(a, b, c, d, e, x, s)\
-    a += H((b), (c), (d)) + (x) + _K1;\
+    a += H((b), (c), (d)) + (x) + K[1];\
     a = rotl((a), (s)) + (e);\
     c = rotl((c), 10)
 
 #define II(a, b, c, d, e, x, s)\
-    a += I((b), (c), (d)) + (x) + _K2;\
+    a += I((b), (c), (d)) + (x) + K[2];\
     a = rotl((a), (s)) + e;\
     c = rotl((c), 10)
 
 #define JJ(a, b, c, d, e, x, s)\
-    a += J((b), (c), (d)) + (x) + _K3;\
+    a += J((b), (c), (d)) + (x) + K[3];\
     a = rotl((a), (s)) + (e);\
     c = rotl((c), 10)
 
@@ -63,523 +56,298 @@ __constant unsigned int _K7 = 0x50a28be6;
     c = rotl((c), 10)
 
 #define GGG(a, b, c, d, e, x, s)\
-    a += G((b), (c), (d)) + x + _K4;\
+    a += G((b), (c), (d)) + x + K[4];\
     a = rotl((a), (s)) + (e);\
     c = rotl((c), 10)
 
 #define HHH(a, b, c, d, e, x, s)\
-    a += H((b), (c), (d)) + (x) + _K5;\
+    a += H((b), (c), (d)) + (x) + K[5];\
     a = rotl((a), (s)) + (e);\
     c = rotl((c), 10)
 
 #define III(a, b, c, d, e, x, s)\
-    a += I((b), (c), (d)) + (x) + _K6;\
+    a += I((b), (c), (d)) + (x) + K[6];\
     a = rotl((a), (s)) + (e);\
     c = rotl((c), 10)
 
 #define JJJ(a, b, c, d, e, x, s)\
-    a += J((b), (c), (d)) + (x) + _K7;\
+    a += J((b), (c), (d)) + (x) + K[7];\
     a = rotl((a), (s)) + (e);\
     c = rotl((c), 10)
 
-
-void ripemd160sha256(const unsigned int x[8], unsigned int digest[5])
+void ripemd160p1(const unsigned int x[8], unsigned int digest[5])
 {
-    unsigned int a1 = _RIPEMD160_IV[0];
-    unsigned int b1 = _RIPEMD160_IV[1];
-    unsigned int c1 = _RIPEMD160_IV[2];
-    unsigned int d1 = _RIPEMD160_IV[3];
-    unsigned int e1 = _RIPEMD160_IV[4];
-
-    const unsigned int x8 = 0x00000080;
-    const unsigned int x14 = 256;
+    __private unsigned int a = RIPEMD160_IV[0];
+    __private unsigned int b = RIPEMD160_IV[1];
+    __private unsigned int c = RIPEMD160_IV[2];
+    __private unsigned int d = RIPEMD160_IV[3];
+    __private unsigned int e = RIPEMD160_IV[4];
 
     /* round 1 */
-    FF(a1, b1, c1, d1, e1, x[0], 11);
-    FF(e1, a1, b1, c1, d1, x[1], 14);
-    FF(d1, e1, a1, b1, c1, x[2], 15);
-    FF(c1, d1, e1, a1, b1, x[3], 12);
-    FF(b1, c1, d1, e1, a1, x[4], 5);
-    FF(a1, b1, c1, d1, e1, x[5], 8);
-    FF(e1, a1, b1, c1, d1, x[6], 7);
-    FF(d1, e1, a1, b1, c1, x[7], 9);
-    FF(c1, d1, e1, a1, b1, x8, 11);
-    FF(b1, c1, d1, e1, a1, 0, 13);
-    FF(a1, b1, c1, d1, e1, 0, 14);
-    FF(e1, a1, b1, c1, d1, 0, 15);
-    FF(d1, e1, a1, b1, c1, 0, 6);
-    FF(c1, d1, e1, a1, b1, 0, 7);
-    FF(b1, c1, d1, e1, a1, x14, 9);
-    FF(a1, b1, c1, d1, e1, 0, 8);
+    FF(a, b, c, d, e, x[0], 11);
+    FF(e, a, b, c, d, x[1], 14);
+    FF(d, e, a, b, c, x[2], 15);
+    FF(c, d, e, a, b, x[3], 12);
+    FF(b, c, d, e, a, x[4], 5);
+    FF(a, b, c, d, e, x[5], 8);
+    FF(e, a, b, c, d, x[6], 7);
+    FF(d, e, a, b, c, x[7], 9);
+    FF(c, d, e, a, b, 128, 11);
+    FF(b, c, d, e, a, 0, 13);
+    FF(a, b, c, d, e, 0, 14);
+    FF(e, a, b, c, d, 0, 15);
+    FF(d, e, a, b, c, 0, 6);
+    FF(c, d, e, a, b, 0, 7);
+    FF(b, c, d, e, a, 256, 9);
+    FF(a, b, c, d, e, 0, 8);
 
     /* round 2 */
-    GG(e1, a1, b1, c1, d1, x[7], 7);
-    GG(d1, e1, a1, b1, c1, x[4], 6);
-    GG(c1, d1, e1, a1, b1, 0, 8);
-    GG(b1, c1, d1, e1, a1, x[1], 13);
-    GG(a1, b1, c1, d1, e1, 0, 11);
-    GG(e1, a1, b1, c1, d1, x[6], 9);
-    GG(d1, e1, a1, b1, c1, 0, 7);
-    GG(c1, d1, e1, a1, b1, x[3], 15);
-    GG(b1, c1, d1, e1, a1, 0, 7);
-    GG(a1, b1, c1, d1, e1, x[0], 12);
-    GG(e1, a1, b1, c1, d1, 0, 15);
-    GG(d1, e1, a1, b1, c1, x[5], 9);
-    GG(c1, d1, e1, a1, b1, x[2], 11);
-    GG(b1, c1, d1, e1, a1, x14, 7);
-    GG(a1, b1, c1, d1, e1, 0, 13);
-    GG(e1, a1, b1, c1, d1, x8, 12);
+    GG(e, a, b, c, d, x[7], 7);
+    GG(d, e, a, b, c, x[4], 6);
+    GG(c, d, e, a, b, 0, 8);
+    GG(b, c, d, e, a, x[1], 13);
+    GG(a, b, c, d, e, 0, 11);
+    GG(e, a, b, c, d, x[6], 9);
+    GG(d, e, a, b, c, 0, 7);
+    GG(c, d, e, a, b, x[3], 15);
+    GG(b, c, d, e, a, 0, 7);
+    GG(a, b, c, d, e, x[0], 12);
+    GG(e, a, b, c, d, 0, 15);
+    GG(d, e, a, b, c, x[5], 9);
+    GG(c, d, e, a, b, x[2], 11);
+    GG(b, c, d, e, a, 256, 7);
+    GG(a, b, c, d, e, 0, 13);
+    GG(e, a, b, c, d, 0x80, 12);
 
     /* round 3 */
-    HH(d1, e1, a1, b1, c1, x[3], 11);
-    HH(c1, d1, e1, a1, b1, 0, 13);
-    HH(b1, c1, d1, e1, a1, x14, 6);
-    HH(a1, b1, c1, d1, e1, x[4], 7);
-    HH(e1, a1, b1, c1, d1, 0, 14);
-    HH(d1, e1, a1, b1, c1, 0, 9);
-    HH(c1, d1, e1, a1, b1, x8, 13);
-    HH(b1, c1, d1, e1, a1, x[1], 15);
-    HH(a1, b1, c1, d1, e1, x[2], 14);
-    HH(e1, a1, b1, c1, d1, x[7], 8);
-    HH(d1, e1, a1, b1, c1, x[0], 13);
-    HH(c1, d1, e1, a1, b1, x[6], 6);
-    HH(b1, c1, d1, e1, a1, 0, 5);
-    HH(a1, b1, c1, d1, e1, 0, 12);
-    HH(e1, a1, b1, c1, d1, x[5], 7);
-    HH(d1, e1, a1, b1, c1, 0, 5);
+    HH(d, e, a, b, c, x[3], 11);
+    HH(c, d, e, a, b, 0, 13);
+    HH(b, c, d, e, a, 256, 6);
+    HH(a, b, c, d, e, x[4], 7);
+    HH(e, a, b, c, d, 0, 14);
+    HH(d, e, a, b, c, 0, 9);
+    HH(c, d, e, a, b, 0x80, 13);
+    HH(b, c, d, e, a, x[1], 15);
+    HH(a, b, c, d, e, x[2], 14);
+    HH(e, a, b, c, d, x[7], 8);
+    HH(d, e, a, b, c, x[0], 13);
+    HH(c, d, e, a, b, x[6], 6);
+    HH(b, c, d, e, a, 0, 5);
+    HH(a, b, c, d, e, 0, 12);
+    HH(e, a, b, c, d, x[5], 7);
+    HH(d, e, a, b, c, 0, 5);
 
     /* round 4 */
-    II(c1, d1, e1, a1, b1, x[1], 11);
-    II(b1, c1, d1, e1, a1, 0, 12);
-    II(a1, b1, c1, d1, e1, 0, 14);
-    II(e1, a1, b1, c1, d1, 0, 15);
-    II(d1, e1, a1, b1, c1, x[0], 14);
-    II(c1, d1, e1, a1, b1, x8, 15);
-    II(b1, c1, d1, e1, a1, 0, 9);
-    II(a1, b1, c1, d1, e1, x[4], 8);
-    II(e1, a1, b1, c1, d1, 0, 9);
-    II(d1, e1, a1, b1, c1, x[3], 14);
-    II(c1, d1, e1, a1, b1, x[7], 5);
-    II(b1, c1, d1, e1, a1, 0, 6);
-    II(a1, b1, c1, d1, e1, x14, 8);
-    II(e1, a1, b1, c1, d1, x[5], 6);
-    II(d1, e1, a1, b1, c1, x[6], 5);
-    II(c1, d1, e1, a1, b1, x[2], 12);
+    II(c, d, e, a, b, x[1], 11);
+    II(b, c, d, e, a, 0, 12);
+    II(a, b, c, d, e, 0, 14);
+    II(e, a, b, c, d, 0, 15);
+    II(d, e, a, b, c, x[0], 14);
+    II(c, d, e, a, b, 0x80, 15);
+    II(b, c, d, e, a, 0, 9);
+    II(a, b, c, d, e, x[4], 8);
+    II(e, a, b, c, d, 0, 9);
+    II(d, e, a, b, c, x[3], 14);
+    II(c, d, e, a, b, x[7], 5);
+    II(b, c, d, e, a, 0, 6);
+    II(a, b, c, d, e, 256, 8);
+    II(e, a, b, c, d, x[5], 6);
+    II(d, e, a, b, c, x[6], 5);
+    II(c, d, e, a, b, x[2], 12);
 
     /* round 5 */
-    JJ(b1, c1, d1, e1, a1, x[4], 9);
-    JJ(a1, b1, c1, d1, e1, x[0], 15);
-    JJ(e1, a1, b1, c1, d1, x[5], 5);
-    JJ(d1, e1, a1, b1, c1, 0, 11);
-    JJ(c1, d1, e1, a1, b1, x[7], 6);
-    JJ(b1, c1, d1, e1, a1, 0, 8);
-    JJ(a1, b1, c1, d1, e1, x[2], 13);
-    JJ(e1, a1, b1, c1, d1, 0, 12);
-    JJ(d1, e1, a1, b1, c1, x14, 5);
-    JJ(c1, d1, e1, a1, b1, x[1], 12);
-    JJ(b1, c1, d1, e1, a1, x[3], 13);
-    JJ(a1, b1, c1, d1, e1, x8, 14);
-    JJ(e1, a1, b1, c1, d1, 0, 11);
-    JJ(d1, e1, a1, b1, c1, x[6], 8);
-    JJ(c1, d1, e1, a1, b1, 0, 5);
-    JJ(b1, c1, d1, e1, a1, 0, 6);
+    JJ(b, c, d, e, a, x[4], 9);
+    JJ(a, b, c, d, e, x[0], 15);
+    JJ(e, a, b, c, d, x[5], 5);
+    JJ(d, e, a, b, c, 0, 11);
+    JJ(c, d, e, a, b, x[7], 6);
+    JJ(b, c, d, e, a, 0, 8);
+    JJ(a, b, c, d, e, x[2], 13);
+    JJ(e, a, b, c, d, 0, 12);
+    JJ(d, e, a, b, c, 256, 5);
+    JJ(c, d, e, a, b, x[1], 12);
+    JJ(b, c, d, e, a, x[3], 13);
+    JJ(a, b, c, d, e, 0x80, 14);
+    JJ(e, a, b, c, d, 0, 11);
+    JJ(d, e, a, b, c, x[6], 8);
+    JJ(c, d, e, a, b, 0, 5);
+    JJ(b, c, d, e, a, 0, 6);
 
-    unsigned int a2 = _RIPEMD160_IV[0];
-    unsigned int b2 = _RIPEMD160_IV[1];
-    unsigned int c2 = _RIPEMD160_IV[2];
-    unsigned int d2 = _RIPEMD160_IV[3];
-    unsigned int e2 = _RIPEMD160_IV[4];
-
-    /* parallel round 1 */
-    JJJ(a2, b2, c2, d2, e2, x[5], 8);
-    JJJ(e2, a2, b2, c2, d2, x14, 9);
-    JJJ(d2, e2, a2, b2, c2, x[7], 9);
-    JJJ(c2, d2, e2, a2, b2, x[0], 11);
-    JJJ(b2, c2, d2, e2, a2, 0, 13);
-    JJJ(a2, b2, c2, d2, e2, x[2], 15);
-    JJJ(e2, a2, b2, c2, d2, 0, 15);
-    JJJ(d2, e2, a2, b2, c2, x[4], 5);
-    JJJ(c2, d2, e2, a2, b2, 0, 7);
-    JJJ(b2, c2, d2, e2, a2, x[6], 7);
-    JJJ(a2, b2, c2, d2, e2, 0, 8);
-    JJJ(e2, a2, b2, c2, d2, x8, 11);
-    JJJ(d2, e2, a2, b2, c2, x[1], 14);
-    JJJ(c2, d2, e2, a2, b2, 0, 14);
-    JJJ(b2, c2, d2, e2, a2, x[3], 12);
-    JJJ(a2, b2, c2, d2, e2, 0, 6);
-
-    /* parallel round 2 */
-    III(e2, a2, b2, c2, d2, x[6], 9);
-    III(d2, e2, a2, b2, c2, 0, 13);
-    III(c2, d2, e2, a2, b2, x[3], 15);
-    III(b2, c2, d2, e2, a2, x[7], 7);
-    III(a2, b2, c2, d2, e2, x[0], 12);
-    III(e2, a2, b2, c2, d2, 0, 8);
-    III(d2, e2, a2, b2, c2, x[5], 9);
-    III(c2, d2, e2, a2, b2, 0, 11);
-    III(b2, c2, d2, e2, a2, x14, 7);
-    III(a2, b2, c2, d2, e2, 0, 7);
-    III(e2, a2, b2, c2, d2, x8, 12);
-    III(d2, e2, a2, b2, c2, 0, 7);
-    III(c2, d2, e2, a2, b2, x[4], 6);
-    III(b2, c2, d2, e2, a2, 0, 15);
-    III(a2, b2, c2, d2, e2, x[1], 13);
-    III(e2, a2, b2, c2, d2, x[2], 11);
-
-    /* parallel round 3 */
-    HHH(d2, e2, a2, b2, c2, 0, 9);
-    HHH(c2, d2, e2, a2, b2, x[5], 7);
-    HHH(b2, c2, d2, e2, a2, x[1], 15);
-    HHH(a2, b2, c2, d2, e2, x[3], 11);
-    HHH(e2, a2, b2, c2, d2, x[7], 8);
-    HHH(d2, e2, a2, b2, c2, x14, 6);
-    HHH(c2, d2, e2, a2, b2, x[6], 6);
-    HHH(b2, c2, d2, e2, a2, 0, 14);
-    HHH(a2, b2, c2, d2, e2, 0, 12);
-    HHH(e2, a2, b2, c2, d2, x8, 13);
-    HHH(d2, e2, a2, b2, c2, 0, 5);
-    HHH(c2, d2, e2, a2, b2, x[2], 14);
-    HHH(b2, c2, d2, e2, a2, 0, 13);
-    HHH(a2, b2, c2, d2, e2, x[0], 13);
-    HHH(e2, a2, b2, c2, d2, x[4], 7);
-    HHH(d2, e2, a2, b2, c2, 0, 5);
-
-    /* parallel round 4 */
-    GGG(c2, d2, e2, a2, b2, x8, 15);
-    GGG(b2, c2, d2, e2, a2, x[6], 5);
-    GGG(a2, b2, c2, d2, e2, x[4], 8);
-    GGG(e2, a2, b2, c2, d2, x[1], 11);
-    GGG(d2, e2, a2, b2, c2, x[3], 14);
-    GGG(c2, d2, e2, a2, b2, 0, 14);
-    GGG(b2, c2, d2, e2, a2, 0, 6);
-    GGG(a2, b2, c2, d2, e2, x[0], 14);
-    GGG(e2, a2, b2, c2, d2, x[5], 6);
-    GGG(d2, e2, a2, b2, c2, 0, 9);
-    GGG(c2, d2, e2, a2, b2, x[2], 12);
-    GGG(b2, c2, d2, e2, a2, 0, 9);
-    GGG(a2, b2, c2, d2, e2, 0, 12);
-    GGG(e2, a2, b2, c2, d2, x[7], 5);
-    GGG(d2, e2, a2, b2, c2, 0, 15);
-    GGG(c2, d2, e2, a2, b2, x14, 8);
-
-    /* parallel round 5 */
-    FFF(b2, c2, d2, e2, a2, 0, 8);
-    FFF(a2, b2, c2, d2, e2, 0, 5);
-    FFF(e2, a2, b2, c2, d2, 0, 12);
-    FFF(d2, e2, a2, b2, c2, x[4], 9);
-    FFF(c2, d2, e2, a2, b2, x[1], 12);
-    FFF(b2, c2, d2, e2, a2, x[5], 5);
-    FFF(a2, b2, c2, d2, e2, x8, 14);
-    FFF(e2, a2, b2, c2, d2, x[7], 6);
-    FFF(d2, e2, a2, b2, c2, x[6], 8);
-    FFF(c2, d2, e2, a2, b2, x[2], 13);
-    FFF(b2, c2, d2, e2, a2, 0, 6);
-    FFF(a2, b2, c2, d2, e2, x14, 5);
-    FFF(e2, a2, b2, c2, d2, x[0], 15);
-    FFF(d2, e2, a2, b2, c2, x[3], 13);
-    FFF(c2, d2, e2, a2, b2, 0, 11);
-    FFF(b2, c2, d2, e2, a2, 0, 11);
-
-    digest[0] = _RIPEMD160_IV[1] + c1 + d2;
-    digest[1] = _RIPEMD160_IV[2] + d1 + e2;
-    digest[2] = _RIPEMD160_IV[3] + e1 + a2;
-    digest[3] = _RIPEMD160_IV[4] + a1 + b2;
-    digest[4] = _RIPEMD160_IV[0] + b1 + c2;
+    digest[0] = c;
+    digest[1] = d;
+    digest[2] = e;
+    digest[3] = a;
+    digest[4] = b;
 }
 
+void ripemd160p2(const unsigned int x[8], unsigned int digest[5])
+{
+    __private unsigned int a = RIPEMD160_IV[0];
+    __private unsigned int b = RIPEMD160_IV[1];
+    __private unsigned int c = RIPEMD160_IV[2];
+    __private unsigned int d = RIPEMD160_IV[3];
+    __private unsigned int e = RIPEMD160_IV[4];
+
+    /* parallel round 1 */
+    JJJ(a, b, c, d, e, x[5], 8);
+    JJJ(e, a, b, c, d, 256, 9);
+    JJJ(d, e, a, b, c, x[7], 9);
+    JJJ(c, d, e, a, b, x[0], 11);
+    JJJ(b, c, d, e, a, 0, 13);
+    JJJ(a, b, c, d, e, x[2], 15);
+    JJJ(e, a, b, c, d, 0, 15);
+    JJJ(d, e, a, b, c, x[4], 5);
+    JJJ(c, d, e, a, b, 0, 7);
+    JJJ(b, c, d, e, a, x[6], 7);
+    JJJ(a, b, c, d, e, 0, 8);
+    JJJ(e, a, b, c, d, 0x80, 11);
+    JJJ(d, e, a, b, c, x[1], 14);
+    JJJ(c, d, e, a, b, 0, 14);
+    JJJ(b, c, d, e, a, x[3], 12);
+    JJJ(a, b, c, d, e, 0, 6);
+
+    /* parallel round 2 */
+    III(e, a, b, c, d, x[6], 9);
+    III(d, e, a, b, c, 0, 13);
+    III(c, d, e, a, b, x[3], 15);
+    III(b, c, d, e, a, x[7], 7);
+    III(a, b, c, d, e, x[0], 12);
+    III(e, a, b, c, d, 0, 8);
+    III(d, e, a, b, c, x[5], 9);
+    III(c, d, e, a, b, 0, 11);
+    III(b, c, d, e, a, 256, 7);
+    III(a, b, c, d, e, 0, 7);
+    III(e, a, b, c, d, 0x80, 12);
+    III(d, e, a, b, c, 0, 7);
+    III(c, d, e, a, b, x[4], 6);
+    III(b, c, d, e, a, 0, 15);
+    III(a, b, c, d, e, x[1], 13);
+    III(e, a, b, c, d, x[2], 11);
+
+    /* parallel round 3 */
+    HHH(d, e, a, b, c, 0, 9);
+    HHH(c, d, e, a, b, x[5], 7);
+    HHH(b, c, d, e, a, x[1], 15);
+    HHH(a, b, c, d, e, x[3], 11);
+    HHH(e, a, b, c, d, x[7], 8);
+    HHH(d, e, a, b, c, 256, 6);
+    HHH(c, d, e, a, b, x[6], 6);
+    HHH(b, c, d, e, a, 0, 14);
+    HHH(a, b, c, d, e, 0, 12);
+    HHH(e, a, b, c, d, 0x80, 13);
+    HHH(d, e, a, b, c, 0, 5);
+    HHH(c, d, e, a, b, x[2], 14);
+    HHH(b, c, d, e, a, 0, 13);
+    HHH(a, b, c, d, e, x[0], 13);
+    HHH(e, a, b, c, d, x[4], 7);
+    HHH(d, e, a, b, c, 0, 5);
+
+    /* parallel round 4 */
+    GGG(c, d, e, a, b, 0x80, 15);
+    GGG(b, c, d, e, a, x[6], 5);
+    GGG(a, b, c, d, e, x[4], 8);
+    GGG(e, a, b, c, d, x[1], 11);
+    GGG(d, e, a, b, c, x[3], 14);
+    GGG(c, d, e, a, b, 0, 14);
+    GGG(b, c, d, e, a, 0, 6);
+    GGG(a, b, c, d, e, x[0], 14);
+    GGG(e, a, b, c, d, x[5], 6);
+    GGG(d, e, a, b, c, 0, 9);
+    GGG(c, d, e, a, b, x[2], 12);
+    GGG(b, c, d, e, a, 0, 9);
+    GGG(a, b, c, d, e, 0, 12);
+    GGG(e, a, b, c, d, x[7], 5);
+    GGG(d, e, a, b, c, 0, 15);
+    GGG(c, d, e, a, b, 256, 8);
+
+    /* parallel round 5 */
+    FFF(b, c, d, e, a, 0, 8);
+    FFF(a, b, c, d, e, 0, 5);
+    FFF(e, a, b, c, d, 0, 12);
+    FFF(d, e, a, b, c, x[4], 9);
+    FFF(c, d, e, a, b, x[1], 12);
+    FFF(b, c, d, e, a, x[5], 5);
+    FFF(a, b, c, d, e, 0x80, 14);
+    FFF(e, a, b, c, d, x[7], 6);
+    FFF(d, e, a, b, c, x[6], 8);
+    FFF(c, d, e, a, b, x[2], 13);
+    FFF(b, c, d, e, a, 0, 6);
+    FFF(a, b, c, d, e, 256, 5);
+    FFF(e, a, b, c, d, x[0], 15);
+    FFF(d, e, a, b, c, x[3], 13);
+    FFF(c, d, e, a, b, 0, 11);
+    FFF(b, c, d, e, a, 0, 11);
+
+    digest[0] = d;
+    digest[1] = e;
+    digest[2] = a;
+    digest[3] = b;
+    digest[4] = c;
+}
 
 void ripemd160sha256NoFinal(const unsigned int x[8], unsigned int digest[5])
 {
-    unsigned int a1 = _RIPEMD160_IV[0];
-    unsigned int b1 = _RIPEMD160_IV[1];
-    unsigned int c1 = _RIPEMD160_IV[2];
-    unsigned int d1 = _RIPEMD160_IV[3];
-    unsigned int e1 = _RIPEMD160_IV[4];
+    __private unsigned int digest1[5];
+    __private unsigned int digest2[5];
 
-    const unsigned int x8 = 0x00000080;
-    const unsigned int x14 = 256;
+    ripemd160p1(x, digest1);
+    ripemd160p2(x, digest2);
 
-    /* round 1 */
-    FF(a1, b1, c1, d1, e1, x[0], 11);
-    FF(e1, a1, b1, c1, d1, x[1], 14);
-    FF(d1, e1, a1, b1, c1, x[2], 15);
-    FF(c1, d1, e1, a1, b1, x[3], 12);
-    FF(b1, c1, d1, e1, a1, x[4], 5);
-    FF(a1, b1, c1, d1, e1, x[5], 8);
-    FF(e1, a1, b1, c1, d1, x[6], 7);
-    FF(d1, e1, a1, b1, c1, x[7], 9);
-    FF(c1, d1, e1, a1, b1, x8, 11);
-    FF(b1, c1, d1, e1, a1, 0, 13);
-    FF(a1, b1, c1, d1, e1, 0, 14);
-    FF(e1, a1, b1, c1, d1, 0, 15);
-    FF(d1, e1, a1, b1, c1, 0, 6);
-    FF(c1, d1, e1, a1, b1, 0, 7);
-    FF(b1, c1, d1, e1, a1, x14, 9);
-    FF(a1, b1, c1, d1, e1, 0, 8);
-
-    /* round 2 */
-    GG(e1, a1, b1, c1, d1, x[7], 7);
-    GG(d1, e1, a1, b1, c1, x[4], 6);
-    GG(c1, d1, e1, a1, b1, 0, 8);
-    GG(b1, c1, d1, e1, a1, x[1], 13);
-    GG(a1, b1, c1, d1, e1, 0, 11);
-    GG(e1, a1, b1, c1, d1, x[6], 9);
-    GG(d1, e1, a1, b1, c1, 0, 7);
-    GG(c1, d1, e1, a1, b1, x[3], 15);
-    GG(b1, c1, d1, e1, a1, 0, 7);
-    GG(a1, b1, c1, d1, e1, x[0], 12);
-    GG(e1, a1, b1, c1, d1, 0, 15);
-    GG(d1, e1, a1, b1, c1, x[5], 9);
-    GG(c1, d1, e1, a1, b1, x[2], 11);
-    GG(b1, c1, d1, e1, a1, x14, 7);
-    GG(a1, b1, c1, d1, e1, 0, 13);
-    GG(e1, a1, b1, c1, d1, x8, 12);
-
-    /* round 3 */
-    HH(d1, e1, a1, b1, c1, x[3], 11);
-    HH(c1, d1, e1, a1, b1, 0, 13);
-    HH(b1, c1, d1, e1, a1, x14, 6);
-    HH(a1, b1, c1, d1, e1, x[4], 7);
-    HH(e1, a1, b1, c1, d1, 0, 14);
-    HH(d1, e1, a1, b1, c1, 0, 9);
-    HH(c1, d1, e1, a1, b1, x8, 13);
-    HH(b1, c1, d1, e1, a1, x[1], 15);
-    HH(a1, b1, c1, d1, e1, x[2], 14);
-    HH(e1, a1, b1, c1, d1, x[7], 8);
-    HH(d1, e1, a1, b1, c1, x[0], 13);
-    HH(c1, d1, e1, a1, b1, x[6], 6);
-    HH(b1, c1, d1, e1, a1, 0, 5);
-    HH(a1, b1, c1, d1, e1, 0, 12);
-    HH(e1, a1, b1, c1, d1, x[5], 7);
-    HH(d1, e1, a1, b1, c1, 0, 5);
-
-    /* round 4 */
-    II(c1, d1, e1, a1, b1, x[1], 11);
-    II(b1, c1, d1, e1, a1, 0, 12);
-    II(a1, b1, c1, d1, e1, 0, 14);
-    II(e1, a1, b1, c1, d1, 0, 15);
-    II(d1, e1, a1, b1, c1, x[0], 14);
-    II(c1, d1, e1, a1, b1, x8, 15);
-    II(b1, c1, d1, e1, a1, 0, 9);
-    II(a1, b1, c1, d1, e1, x[4], 8);
-    II(e1, a1, b1, c1, d1, 0, 9);
-    II(d1, e1, a1, b1, c1, x[3], 14);
-    II(c1, d1, e1, a1, b1, x[7], 5);
-    II(b1, c1, d1, e1, a1, 0, 6);
-    II(a1, b1, c1, d1, e1, x14, 8);
-    II(e1, a1, b1, c1, d1, x[5], 6);
-    II(d1, e1, a1, b1, c1, x[6], 5);
-    II(c1, d1, e1, a1, b1, x[2], 12);
-
-    /* round 5 */
-    JJ(b1, c1, d1, e1, a1, x[4], 9);
-    JJ(a1, b1, c1, d1, e1, x[0], 15);
-    JJ(e1, a1, b1, c1, d1, x[5], 5);
-    JJ(d1, e1, a1, b1, c1, 0, 11);
-    JJ(c1, d1, e1, a1, b1, x[7], 6);
-    JJ(b1, c1, d1, e1, a1, 0, 8);
-    JJ(a1, b1, c1, d1, e1, x[2], 13);
-    JJ(e1, a1, b1, c1, d1, 0, 12);
-    JJ(d1, e1, a1, b1, c1, x14, 5);
-    JJ(c1, d1, e1, a1, b1, x[1], 12);
-    JJ(b1, c1, d1, e1, a1, x[3], 13);
-    JJ(a1, b1, c1, d1, e1, x8, 14);
-    JJ(e1, a1, b1, c1, d1, 0, 11);
-    JJ(d1, e1, a1, b1, c1, x[6], 8);
-    JJ(c1, d1, e1, a1, b1, 0, 5);
-    JJ(b1, c1, d1, e1, a1, 0, 6);
-
-    unsigned int a2 = _RIPEMD160_IV[0];
-    unsigned int b2 = _RIPEMD160_IV[1];
-    unsigned int c2 = _RIPEMD160_IV[2];
-    unsigned int d2 = _RIPEMD160_IV[3];
-    unsigned int e2 = _RIPEMD160_IV[4];
-
-    /* parallel round 1 */
-    JJJ(a2, b2, c2, d2, e2, x[5], 8);
-    JJJ(e2, a2, b2, c2, d2, x14, 9);
-    JJJ(d2, e2, a2, b2, c2, x[7], 9);
-    JJJ(c2, d2, e2, a2, b2, x[0], 11);
-    JJJ(b2, c2, d2, e2, a2, 0, 13);
-    JJJ(a2, b2, c2, d2, e2, x[2], 15);
-    JJJ(e2, a2, b2, c2, d2, 0, 15);
-    JJJ(d2, e2, a2, b2, c2, x[4], 5);
-    JJJ(c2, d2, e2, a2, b2, 0, 7);
-    JJJ(b2, c2, d2, e2, a2, x[6], 7);
-    JJJ(a2, b2, c2, d2, e2, 0, 8);
-    JJJ(e2, a2, b2, c2, d2, x8, 11);
-    JJJ(d2, e2, a2, b2, c2, x[1], 14);
-    JJJ(c2, d2, e2, a2, b2, 0, 14);
-    JJJ(b2, c2, d2, e2, a2, x[3], 12);
-    JJJ(a2, b2, c2, d2, e2, 0, 6);
-
-    /* parallel round 2 */
-    III(e2, a2, b2, c2, d2, x[6], 9);
-    III(d2, e2, a2, b2, c2, 0, 13);
-    III(c2, d2, e2, a2, b2, x[3], 15);
-    III(b2, c2, d2, e2, a2, x[7], 7);
-    III(a2, b2, c2, d2, e2, x[0], 12);
-    III(e2, a2, b2, c2, d2, 0, 8);
-    III(d2, e2, a2, b2, c2, x[5], 9);
-    III(c2, d2, e2, a2, b2, 0, 11);
-    III(b2, c2, d2, e2, a2, x14, 7);
-    III(a2, b2, c2, d2, e2, 0, 7);
-    III(e2, a2, b2, c2, d2, x8, 12);
-    III(d2, e2, a2, b2, c2, 0, 7);
-    III(c2, d2, e2, a2, b2, x[4], 6);
-    III(b2, c2, d2, e2, a2, 0, 15);
-    III(a2, b2, c2, d2, e2, x[1], 13);
-    III(e2, a2, b2, c2, d2, x[2], 11);
-
-    /* parallel round 3 */
-    HHH(d2, e2, a2, b2, c2, 0, 9);
-    HHH(c2, d2, e2, a2, b2, x[5], 7);
-    HHH(b2, c2, d2, e2, a2, x[1], 15);
-    HHH(a2, b2, c2, d2, e2, x[3], 11);
-    HHH(e2, a2, b2, c2, d2, x[7], 8);
-    HHH(d2, e2, a2, b2, c2, x14, 6);
-    HHH(c2, d2, e2, a2, b2, x[6], 6);
-    HHH(b2, c2, d2, e2, a2, 0, 14);
-    HHH(a2, b2, c2, d2, e2, 0, 12);
-    HHH(e2, a2, b2, c2, d2, x8, 13);
-    HHH(d2, e2, a2, b2, c2, 0, 5);
-    HHH(c2, d2, e2, a2, b2, x[2], 14);
-    HHH(b2, c2, d2, e2, a2, 0, 13);
-    HHH(a2, b2, c2, d2, e2, x[0], 13);
-    HHH(e2, a2, b2, c2, d2, x[4], 7);
-    HHH(d2, e2, a2, b2, c2, 0, 5);
-
-    /* parallel round 4 */
-    GGG(c2, d2, e2, a2, b2, x8, 15);
-    GGG(b2, c2, d2, e2, a2, x[6], 5);
-    GGG(a2, b2, c2, d2, e2, x[4], 8);
-    GGG(e2, a2, b2, c2, d2, x[1], 11);
-    GGG(d2, e2, a2, b2, c2, x[3], 14);
-    GGG(c2, d2, e2, a2, b2, 0, 14);
-    GGG(b2, c2, d2, e2, a2, 0, 6);
-    GGG(a2, b2, c2, d2, e2, x[0], 14);
-    GGG(e2, a2, b2, c2, d2, x[5], 6);
-    GGG(d2, e2, a2, b2, c2, 0, 9);
-    GGG(c2, d2, e2, a2, b2, x[2], 12);
-    GGG(b2, c2, d2, e2, a2, 0, 9);
-    GGG(a2, b2, c2, d2, e2, 0, 12);
-    GGG(e2, a2, b2, c2, d2, x[7], 5);
-    GGG(d2, e2, a2, b2, c2, 0, 15);
-    GGG(c2, d2, e2, a2, b2, x14, 8);
-
-    /* parallel round 5 */
-    FFF(b2, c2, d2, e2, a2, 0, 8);
-    FFF(a2, b2, c2, d2, e2, 0, 5);
-    FFF(e2, a2, b2, c2, d2, 0, 12);
-    FFF(d2, e2, a2, b2, c2, x[4], 9);
-    FFF(c2, d2, e2, a2, b2, x[1], 12);
-    FFF(b2, c2, d2, e2, a2, x[5], 5);
-    FFF(a2, b2, c2, d2, e2, x8, 14);
-    FFF(e2, a2, b2, c2, d2, x[7], 6);
-    FFF(d2, e2, a2, b2, c2, x[6], 8);
-    FFF(c2, d2, e2, a2, b2, x[2], 13);
-    FFF(b2, c2, d2, e2, a2, 0, 6);
-    FFF(a2, b2, c2, d2, e2, x14, 5);
-    FFF(e2, a2, b2, c2, d2, x[0], 15);
-    FFF(d2, e2, a2, b2, c2, x[3], 13);
-    FFF(c2, d2, e2, a2, b2, 0, 11);
-    FFF(b2, c2, d2, e2, a2, 0, 11);
-
-    digest[0] = c1 + d2;
-    digest[1] = d1 + e2;
-    digest[2] = e1 + a2;
-    digest[3] = a1 + b2;
-    digest[4] = b1 + c2;
+    digest[0] = digest1[0] + digest2[0];
+    digest[1] = digest1[1] + digest2[1];
+    digest[2] = digest1[2] + digest2[2];
+    digest[3] = digest1[3] + digest2[3];
+    digest[4] = digest1[4] + digest2[4];
 }
+
+void ripemd160FinalRound(const unsigned int hIn[5], unsigned int hOut[5])
+{
+    hOut[0] = endian(hIn[0] + RIPEMD160_IV[1]);
+    hOut[1] = endian(hIn[1] + RIPEMD160_IV[2]);
+    hOut[2] = endian(hIn[2] + RIPEMD160_IV[3]);
+    hOut[3] = endian(hIn[3] + RIPEMD160_IV[4]);
+    hOut[4] = endian(hIn[4] + RIPEMD160_IV[0]);
+}
+
 #endif
-#ifndef _SECP256K1_CL
-#define _SECP256K1_CL
+#ifndef SECP256K1_CL
+#define SECP256K1_CL
 
-typedef ulong uint64_t;
-
-typedef struct {
-    uint v[8];
-}uint256_t;
-
+typedef struct uint256_t {
+    unsigned int v[8];
+} uint256_t;
 
 /**
- Prime modulus 2^256 - 2^32 - 977
+ * Base point X
  */
-__constant unsigned int _P[8] = {
-    0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFE, 0xFFFFFC2F
-};
-
-__constant unsigned int _P_MINUS1[8] = {
-    0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFE, 0xFFFFFC2F
-};
-
-/**
- Base point X
- */
-__constant unsigned int _GX[8] = {
+__constant unsigned int GX[8] = {
     0x79BE667E, 0xF9DCBBAC, 0x55A06295, 0xCE870B07, 0x029BFCDB, 0x2DCE28D9, 0x59F2815B, 0x16F81798
 };
 
 /**
- Base point Y
+ * Base point Y
  */
-__constant unsigned int _GY[8] = {
+__constant unsigned int GY[8] = {
     0x483ADA77, 0x26A3C465, 0x5DA4FBFC, 0x0E1108A8, 0xFD17B448, 0xA6855419, 0x9C47D08F, 0xFB10D4B8
 };
-
 
 /**
  * Group order
  */
-__constant unsigned int _N[8] = {
+__constant unsigned int N[8] = {
     0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFE, 0xBAAEDCE6, 0xAF48A03B, 0xBFD25E8C, 0xD0364141
 };
 
-__constant unsigned int _INFINITY[8] = {
-    0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF
+/**
+ * Prime modulus 2^256 - 2^32 - 977
+ */
+__constant unsigned int P[8] = {
+    0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFE, 0xFFFFFC2F
 };
 
-void printBigInt(const unsigned int x[8])
-{
-    printf("%.8x %.8x %.8x %.8x %.8x %.8x %.8x %.8x\n",
-        x[0], x[1], x[2], x[3],
-        x[4], x[5], x[6], x[7]);
-}
-
-// Add with carry
-unsigned int addc(unsigned int a, unsigned int b, unsigned int *carry)
-{
-    unsigned int sum = a + *carry;
-
-    unsigned int c1 = (sum < a) ? 1 : 0;
-
-    sum = sum + b;
-    
-    unsigned int c2 = (sum < b) ? 1 : 0;
-
-    *carry = c1 | c2;
-
-    return sum;
-}
-
-// Subtract with borrow
-unsigned int subc(unsigned int a, unsigned int b, unsigned int *borrow)
-{
-    unsigned int diff = a - *borrow;
-
-    *borrow = (diff > a) ? 1 : 0;
-
-    unsigned int diff2 = diff - b;
-
-    *borrow |= (diff2 > diff) ? 1 : 0;
-
-    return diff2;
-}
-
 #ifdef DEVICE_VENDOR_INTEL
-
 // Intel devices have a mul_hi bug
-unsigned int mul_hi977(unsigned int x)
+inline unsigned int mul_hi977(unsigned int x)
 {
     unsigned int high = x >> 16;
     unsigned int low = x & 0xffff;
@@ -588,663 +356,673 @@ unsigned int mul_hi977(unsigned int x)
 }
 
 // 32 x 32 multiply-add
-void madd977(unsigned int *high, unsigned int *low, unsigned int a, unsigned int c)
+inline void madd977(unsigned int *high, unsigned int *low, unsigned int *a, unsigned int *c)
 {
-    *low = a * 977;
-    unsigned int tmp = *low + c;
+    *low = *a * 977;
+    unsigned int tmp = *low + *c;
     unsigned int carry = tmp < *low ? 1 : 0;
     *low = tmp;
-    *high = mul_hi977(a) + carry;
+    *high = mul_hi977(*a) + carry;
 }
-
 #else
 
-// 32 x 32 multiply-add
-void madd977(unsigned int *high, unsigned int *low, unsigned int a, unsigned int c)
+inline void madd977(unsigned int *high, unsigned int *low, unsigned int *a, unsigned int *c)
 {
-    *low = a * 977;
-    unsigned int tmp = *low + c;
+    *low = *a * 977;
+    unsigned int tmp = *low + *c;
     unsigned int carry = tmp < *low ? 1 : 0;
     *low = tmp;
-    *high = mad_hi(a, (unsigned int)977, carry);
+    *high = mad_hi(*a, (unsigned int)977, carry);
 }
 
 #endif
 
-// 32 x 32 multiply-add
-void madd(unsigned int *high, unsigned int *low, unsigned int a, unsigned int b, unsigned int c)
-{
-    *low = a * b;
-    unsigned int tmp = *low + c;
-    unsigned int carry = tmp < *low ? 1 : 0;
-    *low = tmp;
-    *high = mad_hi(a, b, carry);
-}
+// Add with carry
+#define addc(a, b, sum, carry, tmp)      \
+    sum = (a) + (carry);                 \
+    tmp = ((sum) < (a)) * 1;             \
+    sum = (sum) + (b);                   \
+    carry = (tmp) | (((sum) < (b)) * 1);
 
-void mull(unsigned int *high, unsigned int *low, unsigned int a, unsigned int b)
-{
-    *low = a * b;
-    *high = mul_hi(a, b);
-}
+// subtract with borrow
+#define subc(a, b, diff, borrow, tmp)    \
+    tmp = (a) - (borrow);                \
+    borrow = ((tmp) > (a)) * 1;          \
+    diff = (tmp) - (b);                  \
+    borrow |= ((diff) > (tmp)) ? 1 : 0;
 
+#define add256k(a, b, c, carry, tmp)    \
+    addc(a[7], b[7], c[7], carry, tmp); \
+    addc(a[6], b[6], c[6], carry, tmp); \
+    addc(a[5], b[5], c[5], carry, tmp); \
+    addc(a[4], b[4], c[4], carry, tmp); \
+    addc(a[3], b[3], c[3], carry, tmp); \
+    addc(a[2], b[2], c[2], carry, tmp); \
+    addc(a[1], b[1], c[1], carry, tmp); \
+    addc(a[0], b[0], c[0], carry, tmp);
 
-uint256_t sub256k(uint256_t a, uint256_t b, unsigned int* borrow_ptr)
-{
-    unsigned int borrow = 0;
-    uint256_t c;
+#define sub256k( a, b, c, borrow, tmp)   \
+    subc(a[7], b[7], c[7], borrow, tmp); \
+    subc(a[6], b[6], c[6], borrow, tmp); \
+    subc(a[5], b[5], c[5], borrow, tmp); \
+    subc(a[4], b[4], c[4], borrow, tmp); \
+    subc(a[3], b[3], c[3], borrow, tmp); \
+    subc(a[2], b[2], c[2], borrow, tmp); \
+    subc(a[1], b[1], c[1], borrow, tmp); \
+    subc(a[0], b[0], c[0], borrow, tmp);
 
-    for(int i = 7; i >= 0; i--) {
-        c.v[i] = subc(a.v[i], b.v[i], &borrow);
-    }
+#define isInfinity256k(a)        \
+    (                           \
+        (a[0] == 0xffffffff) && \
+        (a[1] == 0xffffffff) && \
+        (a[2] == 0xffffffff) && \
+        (a[3] == 0xffffffff) && \
+        (a[4] == 0xffffffff) && \
+        (a[5] == 0xffffffff) && \
+        (a[6] == 0xffffffff) && \
+        (a[7] == 0xffffffff)    \
+    )
 
-    *borrow_ptr = borrow;
+#define greaterOrEqualToP(a)    \
+    (a[6] >= P[6] || a[7] >= P[7])
 
-    return c;
-}
-
-bool greaterThanEqualToP(const unsigned int a[8])
-{
-    for(int i = 0; i < 8; i++) {
-        if(a[i] > _P_MINUS1[i]) {
-            return true;
-        } else if(a[i] < _P_MINUS1[i]) {
-            return false;
-        }
-    }
-
-    return true;
-}
+#define equal256k(a, b)   \
+    (                     \
+        (a[0] == b[0]) && \
+        (a[1] == b[1]) && \
+        (a[2] == b[2]) && \
+        (a[3] == b[3]) && \
+        (a[4] == b[4]) && \
+        (a[5] == b[5]) && \
+        (a[6] == b[6]) && \
+        (a[7] == b[7])    \
+    )
 
 void multiply256(const unsigned int x[8], const unsigned int y[8], unsigned int out_high[8], unsigned int out_low[8])
 {
-    unsigned int z[16];
-
-    unsigned int high = 0;
+    __private unsigned long product;
 
     // First round, overwrite z
-    for(int j = 7; j >= 0; j--) {
+    product = (unsigned long)x[7] * y[7];
+    out_low[7] = (unsigned int)product;
+    
+    product = (unsigned long)x[7] * y[6] + (unsigned int)(product >> 32);
+    out_low[6] = (unsigned int)product;
+    
+    product = (unsigned long)x[7] * y[5] + (unsigned int)(product >> 32);
+    out_low[5] = (unsigned int)product;
+    
+    product = (unsigned long)x[7] * y[4] + (unsigned int)(product >> 32);
+    out_low[4] = (unsigned int)product;
+    
+    product = (unsigned long)x[7] * y[3] + (unsigned int)(product >> 32);
+    out_low[3] = (unsigned int)product;
+    
+    product = (unsigned long)x[7] * y[2] + (unsigned int)(product >> 32);
+    out_low[2] = (unsigned int)product;
+        
+    product = (unsigned long)x[7] * y[1] + (unsigned int)(product >> 32);
+    out_low[1] = (unsigned int)product;
+        
+    product = (unsigned long)x[7] * y[0] + (unsigned int)(product >> 32);
+    out_low[0] = (unsigned int)product;
+    out_high[7] = (unsigned int)(product >> 32);
 
-        uint64_t product = (uint64_t)x[7] * y[j];
+    product = (unsigned long)x[6] * y[7] + out_low[6];
+    out_low[6] = (unsigned int)product;
 
-        product = product + high;
+    /** round6 */
+    product = (unsigned long)x[6] * y[6] + out_low[5] + (product >> 32);
+    out_low[5] = (unsigned int)product;
 
-        z[7 + j + 1] = (unsigned int)product;
-        high = (unsigned int)(product >> 32);
-    }
-    z[7] = high;
+    product = (unsigned long)x[6] * y[5] + out_low[4] + (product >> 32);
+    out_low[4] = (unsigned int)product;
 
-    for(int i = 6; i >= 0; i--) {
+    product = (unsigned long)x[6] * y[4] + out_low[3] + (product >> 32);
+    out_low[3] = (unsigned int)product;
 
-        high = 0;
+    product = (unsigned long)x[6] * y[3] + out_low[2] + (product >> 32);
+    out_low[2] = (unsigned int)product;
 
-        for(int j = 7; j >= 0; j--) {
+    product = (unsigned long)x[6] * y[2] + out_low[1] + (product >> 32);
+    out_low[1] = (unsigned int)product;
+    
+    product = (unsigned long)x[6] * y[1] + out_low[0] + (product >> 32);
+    out_low[0] = (unsigned int)product;
+    
+    product = (unsigned long)x[6] * y[0] + out_high[7] + (product >> 32);
+    out_high[7] = (unsigned int)product;
+    out_high[6] = product >> 32;
 
-            uint64_t product = (uint64_t)x[i] * y[j];
+    /** round 5 */
+    product = (unsigned long)x[5] * y[7] + out_low[5];
+    out_low[5] = (unsigned int)product;
 
-            product = product + z[i + j + 1] + high;
+    product = (unsigned long)x[5] * y[6] + out_low[4] + (product >> 32);
+    out_low[4] = (unsigned int)product;
 
-            z[i + j + 1] = (unsigned int)product;
+    product = (unsigned long)x[5] * y[5] + out_low[3] + (product >> 32);
+    out_low[3] = (unsigned int)product;
 
-            high = product >> 32;
-        }
+    product = (unsigned long)x[5] * y[4] + out_low[2] + (product >> 32);
+    out_low[2] = (unsigned int)product;
 
-        z[i] = high;
-    }
+    product = (unsigned long)x[5] * y[3] + out_low[1] + (product >> 32);
+    out_low[1] = (unsigned int)product;
 
-    for(int i = 0; i < 8; i++) {
-        out_high[i] = z[i];
-        out_low[i] = z[8 + i];
-    }
+    product = (unsigned long)x[5] * y[2] + out_low[0] + (product >> 32);
+    out_low[0] = (unsigned int)product;
+    
+    product = (unsigned long)x[5] * y[1] + out_high[7] + (product >> 32);
+    out_high[7] = (unsigned int)product;
+    
+    product = (unsigned long)x[5] * y[0] + out_high[6] + (product >> 32);
+    out_high[6] = (unsigned int)product;
+    out_high[5] = product >> 32;
+
+    /** round 4 */
+    product = (unsigned long)x[4] * y[7] + out_low[4];
+    out_low[4] = (unsigned int)product;
+
+    product = (unsigned long)x[4] * y[6] + out_low[3] + (product >> 32);
+    out_low[3] = (unsigned int)product;
+
+    product = (unsigned long)x[4] * y[5] + out_low[2] + (product >> 32);
+    out_low[2] = (unsigned int)product;
+
+    product = (unsigned long)x[4] * y[4] + out_low[1] + (product >> 32);
+    out_low[1] = (unsigned int)product;
+
+    product = (unsigned long)x[4] * y[3] + out_low[0] + (product >> 32);
+    out_low[0] = (unsigned int)product;
+
+    product = (unsigned long)x[4] * y[2] + out_high[7] + (product >> 32);
+    out_high[7] = (unsigned int)product;
+    
+    product = (unsigned long)x[4] * y[1] + out_high[6] + (product >> 32);
+    out_high[6] = (unsigned int)product;
+    
+    product = (unsigned long)x[4] * y[0] + out_high[5] + (product >> 32);
+    out_high[5] = (unsigned int)product;
+    out_high[4] = product >> 32;
+
+    /** round 3 */
+    product = (unsigned long)x[3] * y[7] + out_low[3];
+    out_low[3] = (unsigned int)product;
+
+    product = (unsigned long)x[3] * y[6] + out_low[2] + (product >> 32);
+    out_low[2] = (unsigned int)product;
+
+    product = (unsigned long)x[3] * y[5] + out_low[1] + (product >> 32);
+    out_low[1] = (unsigned int)product;
+
+    product = (unsigned long)x[3] * y[4] + out_low[0] + (product >> 32);
+    out_low[0] = (unsigned int)product;
+
+    product = (unsigned long)x[3] * y[3] + out_high[7] + (product >> 32);
+    out_high[7] = (unsigned int)product;
+
+    product = (unsigned long)x[3] * y[2] + out_high[6] + (product >> 32);
+    out_high[6] = (unsigned int)product;
+    
+    product = (unsigned long)x[3] * y[1] + out_high[5] + (product >> 32);
+    out_high[5] = (unsigned int)product;
+    
+    product = (unsigned long)x[3] * y[0] + out_high[4] + (product >> 32);
+    out_high[4] = (unsigned int)product;
+    out_high[3] = product >> 32;
+
+    /** round 2 */
+    product = (unsigned long)x[2] * y[7] + out_low[2];
+    out_low[2] = (unsigned int)product;
+
+    product = (unsigned long)x[2] * y[6] + out_low[1] + (product >> 32);
+    out_low[1] = (unsigned int)product;
+
+    product = (unsigned long)x[2] * y[5] + out_low[0] + (product >> 32);
+    out_low[0] = (unsigned int)product;
+
+    product = (unsigned long)x[2] * y[4] + out_high[7] + (product >> 32);
+    out_high[7] = (unsigned int)product;
+
+    product = (unsigned long)x[2] * y[3] + out_high[6] + (product >> 32);
+    out_high[6] = (unsigned int)product;
+
+    product = (unsigned long)x[2] * y[2] + out_high[5] + (product >> 32);
+    out_high[5] = (unsigned int)product;
+    
+    product = (unsigned long)x[2] * y[1] + out_high[4] + (product >> 32);
+    out_high[4] = (unsigned int)product;
+    
+    product = (unsigned long)x[2] * y[0] + out_high[3] + (product >> 32);
+    out_high[3] = (unsigned int)product;
+    out_high[2] = product >> 32;
+    
+    /** round 1 */
+    product = (unsigned long)x[1] * y[7] + out_low[1];
+    out_low[1] = (unsigned int)product;
+
+    product = (unsigned long)x[1] * y[6] + out_low[0] + (product >> 32);
+    out_low[0] = (unsigned int)product;
+
+    product = (unsigned long)x[1] * y[5] + out_high[7] + (product >> 32);
+    out_high[7] = (unsigned int)product;
+
+    product = (unsigned long)x[1] * y[4] + out_high[6] + (product >> 32);
+    out_high[6] = (unsigned int)product;
+
+    product = (unsigned long)x[1] * y[3] + out_high[5] + (product >> 32);
+    out_high[5] = (unsigned int)product;
+
+    product = (unsigned long)x[1] * y[2] + out_high[4] + (product >> 32);
+    out_high[4] = (unsigned int)product;
+    
+    product = (unsigned long)x[1] * y[1] + out_high[3] + (product >> 32);
+    out_high[3] = (unsigned int)product;
+    
+    product = (unsigned long)x[1] * y[0] + out_high[2] + (product >> 32);
+    out_high[2] = (unsigned int)product;
+    out_high[1] = product >> 32;
+
+    /** round 0 */
+    product = (unsigned long)x[0] * y[7] + out_low[0];
+    out_low[0] = (unsigned int)product;
+
+    product = (unsigned long)x[0] * y[6] + out_high[7] + (product >> 32);
+    out_high[7] = (unsigned int)product;
+
+    product = (unsigned long)x[0] * y[5] + out_high[6] + (product >> 32);
+    out_high[6] = (unsigned int)product;
+
+    product = (unsigned long)x[0] * y[4] + out_high[5] + (product >> 32);
+    out_high[5] = (unsigned int)product;
+
+    product = (unsigned long)x[0] * y[3] + out_high[4] + (product >> 32);
+    out_high[4] = (unsigned int)product;
+
+    product = (unsigned long)x[0] * y[2] + out_high[3] + (product >> 32);
+    out_high[3] = (unsigned int)product;
+    
+    product = (unsigned long)x[0] * y[1] + out_high[2] + (product >> 32);
+    out_high[2] = (unsigned int)product;
+    
+    product = (unsigned long)x[0] * y[0] + out_high[1] + (product >> 32);
+    out_high[1] = (unsigned int)product;
+    out_high[0] = product >> 32;
 }
 
-
-unsigned int add256(const unsigned int a[8], const unsigned int b[8], unsigned int c[8])
+void mulModP(unsigned int a[8], unsigned int b[8], unsigned int product_low[8])
 {
-    unsigned int carry = 0;
+    __private unsigned int high[8];
+    __private unsigned int low[8];
 
-    for(int i = 7; i >= 0; i--) {
-        c[i] = addc(a[i], b[i], &carry);
-    }
-
-    return carry;
-}
-
-uint256_t add256k(uint256_t a, uint256_t b, unsigned int* carry_ptr)
-{
-    uint256_t c;
-    unsigned int carry = 0;
-
-    for(int i = 7; i >= 0; i--) {
-        c.v[i] = addc(a.v[i], b.v[i], &carry);
-    }
-
-    *carry_ptr = carry;
-
-    return c;
-}
-
-bool isInfinity(const unsigned int x[8])
-{
-    bool isf = true;
-
-    for(int i = 0; i < 8; i++) {
-        if(x[i] != 0xffffffff) {
-            isf = false;
-        }
-    }
-
-    return isf;
-}
-
-bool isInfinity256k(const uint256_t x)
-{
-    bool isf = true;
-
-    for(int i = 0; i < 8; i++) {
-        if(x.v[i] != 0xffffffff) {
-            isf = false;
-        }
-    }
-
-    return isf;
-}
-
-bool equal(const unsigned int a[8], const unsigned int b[8])
-{
-    for(int i = 0; i < 8; i++) {
-        if(a[i] != b[i]) {
-            return false;
-        }
-    }
-
-    return true;
-}
-
-bool equal256k(uint256_t a, uint256_t b)
-{
-    for(int i = 0; i < 8; i++) {
-        if(a.v[i] != b.v[i]) {
-            return false;
-        }
-    }
-
-    return true;
-}
-
-inline uint256_t readInt256(__global const uint256_t* ara, int idx)
-{
-    return ara[idx];
-}
-
-/*
- * Read least-significant word
- */
-unsigned int readLSW(__global const unsigned int *ara, int idx)
-{
-    return ara[idx * 8 + 7];
-}
-
-unsigned int readLSW256k(__global const uint256_t* ara, int idx)
-{
-    return ara[idx].v[7];
-}
-
-unsigned int readWord256k(__global const uint256_t* ara, int idx, int word)
-{
-    return ara[idx].v[word];
-}
-
-unsigned int addP(const unsigned int a[8], unsigned int c[8])
-{
-    unsigned int carry = 0;
-
-    for(int i = 7; i >= 0; i--) {
-        c[i] = addc(a[i], _P[i], &carry);
-    }
-
-    return carry;
-}
-
-unsigned int subP(const unsigned int a[8], unsigned int c[8])
-{
-    unsigned int borrow = 0;
-    for(int i = 7; i >= 0; i--) {
-        c[i] = subc(a[i], _P[i], &borrow);
-    }
-
-    return borrow;
-}
-
-/**
- * Subtraction mod p
- */
-uint256_t subModP256k(uint256_t a, uint256_t b)
-{
-    unsigned int borrow = 0;
-    uint256_t c = sub256k(a, b, &borrow);
-    if(borrow) {
-        addP(c.v, c.v);
-    }
-
-    return c;
-}
-
-
-uint256_t addModP256k(uint256_t a, uint256_t b)
-{
-    unsigned int carry = 0;
-
-    uint256_t c = add256k(a, b, &carry);
-
-    bool gt = false;
-    for(int i = 0; i < 8; i++) {
-        if(c.v[i] > _P[i]) {
-            gt = true;
-            break;
-        } else if(c.v[i] < _P[i]) {
-            break;
-        }
-    }
-
-    if(carry || gt) {
-        subP(c.v, c.v);
-    }
-
-    return c;
-}
-
-
-void mulModP(const unsigned int a[8], const unsigned int b[8], unsigned int product_low[8])
-{
-    unsigned int high[8];
-
-    unsigned int hWord = 0;
-    unsigned int carry = 0;
+    __private unsigned int hWord = 0;
+    __private unsigned int carry = 0;
+    __private unsigned int t = 0;
+    __private unsigned int product6 = 0;
+    __private unsigned int product7 = 0;
+    __private unsigned int tmp;
 
     // 256 x 256 multiply
-    multiply256(a, b, high, product_low);
+    multiply256(a, b, high, low);
+    product_low[7] = low[7];
+    product_low[6] = low[6];
+    product_low[5] = low[5];
+    product_low[4] = low[4];
+    product_low[3] = low[3];
+    product_low[2] = low[2];
+    product_low[1] = low[1];
+    product_low[0] = low[0];
 
     // Add 2^32 * high to the low 256 bits (shift left 1 word and add)
     // Affects product[14] to product[6]
-    for(int i = 6; i >= 0; i--) {
-        product_low[i] = addc(product_low[i], high[i + 1], &carry);
-    }
-    unsigned int product7 = addc(high[0], 0, &carry);
-    unsigned int product6 = carry;
+    addc(product_low[6], high[7], product_low[6], carry, tmp);
+    addc(product_low[5], high[6], product_low[5], carry, tmp);
+    addc(product_low[4], high[5], product_low[4], carry, tmp);
+    addc(product_low[3], high[4], product_low[3], carry, tmp);
+    addc(product_low[2], high[3], product_low[2], carry, tmp);
+    addc(product_low[1], high[2], product_low[1], carry, tmp);
+    addc(product_low[0], high[1], product_low[0], carry, tmp);
+
+    addc(high[0], 0, product7, carry, tmp);
+    product6 = carry;
 
     carry = 0;
 
     // Multiply high by 977 and add to low
     // Affects product[15] to product[5]
     for(int i = 7; i >= 0; i--) {
-        unsigned int t = 0;
-        madd977(&hWord, &t, high[i], hWord);
-        product_low[i] = addc(product_low[i], t, &carry);
+        madd977(&hWord, &t, &high[i], &hWord);
+        addc(product_low[i], t, product_low[i], carry, tmp);
+        t = 0;
     }
-    product7 = addc(product7, hWord, &carry);
-    product6 = addc(product6, 0, &carry);
+    addc(product7, hWord, high[7], carry, tmp);
+    addc(product6, 0, high[6], carry, tmp);
 
     // Multiply high 2 words by 2^32 and add to low
     // Affects product[14] to product[7]
     carry = 0;
-    high[7] = product7;
-    high[6] = product6;
 
-    product7 = 0;
-    product6 = 0;
+    addc(product_low[6], high[7], product_low[6], carry, tmp);
+    addc(product_low[5], high[6], product_low[5], carry, tmp);
 
-    product_low[6] = addc(product_low[6], high[7], &carry);
-    product_low[5] = addc(product_low[5], high[6], &carry);
-
-    // Propagate the carry
-    for(int i = 4; i >= 0; i--) {
-        product_low[i] = addc(product_low[i], 0, &carry);
-    }
-    product7 = carry;
+    addc(product_low[4], 0, product_low[4], carry, tmp);
+    addc(product_low[3], 0, product_low[3], carry, tmp);
+    addc(product_low[2], 0, product_low[2], carry, tmp);
+    addc(product_low[1], 0, product_low[1], carry, tmp);
+    addc(product_low[0], 0, product_low[0], carry, tmp);
 
     // Multiply top 2 words by 977 and add to low
     // Affects product[15] to product[7]
     carry = 0;
     hWord = 0;
-    unsigned int t = 0;
-    madd977(&hWord, &t, high[7], hWord);
-    product_low[7] = addc(product_low[7], t, &carry);
-    madd977(&hWord, &t, high[6], hWord);
-    product_low[6] = addc(product_low[6], t, &carry);
-    product_low[5] = addc(product_low[5], hWord, &carry);
-
+    madd977(&hWord, &t, &high[7], &hWord);
+    addc(product_low[7], t, product_low[7], carry, tmp);
+    madd977(&hWord, &t, &high[6], &hWord);
+    addc(product_low[6], t,  product_low[6], carry, tmp);
+    addc(product_low[5], hWord,  product_low[5], carry, tmp);
     // Propagate carry
-    for(int i = 4; i >= 0; i--) {
-        product_low[i] = addc(product_low[i], 0, &carry);
-    }
-    product7 = carry;
+    addc(product_low[4], 0, product_low[4], carry, tmp);
+    addc(product_low[3], 0, product_low[3], carry, tmp);
+    addc(product_low[2], 0, product_low[2], carry, tmp);
+    addc(product_low[1], 0, product_low[1], carry, tmp);
+    addc(product_low[0], 0, product_low[0], carry, tmp);
 
     // Reduce if >= P
-    if(product7 || greaterThanEqualToP(product_low)) {
-        subP(product_low, product_low);
+    if(carry || greaterOrEqualToP(product_low)) {
+        carry = 0;
+        sub256k(product_low, P, product_low, carry, tmp);
     }
 }
 
-uint256_t mulModP256k(uint256_t a, uint256_t b)
+/**
+ * Subtraction mod p
+ */
+void subModP256k(unsigned int a[8], unsigned int b[8], unsigned int c[8])
 {
-    uint256_t c;
-
-    mulModP(a.v, b.v, c.v);
-
-    return c;
+    __private unsigned int borrow = 0;
+    __private unsigned int tmp;
+    
+    sub256k(a, b, c, borrow, tmp);
+    
+    if (borrow) {
+        borrow = 0;
+        add256k(c, P, c, borrow, tmp);
+    }
 }
-
-
-uint256_t squareModP256k(uint256_t a)
-{
-    uint256_t b;
-    mulModP(a.v, a.v, b.v);
-
-    return b;
-}
-
 
 /**
  * Multiplicative inverse mod P using Fermat's method of x^(p-2) mod p and addition chains
  */
-uint256_t invModP256k(uint256_t value)
+void invModP256k(unsigned int x[8])
 {
-    uint256_t x = value;
+    __private unsigned int y[8] = {0, 0, 0, 0, 0, 0, 0, 1};
 
+    mulModP(x, y, y);
+    mulModP(x, x, x);
+    mulModP(x, x, x);
+    mulModP(x, y, y);
+    mulModP(x, x, x);
+    mulModP(x, y, y);
+    mulModP(x, x, x);
+    mulModP(x, x, x);
+    mulModP(x, y, y);
 
-    //unsigned int y[8] = { 0, 0, 0, 0, 0, 0, 0, 1 };
-    uint256_t y = {{0, 0, 0, 0, 0, 0, 0, 1}};
-
-    // 0xd - 1101
-    y = mulModP256k(x, y);
-    x = squareModP256k(x);
-    //y = mulModP256k(x, y);
-    x = squareModP256k(x);
-    y = mulModP256k(x, y);
-    x = squareModP256k(x);
-    y = mulModP256k(x, y);
-    x = squareModP256k(x);
-
-    // 0x2 - 0010
-    //y = mulModP256k(x, y);
-    x = squareModP256k(x);
-    y = mulModP256k(x, y);
-    x = squareModP256k(x);
-    //y = mulModP256k(x, y);
-    x = squareModP256k(x);
-    //y = mulModP256k(x, y);
-    x = squareModP256k(x);
-
-    // 0xc = 0x1100
-    //y = mulModP256k(x, y);
-    x = squareModP256k(x);
-    //y = mulModP256k(x, y);
-    x = squareModP256k(x);
-    y = mulModP256k(x, y);
-    x = squareModP256k(x);
-    y = mulModP256k(x, y);
-    x = squareModP256k(x);
-
-
-    // 0xfffff
-    y = mulModP256k(x, y);
-    x = squareModP256k(x);
-    y = mulModP256k(x, y);
-    x = squareModP256k(x);
-    y = mulModP256k(x, y);
-    x = squareModP256k(x);
-    y = mulModP256k(x, y);
-    x = squareModP256k(x);
-    y = mulModP256k(x, y);
-    x = squareModP256k(x);
-    y = mulModP256k(x, y);
-    x = squareModP256k(x);
-    y = mulModP256k(x, y);
-    x = squareModP256k(x);
-    y = mulModP256k(x, y);
-    x = squareModP256k(x);
-    y = mulModP256k(x, y);
-    x = squareModP256k(x);
-    y = mulModP256k(x, y);
-    x = squareModP256k(x);
-    y = mulModP256k(x, y);
-    x = squareModP256k(x);
-    y = mulModP256k(x, y);
-    x = squareModP256k(x);
-    y = mulModP256k(x, y);
-    x = squareModP256k(x);
-    y = mulModP256k(x, y);
-    x = squareModP256k(x);
-    y = mulModP256k(x, y);
-    x = squareModP256k(x);
-    y = mulModP256k(x, y);
-    x = squareModP256k(x);
-    y = mulModP256k(x, y);
-    x = squareModP256k(x);
-    y = mulModP256k(x, y);
-    x = squareModP256k(x);
-    y = mulModP256k(x, y);
-    x = squareModP256k(x);
-    y = mulModP256k(x, y);
-    x = squareModP256k(x);
-
-
-    // 0xe - 1110
-    //y = mulModP256k(x, y);
-    x = squareModP256k(x);
-    y = mulModP256k(x, y);
-    x = squareModP256k(x);
-    y = mulModP256k(x, y);
-    x = squareModP256k(x);
-    y = mulModP256k(x, y);
-    x = squareModP256k(x);
-    // 0xfffffffffffffffffffffffffffffffffffffffffffffffffffffff
-    for(int i = 0; i < 219; i++) {
-        y = mulModP256k(x, y);
-        x = squareModP256k(x);
+    for(int i = 0; i < 5; i++) {
+        mulModP(x, x, x);
     }
-    y = mulModP256k(x, y);
 
-    return y;
+    for(int i = 0; i < 22; i++) {
+        mulModP(x, y, y);
+        mulModP(x, x, x);
+    }
+
+    mulModP(x, x, x);
+
+    for(int i = 0; i < 222; i++) {
+        mulModP(x, y, y);
+        mulModP(x, x, x);
+    }
+
+    mulModP(x, y, x);
 }
 
-
-void beginBatchAdd256k(uint256_t px, uint256_t x, __global uint256_t* chain, int i, int batchIdx, uint256_t* inverse)
+void addModP256k(const unsigned int a[8], const unsigned int b[8], unsigned int c[8])
 {
-    int gid = get_local_size(0) * get_group_id(0) + get_local_id(0);
-    int dim = get_global_size(0);
+    __private unsigned int borrow = 0;
+    __private unsigned int carry = 0;
+    __private unsigned int tmp = 0;
+
+    add256k(a, b, c, carry, tmp);
+
+    if(carry) { sub256k(c, P, c, borrow, tmp); }
+
+    else if(c[0] > P[0]) { sub256k(c, P, c, borrow, tmp); } 
+    else if(c[0] < P[0]) {  }
+
+    else if(c[1] > P[1]) { sub256k(c, P, c, borrow, tmp); } 
+    else if(c[1] < P[1]) {  }
+
+    else if(c[2] > P[2]) { sub256k(c, P, c, borrow, tmp); } 
+    else if(c[2] < P[2]) {  }
+    
+    else if(c[3] > P[3]) { sub256k(c, P, c, borrow, tmp); } 
+    else if(c[3] < P[3]) {  }
+    
+    else if(c[4] > P[4]) { sub256k(c, P, c, borrow, tmp); } 
+    else if(c[4] < P[4]) {  }
+    
+    else if(c[5] > P[5]) { sub256k(c, P, c, borrow, tmp); } 
+    else if(c[5] < P[5]) {  }
+    
+    else if(c[6] > P[6]) { sub256k(c, P, c, borrow, tmp); } 
+    else if(c[6] < P[6]) {  }
+
+    else if(c[7] > P[7]) { sub256k(c, P, c, borrow, tmp); } 
+}
+
+void doBatchInverse256k(unsigned int x[8])
+{
+    invModP256k(x);
+}
+
+void beginBatchAdd256k(
+    const uint256_t px,
+    const uint256_t x,
+    __global uint256_t* chain,
+    const int i,
+    const int batchIdx,
+    uint256_t* inverse
+) {
+    __private int gid = get_local_size(0) * get_group_id(0) + get_local_id(0);
+    __private int dim = get_global_size(0);
+
+    __private unsigned int t[8];
 
     // x = Gx - x
-    uint256_t t = subModP256k(px, x);
+    subModP256k(px.v, x.v, t);
 
 
     // Keep a chain of multiples of the diff, i.e. c[0] = diff0, c[1] = diff0 * diff1,
     // c[2] = diff2 * diff1 * diff0, etc
-    *inverse = mulModP256k(*inverse, t);
+    mulModP(inverse->v, t, inverse->v);
 
     chain[batchIdx * dim + gid] = *inverse;
 }
 
+void beginBatchAddWithDouble256k(
+    const uint256_t px,
+    const uint256_t py,
+    __global uint256_t* xPtr,
+    __global uint256_t* chain,
+    const int i,
+    const int batchIdx,
+    uint256_t* inverse
+) {
+    __private int gid = get_local_size(0) * get_group_id(0) + get_local_id(0);
+    __private int dim = get_global_size(0);
+    __private uint256_t x = xPtr[i];
 
-void beginBatchAddWithDouble256k(uint256_t px, uint256_t py, __global uint256_t* xPtr, __global uint256_t* chain, int i, int batchIdx, uint256_t* inverse)
-{
-    int gid = get_local_size(0) * get_group_id(0) + get_local_id(0);
-    int dim = get_global_size(0);
-
-    uint256_t x = xPtr[i];
-
-    if(equal256k(px, x)) {
-        x = addModP256k(py, py);
+    if(equal256k(px.v, x.v)) {
+        addModP256k(py.v,py.v, x.v);
     } else {
         // x = Gx - x
-        x = subModP256k(px, x);
+        subModP256k(px.v, x.v, x.v);
     }
 
     // Keep a chain of multiples of the diff, i.e. c[0] = diff0, c[1] = diff0 * diff1,
     // c[2] = diff2 * diff1 * diff0, etc
-    *inverse = mulModP256k(x, *inverse);
+    mulModP(x.v, inverse->v, inverse->v);
 
     chain[batchIdx * dim + gid] = *inverse;
 }
 
-
-void completeBatchAddWithDouble256k(
-    uint256_t px,
-    uint256_t py,
-    __global const uint256_t* xPtr,
-    __global const uint256_t* yPtr,
-    int i,
-    int batchIdx,
-    __global uint256_t* chain,
-    uint256_t* inverse,
-    uint256_t* newX,
-    uint256_t* newY)
-{
-    int gid = get_local_size(0) * get_group_id(0) + get_local_id(0);
-    int dim = get_global_size(0);
-    uint256_t s;
-    uint256_t x;
-    uint256_t y;
-
-    x = xPtr[i];
-    y = yPtr[i];
-
-    if(batchIdx >= 1) {
-
-        uint256_t c;
-
-        c = chain[(batchIdx - 1) * dim + gid];
-        s = mulModP256k(*inverse, c);
-
-        uint256_t diff;
-        if(equal256k(px, x)) {
-            diff = addModP256k(py, py);
-        } else {
-            diff = subModP256k(px, x);
-        }
-
-        *inverse = mulModP256k(diff, *inverse);
-    } else {
-        s = *inverse;
-    }
-
-
-    if(equal256k(px, x)) {
-        // currently s = 1 / 2y
-
-        uint256_t x2;
-        uint256_t tx2;
-        uint256_t x3;
-
-        // 3x^2
-        x2 = mulModP256k(x, x);
-        tx2 = addModP256k(x2, x2);
-        tx2 = addModP256k(x2, tx2);
-
-        // s = 3x^2 * 1/2y
-        s = mulModP256k(tx2, s);
-
-        // s^2
-        uint256_t s2;
-        s2 = mulModP256k(s, s);
-
-        // Rx = s^2 - 2px
-        *newX = subModP256k(s2, x);
-        *newX = subModP256k(*newX, x);
-
-        // Ry = s(px - rx) - py
-        uint256_t k;
-        k = subModP256k(px, *newX);
-        *newY = mulModP256k(s, k);
-        *newY = subModP256k(*newY, py);
-    } else {
-
-        uint256_t rise;
-        rise = subModP256k(py, y);
-
-        s = mulModP256k(rise, s);
-
-        // Rx = s^2 - Gx - Qx
-        uint256_t s2;
-        s2 = mulModP256k(s, s);
-
-        *newX = subModP256k(s2, px);
-        *newX = subModP256k(*newX, x);
-
-        // Ry = s(px - rx) - py
-        uint256_t k;
-        k = subModP256k(px, *newX);
-        *newY = mulModP256k(s, k);
-        *newY = subModP256k(*newY, py);
-    }
-}
-
-
 void completeBatchAdd256k(
-    uint256_t px,
-    uint256_t py,
+    const uint256_t px,
+    const uint256_t py,
     __global uint256_t* xPtr,
     __global uint256_t* yPtr,
-    int i,
-    int batchIdx,
+    const int i,
+    const int batchIdx,
     __global uint256_t* chain,
     uint256_t* inverse,
     uint256_t* newX,
     uint256_t* newY)
 {
-    int gid = get_local_size(0) * get_group_id(0) + get_local_id(0);
-    int dim = get_global_size(0);
-
+    __private int gid = get_local_size(0) * get_group_id(0) + get_local_id(0);
+    __private int dim = get_global_size(0);
+    __private uint256_t x = xPtr[i];
+    __private uint256_t y = yPtr[i];
+	
     uint256_t s;
-    uint256_t x;
+    __private unsigned int tmp[8];
 
-    x = xPtr[i];
-
-    if(batchIdx >= 1) {
+    if(batchIdx != 0) {
         uint256_t c;
 
         c = chain[(batchIdx - 1) * dim + gid];
-        s = mulModP256k(*inverse, c);
+        mulModP(inverse->v, c.v, s.v);
 
-        uint256_t diff;
-        diff = subModP256k(px, x);
-        *inverse = mulModP256k(diff, *inverse);
+        subModP256k(px.v, x.v, tmp);
+        mulModP(tmp, inverse->v, inverse->v);
     } else {
         s = *inverse;
     }
 
-    uint256_t y;
-    y = yPtr[i];
+	subModP256k(py.v, y.v, tmp);
 
-    uint256_t rise;
-    rise = subModP256k(py, y);
-
-    s = mulModP256k(rise, s);
+    mulModP(tmp, s.v, s.v);
 
     // Rx = s^2 - Gx - Qx
-    uint256_t s2;
-    s2 = mulModP256k(s, s);
+    mulModP(s.v, s.v, tmp);
 
-    *newX = subModP256k(s2, px);
-    *newX = subModP256k(*newX, x);
+    subModP256k(tmp, px.v, newX->v);
+    subModP256k(newX->v, x.v, newX->v);
 
     // Ry = s(px - rx) - py
-    uint256_t k;
-    k = subModP256k(px, *newX);
-    *newY = mulModP256k(s, k);
-    *newY = subModP256k(*newY, py);
+	subModP256k(px.v, newX->v, tmp);
+    mulModP(s.v, tmp, newY->v);
+    subModP256k(newY->v, py.v, newY->v);
 }
 
-
-uint256_t doBatchInverse256k(uint256_t x)
+void completeBatchAddWithDouble256k(
+    const uint256_t px,
+    const uint256_t py,
+    __global const uint256_t* xPtr,
+    __global const uint256_t* yPtr,
+    const int i,
+    const int batchIdx,
+    __global uint256_t* chain,
+    uint256_t* inverse,
+    uint256_t* newX,
+    uint256_t* newY)
 {
-    return invModP256k(x);
+    __private int gid = get_local_size(0) * get_group_id(0) + get_local_id(0);
+    __private int dim = get_global_size(0);
+    __private uint256_t s;
+    __private uint256_t x;
+    __private uint256_t y;
+
+    x = xPtr[i];
+    y = yPtr[i];
+
+    if(batchIdx >= 1) {
+
+        __private uint256_t c;
+
+        c = chain[(batchIdx - 1) * dim + gid];
+        mulModP(inverse->v, c.v, s.v);
+
+        uint256_t diff;
+        if(equal256k(px.v, x.v)) {
+            addModP256k(py.v, py.v, diff.v);
+        } else {
+            subModP256k(px.v, x.v, diff.v);
+        }
+
+        mulModP(diff.v, inverse->v, inverse->v);
+    } else {
+        s = *inverse;
+    }
+
+
+    if(equal256k(px.v, x.v)) {
+        // currently s = 1 / 2y
+
+        __private uint256_t x2;
+        __private uint256_t tx2;
+
+        // 3x^2
+        mulModP(x.v, x.v, x2.v);
+        addModP256k(x2.v, x2.v, tx2.v);
+        addModP256k(x2.v, tx2.v, tx2.v);
+
+        // s = 3x^2 * 1/2y
+        mulModP(tx2.v, s.v, s.v);
+
+        // s^2
+        __private uint256_t s2;
+        mulModP(s.v, s.v, s2.v);
+
+        // Rx = s^2 - 2px
+        subModP256k(s2.v, x.v, newX->v);
+        subModP256k(newX->v, x.v, newX->v);
+
+        // Ry = s(px - rx) - py
+        __private uint256_t k;
+				subModP256k(px.v, newX->v, k.v);
+        mulModP(s.v, k.v, newY->v);
+        subModP256k(newY->v, py.v,newY->v);
+    } else {
+
+        __private uint256_t rise;
+        subModP256k(py.v, y.v, rise.v);
+
+        mulModP(rise.v, s.v, s.v);
+
+        // Rx = s^2 - Gx - Qx
+        __private uint256_t s2;
+        mulModP(s.v, s.v, s2.v);
+
+        subModP256k(s2.v, px.v, newX->v);
+        subModP256k(newX->v, x.v,newX->v);
+
+        // Ry = s(px - rx) - py
+        __private uint256_t k;
+        subModP256k(px.v, newX->v, k.v);
+        mulModP(s.v, k.v, newY->v);
+        subModP256k(newY->v, py.v, newY->v);
+    }
+}
+
+unsigned int readWord256k(__global const uint256_t* ara, const int idx, const int word)
+{
+    return ara[idx].v[word];
 }
 
 #endif
-#ifndef _SHA256_CL
-#define _SHA256_CL
-
+#ifndef SHA256_CL
+#define SHA256_CL
 
 __constant unsigned int _K[64] = {
     0x428a2f98, 0x71374491, 0xb5c0fbcf, 0xe9b5dba5, 0x3956c25b, 0x59f111f1, 0x923f82a4, 0xab1c5ed5,
@@ -1270,7 +1048,6 @@ __constant unsigned int _IV[8] = {
 
 #define rotr(x, n) ((x) >> (n)) ^ ((x) << (32 - (n)))
 
-
 #define MAJ(a, b, c) (((a) & (b)) ^ ((a) & (c)) ^ ((b) & (c)))
 
 #define CH(e, f, g) (((e) & (f)) ^ (~(e) & (g)))
@@ -1279,17 +1056,25 @@ __constant unsigned int _IV[8] = {
 
 #define s1(x) (rotr((x), 17) ^ rotr((x), 19) ^ ((x) >> 10))
 
-#define round(a, b, c, d, e, f, g, h, m, k)\
+#define roundSha(a, b, c, d, e, f, g, h, m, k)\
     t = CH((e), (f), (g)) + (rotr((e), 6) ^ rotr((e), 11) ^ rotr((e), 25)) + (k) + (m);\
     (d) += (t) + (h);\
     (h) += (t) + MAJ((a), (b), (c)) + (rotr((a), 2) ^ rotr((a), 13) ^ rotr((a), 22))
 
-
 void sha256PublicKey(const unsigned int x[8], const unsigned int y[8], unsigned int digest[8])
 {
-    unsigned int a, b, c, d, e, f, g, h;
-    unsigned int w[16];
-    unsigned int t;
+    __private unsigned int a, b, c, d, e, f, g, h;
+    __private unsigned int w[16];
+    __private unsigned int t;
+
+    a = _IV[0];
+    b = _IV[1];
+    c = _IV[2];
+    d = _IV[3];
+    e = _IV[4];
+    f = _IV[5];
+    g = _IV[6];
+    h = _IV[7];
 
     // 0x04 || x || y
     w[0] = (x[0] >> 8) | 0x04000000;
@@ -1309,31 +1094,22 @@ void sha256PublicKey(const unsigned int x[8], const unsigned int y[8], unsigned 
     w[14] = (y[6] >> 8) | (y[5] << 24);
     w[15] = (y[7] >> 8) | (y[6] << 24);
 
-    a = _IV[0];
-    b = _IV[1];
-    c = _IV[2];
-    d = _IV[3];
-    e = _IV[4];
-    f = _IV[5];
-    g = _IV[6];
-    h = _IV[7];
-
-    round(a, b, c, d, e, f, g, h, w[0], _K[0]);
-    round(h, a, b, c, d, e, f, g, w[1], _K[1]);
-    round(g, h, a, b, c, d, e, f, w[2], _K[2]);
-    round(f, g, h, a, b, c, d, e, w[3], _K[3]);
-    round(e, f, g, h, a, b, c, d, w[4], _K[4]);
-    round(d, e, f, g, h, a, b, c, w[5], _K[5]);
-    round(c, d, e, f, g, h, a, b, w[6], _K[6]);
-    round(b, c, d, e, f, g, h, a, w[7], _K[7]);
-    round(a, b, c, d, e, f, g, h, w[8], _K[8]);
-    round(h, a, b, c, d, e, f, g, w[9], _K[9]);
-    round(g, h, a, b, c, d, e, f, w[10], _K[10]);
-    round(f, g, h, a, b, c, d, e, w[11], _K[11]);
-    round(e, f, g, h, a, b, c, d, w[12], _K[12]);
-    round(d, e, f, g, h, a, b, c, w[13], _K[13]);
-    round(c, d, e, f, g, h, a, b, w[14], _K[14]);
-    round(b, c, d, e, f, g, h, a, w[15], _K[15]);
+    roundSha(a, b, c, d, e, f, g, h, w[0], _K[0]);
+    roundSha(h, a, b, c, d, e, f, g, w[1], _K[1]);
+    roundSha(g, h, a, b, c, d, e, f, w[2], _K[2]);
+    roundSha(f, g, h, a, b, c, d, e, w[3], _K[3]);
+    roundSha(e, f, g, h, a, b, c, d, w[4], _K[4]);
+    roundSha(d, e, f, g, h, a, b, c, w[5], _K[5]);
+    roundSha(c, d, e, f, g, h, a, b, w[6], _K[6]);
+    roundSha(b, c, d, e, f, g, h, a, w[7], _K[7]);
+    roundSha(a, b, c, d, e, f, g, h, w[8], _K[8]);
+    roundSha(h, a, b, c, d, e, f, g, w[9], _K[9]);
+    roundSha(g, h, a, b, c, d, e, f, w[10], _K[10]);
+    roundSha(f, g, h, a, b, c, d, e, w[11], _K[11]);
+    roundSha(e, f, g, h, a, b, c, d, w[12], _K[12]);
+    roundSha(d, e, f, g, h, a, b, c, w[13], _K[13]);
+    roundSha(c, d, e, f, g, h, a, b, w[14], _K[14]);
+    roundSha(b, c, d, e, f, g, h, a, w[15], _K[15]);
 
     w[0] = w[0] + s0(w[1]) + w[9] + s1(w[14]);
     w[1] = w[1] + s0(w[2]) + w[10] + s1(w[15]);
@@ -1352,22 +1128,22 @@ void sha256PublicKey(const unsigned int x[8], const unsigned int y[8], unsigned 
     w[14] = w[14] + s0(w[15]) + w[7] + s1(w[12]);
     w[15] = w[15] + s0(w[0]) + w[8] + s1(w[13]);
 
-    round(a, b, c, d, e, f, g, h, w[0], _K[16]);
-    round(h, a, b, c, d, e, f, g, w[1], _K[17]);
-    round(g, h, a, b, c, d, e, f, w[2], _K[18]);
-    round(f, g, h, a, b, c, d, e, w[3], _K[19]);
-    round(e, f, g, h, a, b, c, d, w[4], _K[20]);
-    round(d, e, f, g, h, a, b, c, w[5], _K[21]);
-    round(c, d, e, f, g, h, a, b, w[6], _K[22]);
-    round(b, c, d, e, f, g, h, a, w[7], _K[23]);
-    round(a, b, c, d, e, f, g, h, w[8], _K[24]);
-    round(h, a, b, c, d, e, f, g, w[9], _K[25]);
-    round(g, h, a, b, c, d, e, f, w[10], _K[26]);
-    round(f, g, h, a, b, c, d, e, w[11], _K[27]);
-    round(e, f, g, h, a, b, c, d, w[12], _K[28]);
-    round(d, e, f, g, h, a, b, c, w[13], _K[29]);
-    round(c, d, e, f, g, h, a, b, w[14], _K[30]);
-    round(b, c, d, e, f, g, h, a, w[15], _K[31]);
+    roundSha(a, b, c, d, e, f, g, h, w[0], _K[16]);
+    roundSha(h, a, b, c, d, e, f, g, w[1], _K[17]);
+    roundSha(g, h, a, b, c, d, e, f, w[2], _K[18]);
+    roundSha(f, g, h, a, b, c, d, e, w[3], _K[19]);
+    roundSha(e, f, g, h, a, b, c, d, w[4], _K[20]);
+    roundSha(d, e, f, g, h, a, b, c, w[5], _K[21]);
+    roundSha(c, d, e, f, g, h, a, b, w[6], _K[22]);
+    roundSha(b, c, d, e, f, g, h, a, w[7], _K[23]);
+    roundSha(a, b, c, d, e, f, g, h, w[8], _K[24]);
+    roundSha(h, a, b, c, d, e, f, g, w[9], _K[25]);
+    roundSha(g, h, a, b, c, d, e, f, w[10], _K[26]);
+    roundSha(f, g, h, a, b, c, d, e, w[11], _K[27]);
+    roundSha(e, f, g, h, a, b, c, d, w[12], _K[28]);
+    roundSha(d, e, f, g, h, a, b, c, w[13], _K[29]);
+    roundSha(c, d, e, f, g, h, a, b, w[14], _K[30]);
+    roundSha(b, c, d, e, f, g, h, a, w[15], _K[31]);
 
     w[0] = w[0] + s0(w[1]) + w[9] + s1(w[14]);
     w[1] = w[1] + s0(w[2]) + w[10] + s1(w[15]);
@@ -1386,22 +1162,22 @@ void sha256PublicKey(const unsigned int x[8], const unsigned int y[8], unsigned 
     w[14] = w[14] + s0(w[15]) + w[7] + s1(w[12]);
     w[15] = w[15] + s0(w[0]) + w[8] + s1(w[13]);
 
-    round(a, b, c, d, e, f, g, h, w[0], _K[32]);
-    round(h, a, b, c, d, e, f, g, w[1], _K[33]);
-    round(g, h, a, b, c, d, e, f, w[2], _K[34]);
-    round(f, g, h, a, b, c, d, e, w[3], _K[35]);
-    round(e, f, g, h, a, b, c, d, w[4], _K[36]);
-    round(d, e, f, g, h, a, b, c, w[5], _K[37]);
-    round(c, d, e, f, g, h, a, b, w[6], _K[38]);
-    round(b, c, d, e, f, g, h, a, w[7], _K[39]);
-    round(a, b, c, d, e, f, g, h, w[8], _K[40]);
-    round(h, a, b, c, d, e, f, g, w[9], _K[41]);
-    round(g, h, a, b, c, d, e, f, w[10], _K[42]);
-    round(f, g, h, a, b, c, d, e, w[11], _K[43]);
-    round(e, f, g, h, a, b, c, d, w[12], _K[44]);
-    round(d, e, f, g, h, a, b, c, w[13], _K[45]);
-    round(c, d, e, f, g, h, a, b, w[14], _K[46]);
-    round(b, c, d, e, f, g, h, a, w[15], _K[47]);
+    roundSha(a, b, c, d, e, f, g, h, w[0], _K[32]);
+    roundSha(h, a, b, c, d, e, f, g, w[1], _K[33]);
+    roundSha(g, h, a, b, c, d, e, f, w[2], _K[34]);
+    roundSha(f, g, h, a, b, c, d, e, w[3], _K[35]);
+    roundSha(e, f, g, h, a, b, c, d, w[4], _K[36]);
+    roundSha(d, e, f, g, h, a, b, c, w[5], _K[37]);
+    roundSha(c, d, e, f, g, h, a, b, w[6], _K[38]);
+    roundSha(b, c, d, e, f, g, h, a, w[7], _K[39]);
+    roundSha(a, b, c, d, e, f, g, h, w[8], _K[40]);
+    roundSha(h, a, b, c, d, e, f, g, w[9], _K[41]);
+    roundSha(g, h, a, b, c, d, e, f, w[10], _K[42]);
+    roundSha(f, g, h, a, b, c, d, e, w[11], _K[43]);
+    roundSha(e, f, g, h, a, b, c, d, w[12], _K[44]);
+    roundSha(d, e, f, g, h, a, b, c, w[13], _K[45]);
+    roundSha(c, d, e, f, g, h, a, b, w[14], _K[46]);
+    roundSha(b, c, d, e, f, g, h, a, w[15], _K[47]);
 
     w[0] = w[0] + s0(w[1]) + w[9] + s1(w[14]);
     w[1] = w[1] + s0(w[2]) + w[10] + s1(w[15]);
@@ -1420,22 +1196,22 @@ void sha256PublicKey(const unsigned int x[8], const unsigned int y[8], unsigned 
     w[14] = w[14] + s0(w[15]) + w[7] + s1(w[12]);
     w[15] = w[15] + s0(w[0]) + w[8] + s1(w[13]);
 
-    round(a, b, c, d, e, f, g, h, w[0], _K[48]);
-    round(h, a, b, c, d, e, f, g, w[1], _K[49]);
-    round(g, h, a, b, c, d, e, f, w[2], _K[50]);
-    round(f, g, h, a, b, c, d, e, w[3], _K[51]);
-    round(e, f, g, h, a, b, c, d, w[4], _K[52]);
-    round(d, e, f, g, h, a, b, c, w[5], _K[53]);
-    round(c, d, e, f, g, h, a, b, w[6], _K[54]);
-    round(b, c, d, e, f, g, h, a, w[7], _K[55]);
-    round(a, b, c, d, e, f, g, h, w[8], _K[56]);
-    round(h, a, b, c, d, e, f, g, w[9], _K[57]);
-    round(g, h, a, b, c, d, e, f, w[10], _K[58]);
-    round(f, g, h, a, b, c, d, e, w[11], _K[59]);
-    round(e, f, g, h, a, b, c, d, w[12], _K[60]);
-    round(d, e, f, g, h, a, b, c, w[13], _K[61]);
-    round(c, d, e, f, g, h, a, b, w[14], _K[62]);
-    round(b, c, d, e, f, g, h, a, w[15], _K[63]);
+    roundSha(a, b, c, d, e, f, g, h, w[0], _K[48]);
+    roundSha(h, a, b, c, d, e, f, g, w[1], _K[49]);
+    roundSha(g, h, a, b, c, d, e, f, w[2], _K[50]);
+    roundSha(f, g, h, a, b, c, d, e, w[3], _K[51]);
+    roundSha(e, f, g, h, a, b, c, d, w[4], _K[52]);
+    roundSha(d, e, f, g, h, a, b, c, w[5], _K[53]);
+    roundSha(c, d, e, f, g, h, a, b, w[6], _K[54]);
+    roundSha(b, c, d, e, f, g, h, a, w[7], _K[55]);
+    roundSha(a, b, c, d, e, f, g, h, w[8], _K[56]);
+    roundSha(h, a, b, c, d, e, f, g, w[9], _K[57]);
+    roundSha(g, h, a, b, c, d, e, f, w[10], _K[58]);
+    roundSha(f, g, h, a, b, c, d, e, w[11], _K[59]);
+    roundSha(e, f, g, h, a, b, c, d, w[12], _K[60]);
+    roundSha(d, e, f, g, h, a, b, c, w[13], _K[61]);
+    roundSha(c, d, e, f, g, h, a, b, w[14], _K[62]);
+    roundSha(b, c, d, e, f, g, h, a, w[15], _K[63]);
 
     a += _IV[0];
     b += _IV[1];
@@ -1447,35 +1223,34 @@ void sha256PublicKey(const unsigned int x[8], const unsigned int y[8], unsigned 
     h += _IV[7];
 
     // store the intermediate hash value
-    unsigned int tmp[8];
-    tmp[0] = a;
-    tmp[1] = b;
-    tmp[2] = c;
-    tmp[3] = d;
-    tmp[4] = e;
-    tmp[5] = f;
-    tmp[6] = g;
-    tmp[7] = h;
+    digest[0] = a;
+    digest[1] = b;
+    digest[2] = c;
+    digest[3] = d;
+    digest[4] = e;
+    digest[5] = f;
+    digest[6] = g;
+    digest[7] = h;
 
     w[0] = (y[7] << 24) | 0x00800000;
-    w[15] = 65 * 8;
+    w[15] = 520; // 65 * 8
 
-    round(a, b, c, d, e, f, g, h, w[0], _K[0]);
-    round(h, a, b, c, d, e, f, g, 0, _K[1]);
-    round(g, h, a, b, c, d, e, f, 0, _K[2]);
-    round(f, g, h, a, b, c, d, e, 0, _K[3]);
-    round(e, f, g, h, a, b, c, d, 0, _K[4]);
-    round(d, e, f, g, h, a, b, c, 0, _K[5]);
-    round(c, d, e, f, g, h, a, b, 0, _K[6]);
-    round(b, c, d, e, f, g, h, a, 0, _K[7]);
-    round(a, b, c, d, e, f, g, h, 0, _K[8]);
-    round(h, a, b, c, d, e, f, g, 0, _K[9]);
-    round(g, h, a, b, c, d, e, f, 0, _K[10]);
-    round(f, g, h, a, b, c, d, e, 0, _K[11]);
-    round(e, f, g, h, a, b, c, d, 0, _K[12]);
-    round(d, e, f, g, h, a, b, c, 0, _K[13]);
-    round(c, d, e, f, g, h, a, b, 0, _K[14]);
-    round(b, c, d, e, f, g, h, a, w[15], _K[15]);
+    roundSha(a, b, c, d, e, f, g, h, w[0], _K[0]);
+    roundSha(h, a, b, c, d, e, f, g, 0, _K[1]);
+    roundSha(g, h, a, b, c, d, e, f, 0, _K[2]);
+    roundSha(f, g, h, a, b, c, d, e, 0, _K[3]);
+    roundSha(e, f, g, h, a, b, c, d, 0, _K[4]);
+    roundSha(d, e, f, g, h, a, b, c, 0, _K[5]);
+    roundSha(c, d, e, f, g, h, a, b, 0, _K[6]);
+    roundSha(b, c, d, e, f, g, h, a, 0, _K[7]);
+    roundSha(a, b, c, d, e, f, g, h, 0, _K[8]);
+    roundSha(h, a, b, c, d, e, f, g, 0, _K[9]);
+    roundSha(g, h, a, b, c, d, e, f, 0, _K[10]);
+    roundSha(f, g, h, a, b, c, d, e, 0, _K[11]);
+    roundSha(e, f, g, h, a, b, c, d, 0, _K[12]);
+    roundSha(d, e, f, g, h, a, b, c, 0, _K[13]);
+    roundSha(c, d, e, f, g, h, a, b, 0, _K[14]);
+    roundSha(b, c, d, e, f, g, h, a, w[15], _K[15]);
 
     w[0] = w[0] + s0(0) + 0 + s1(0);
     w[1] = 0 + s0(0) + 0 + s1(w[15]);
@@ -1494,22 +1269,22 @@ void sha256PublicKey(const unsigned int x[8], const unsigned int y[8], unsigned 
     w[14] = 0 + s0(w[15]) + w[7] + s1(w[12]);
     w[15] = w[15] + s0(w[0]) + w[8] + s1(w[13]);
 
-    round(a, b, c, d, e, f, g, h, w[0], _K[16]);
-    round(h, a, b, c, d, e, f, g, w[1], _K[17]);
-    round(g, h, a, b, c, d, e, f, w[2], _K[18]);
-    round(f, g, h, a, b, c, d, e, w[3], _K[19]);
-    round(e, f, g, h, a, b, c, d, w[4], _K[20]);
-    round(d, e, f, g, h, a, b, c, w[5], _K[21]);
-    round(c, d, e, f, g, h, a, b, w[6], _K[22]);
-    round(b, c, d, e, f, g, h, a, w[7], _K[23]);
-    round(a, b, c, d, e, f, g, h, w[8], _K[24]);
-    round(h, a, b, c, d, e, f, g, w[9], _K[25]);
-    round(g, h, a, b, c, d, e, f, w[10], _K[26]);
-    round(f, g, h, a, b, c, d, e, w[11], _K[27]);
-    round(e, f, g, h, a, b, c, d, w[12], _K[28]);
-    round(d, e, f, g, h, a, b, c, w[13], _K[29]);
-    round(c, d, e, f, g, h, a, b, w[14], _K[30]);
-    round(b, c, d, e, f, g, h, a, w[15], _K[31]);
+    roundSha(a, b, c, d, e, f, g, h, w[0], _K[16]);
+    roundSha(h, a, b, c, d, e, f, g, w[1], _K[17]);
+    roundSha(g, h, a, b, c, d, e, f, w[2], _K[18]);
+    roundSha(f, g, h, a, b, c, d, e, w[3], _K[19]);
+    roundSha(e, f, g, h, a, b, c, d, w[4], _K[20]);
+    roundSha(d, e, f, g, h, a, b, c, w[5], _K[21]);
+    roundSha(c, d, e, f, g, h, a, b, w[6], _K[22]);
+    roundSha(b, c, d, e, f, g, h, a, w[7], _K[23]);
+    roundSha(a, b, c, d, e, f, g, h, w[8], _K[24]);
+    roundSha(h, a, b, c, d, e, f, g, w[9], _K[25]);
+    roundSha(g, h, a, b, c, d, e, f, w[10], _K[26]);
+    roundSha(f, g, h, a, b, c, d, e, w[11], _K[27]);
+    roundSha(e, f, g, h, a, b, c, d, w[12], _K[28]);
+    roundSha(d, e, f, g, h, a, b, c, w[13], _K[29]);
+    roundSha(c, d, e, f, g, h, a, b, w[14], _K[30]);
+    roundSha(b, c, d, e, f, g, h, a, w[15], _K[31]);
 
     w[0] = w[0] + s0(w[1]) + w[9] + s1(w[14]);
     w[1] = w[1] + s0(w[2]) + w[10] + s1(w[15]);
@@ -1528,22 +1303,22 @@ void sha256PublicKey(const unsigned int x[8], const unsigned int y[8], unsigned 
     w[14] = w[14] + s0(w[15]) + w[7] + s1(w[12]);
     w[15] = w[15] + s0(w[0]) + w[8] + s1(w[13]);
 
-    round(a, b, c, d, e, f, g, h, w[0], _K[32]);
-    round(h, a, b, c, d, e, f, g, w[1], _K[33]);
-    round(g, h, a, b, c, d, e, f, w[2], _K[34]);
-    round(f, g, h, a, b, c, d, e, w[3], _K[35]);
-    round(e, f, g, h, a, b, c, d, w[4], _K[36]);
-    round(d, e, f, g, h, a, b, c, w[5], _K[37]);
-    round(c, d, e, f, g, h, a, b, w[6], _K[38]);
-    round(b, c, d, e, f, g, h, a, w[7], _K[39]);
-    round(a, b, c, d, e, f, g, h, w[8], _K[40]);
-    round(h, a, b, c, d, e, f, g, w[9], _K[41]);
-    round(g, h, a, b, c, d, e, f, w[10], _K[42]);
-    round(f, g, h, a, b, c, d, e, w[11], _K[43]);
-    round(e, f, g, h, a, b, c, d, w[12], _K[44]);
-    round(d, e, f, g, h, a, b, c, w[13], _K[45]);
-    round(c, d, e, f, g, h, a, b, w[14], _K[46]);
-    round(b, c, d, e, f, g, h, a, w[15], _K[47]);
+    roundSha(a, b, c, d, e, f, g, h, w[0], _K[32]);
+    roundSha(h, a, b, c, d, e, f, g, w[1], _K[33]);
+    roundSha(g, h, a, b, c, d, e, f, w[2], _K[34]);
+    roundSha(f, g, h, a, b, c, d, e, w[3], _K[35]);
+    roundSha(e, f, g, h, a, b, c, d, w[4], _K[36]);
+    roundSha(d, e, f, g, h, a, b, c, w[5], _K[37]);
+    roundSha(c, d, e, f, g, h, a, b, w[6], _K[38]);
+    roundSha(b, c, d, e, f, g, h, a, w[7], _K[39]);
+    roundSha(a, b, c, d, e, f, g, h, w[8], _K[40]);
+    roundSha(h, a, b, c, d, e, f, g, w[9], _K[41]);
+    roundSha(g, h, a, b, c, d, e, f, w[10], _K[42]);
+    roundSha(f, g, h, a, b, c, d, e, w[11], _K[43]);
+    roundSha(e, f, g, h, a, b, c, d, w[12], _K[44]);
+    roundSha(d, e, f, g, h, a, b, c, w[13], _K[45]);
+    roundSha(c, d, e, f, g, h, a, b, w[14], _K[46]);
+    roundSha(b, c, d, e, f, g, h, a, w[15], _K[47]);
 
     w[0] = w[0] + s0(w[1]) + w[9] + s1(w[14]);
     w[1] = w[1] + s0(w[2]) + w[10] + s1(w[15]);
@@ -1562,38 +1337,38 @@ void sha256PublicKey(const unsigned int x[8], const unsigned int y[8], unsigned 
     w[14] = w[14] + s0(w[15]) + w[7] + s1(w[12]);
     w[15] = w[15] + s0(w[0]) + w[8] + s1(w[13]);
 
-    round(a, b, c, d, e, f, g, h, w[0], _K[48]);
-    round(h, a, b, c, d, e, f, g, w[1], _K[49]);
-    round(g, h, a, b, c, d, e, f, w[2], _K[50]);
-    round(f, g, h, a, b, c, d, e, w[3], _K[51]);
-    round(e, f, g, h, a, b, c, d, w[4], _K[52]);
-    round(d, e, f, g, h, a, b, c, w[5], _K[53]);
-    round(c, d, e, f, g, h, a, b, w[6], _K[54]);
-    round(b, c, d, e, f, g, h, a, w[7], _K[55]);
-    round(a, b, c, d, e, f, g, h, w[8], _K[56]);
-    round(h, a, b, c, d, e, f, g, w[9], _K[57]);
-    round(g, h, a, b, c, d, e, f, w[10], _K[58]);
-    round(f, g, h, a, b, c, d, e, w[11], _K[59]);
-    round(e, f, g, h, a, b, c, d, w[12], _K[60]);
-    round(d, e, f, g, h, a, b, c, w[13], _K[61]);
-    round(c, d, e, f, g, h, a, b, w[14], _K[62]);
-    round(b, c, d, e, f, g, h, a, w[15], _K[63]);
+    roundSha(a, b, c, d, e, f, g, h, w[0], _K[48]);
+    roundSha(h, a, b, c, d, e, f, g, w[1], _K[49]);
+    roundSha(g, h, a, b, c, d, e, f, w[2], _K[50]);
+    roundSha(f, g, h, a, b, c, d, e, w[3], _K[51]);
+    roundSha(e, f, g, h, a, b, c, d, w[4], _K[52]);
+    roundSha(d, e, f, g, h, a, b, c, w[5], _K[53]);
+    roundSha(c, d, e, f, g, h, a, b, w[6], _K[54]);
+    roundSha(b, c, d, e, f, g, h, a, w[7], _K[55]);
+    roundSha(a, b, c, d, e, f, g, h, w[8], _K[56]);
+    roundSha(h, a, b, c, d, e, f, g, w[9], _K[57]);
+    roundSha(g, h, a, b, c, d, e, f, w[10], _K[58]);
+    roundSha(f, g, h, a, b, c, d, e, w[11], _K[59]);
+    roundSha(e, f, g, h, a, b, c, d, w[12], _K[60]);
+    roundSha(d, e, f, g, h, a, b, c, w[13], _K[61]);
+    roundSha(c, d, e, f, g, h, a, b, w[14], _K[62]);
+    roundSha(b, c, d, e, f, g, h, a, w[15], _K[63]);
 
-    digest[0] = tmp[0] + a;
-    digest[1] = tmp[1] + b;
-    digest[2] = tmp[2] + c;
-    digest[3] = tmp[3] + d;
-    digest[4] = tmp[4] + e;
-    digest[5] = tmp[5] + f;
-    digest[6] = tmp[6] + g;
-    digest[7] = tmp[7] + h;
+    digest[0] += a;
+    digest[1] += b;
+    digest[2] += c;
+    digest[3] += d;
+    digest[4] += e;
+    digest[5] += f;
+    digest[6] += g;
+    digest[7] += h;
 }
 
 void sha256PublicKeyCompressed(const unsigned int x[8], unsigned int yParity, unsigned int digest[8])
 {
-    unsigned int a, b, c, d, e, f, g, h;
-    unsigned int w[16];
-    unsigned int t;
+    __private unsigned int a, b, c, d, e, f, g, h;
+    __private unsigned int w[16];
+    __private unsigned int t;
 
     // 0x03 || x  or  0x02 || x
     w[0] = 0x02000000 | ((yParity & 1) << 24) | (x[0] >> 8);
@@ -1606,7 +1381,7 @@ void sha256PublicKeyCompressed(const unsigned int x[8], unsigned int yParity, un
     w[6] = (x[6] >> 8) | (x[5] << 24);
     w[7] = (x[7] >> 8) | (x[6] << 24);
     w[8] = (x[7] << 24) | 0x00800000;
-    w[15] = 33 * 8;
+    w[15] = 264; // 33 * 8
 
     a = _IV[0];
     b = _IV[1];
@@ -1617,22 +1392,22 @@ void sha256PublicKeyCompressed(const unsigned int x[8], unsigned int yParity, un
     g = _IV[6];
     h = _IV[7];
 
-    round(a, b, c, d, e, f, g, h, w[0], _K[0]);
-    round(h, a, b, c, d, e, f, g, w[1], _K[1]);
-    round(g, h, a, b, c, d, e, f, w[2], _K[2]);
-    round(f, g, h, a, b, c, d, e, w[3], _K[3]);
-    round(e, f, g, h, a, b, c, d, w[4], _K[4]);
-    round(d, e, f, g, h, a, b, c, w[5], _K[5]);
-    round(c, d, e, f, g, h, a, b, w[6], _K[6]);
-    round(b, c, d, e, f, g, h, a, w[7], _K[7]);
-    round(a, b, c, d, e, f, g, h, w[8], _K[8]);
-    round(h, a, b, c, d, e, f, g, 0, _K[9]);
-    round(g, h, a, b, c, d, e, f, 0, _K[10]);
-    round(f, g, h, a, b, c, d, e, 0, _K[11]);
-    round(e, f, g, h, a, b, c, d, 0, _K[12]);
-    round(d, e, f, g, h, a, b, c, 0, _K[13]);
-    round(c, d, e, f, g, h, a, b, 0, _K[14]);
-    round(b, c, d, e, f, g, h, a, w[15], _K[15]);
+    roundSha(a, b, c, d, e, f, g, h, w[0], _K[0]);
+    roundSha(h, a, b, c, d, e, f, g, w[1], _K[1]);
+    roundSha(g, h, a, b, c, d, e, f, w[2], _K[2]);
+    roundSha(f, g, h, a, b, c, d, e, w[3], _K[3]);
+    roundSha(e, f, g, h, a, b, c, d, w[4], _K[4]);
+    roundSha(d, e, f, g, h, a, b, c, w[5], _K[5]);
+    roundSha(c, d, e, f, g, h, a, b, w[6], _K[6]);
+    roundSha(b, c, d, e, f, g, h, a, w[7], _K[7]);
+    roundSha(a, b, c, d, e, f, g, h, w[8], _K[8]);
+    roundSha(h, a, b, c, d, e, f, g, 0, _K[9]);
+    roundSha(g, h, a, b, c, d, e, f, 0, _K[10]);
+    roundSha(f, g, h, a, b, c, d, e, 0, _K[11]);
+    roundSha(e, f, g, h, a, b, c, d, 0, _K[12]);
+    roundSha(d, e, f, g, h, a, b, c, 0, _K[13]);
+    roundSha(c, d, e, f, g, h, a, b, 0, _K[14]);
+    roundSha(b, c, d, e, f, g, h, a, w[15], _K[15]);
 
     w[0] = w[0] + s0(w[1]) + 0 + s1(0);
     w[1] = w[1] + s0(w[2]) + 0 + s1(w[15]);
@@ -1651,22 +1426,22 @@ void sha256PublicKeyCompressed(const unsigned int x[8], unsigned int yParity, un
     w[14] = 0 + s0(w[15]) + w[7] + s1(w[12]);
     w[15] = w[15] + s0(w[0]) + w[8] + s1(w[13]);
 
-    round(a, b, c, d, e, f, g, h, w[0], _K[16]);
-    round(h, a, b, c, d, e, f, g, w[1], _K[17]);
-    round(g, h, a, b, c, d, e, f, w[2], _K[18]);
-    round(f, g, h, a, b, c, d, e, w[3], _K[19]);
-    round(e, f, g, h, a, b, c, d, w[4], _K[20]);
-    round(d, e, f, g, h, a, b, c, w[5], _K[21]);
-    round(c, d, e, f, g, h, a, b, w[6], _K[22]);
-    round(b, c, d, e, f, g, h, a, w[7], _K[23]);
-    round(a, b, c, d, e, f, g, h, w[8], _K[24]);
-    round(h, a, b, c, d, e, f, g, w[9], _K[25]);
-    round(g, h, a, b, c, d, e, f, w[10], _K[26]);
-    round(f, g, h, a, b, c, d, e, w[11], _K[27]);
-    round(e, f, g, h, a, b, c, d, w[12], _K[28]);
-    round(d, e, f, g, h, a, b, c, w[13], _K[29]);
-    round(c, d, e, f, g, h, a, b, w[14], _K[30]);
-    round(b, c, d, e, f, g, h, a, w[15], _K[31]);
+    roundSha(a, b, c, d, e, f, g, h, w[0], _K[16]);
+    roundSha(h, a, b, c, d, e, f, g, w[1], _K[17]);
+    roundSha(g, h, a, b, c, d, e, f, w[2], _K[18]);
+    roundSha(f, g, h, a, b, c, d, e, w[3], _K[19]);
+    roundSha(e, f, g, h, a, b, c, d, w[4], _K[20]);
+    roundSha(d, e, f, g, h, a, b, c, w[5], _K[21]);
+    roundSha(c, d, e, f, g, h, a, b, w[6], _K[22]);
+    roundSha(b, c, d, e, f, g, h, a, w[7], _K[23]);
+    roundSha(a, b, c, d, e, f, g, h, w[8], _K[24]);
+    roundSha(h, a, b, c, d, e, f, g, w[9], _K[25]);
+    roundSha(g, h, a, b, c, d, e, f, w[10], _K[26]);
+    roundSha(f, g, h, a, b, c, d, e, w[11], _K[27]);
+    roundSha(e, f, g, h, a, b, c, d, w[12], _K[28]);
+    roundSha(d, e, f, g, h, a, b, c, w[13], _K[29]);
+    roundSha(c, d, e, f, g, h, a, b, w[14], _K[30]);
+    roundSha(b, c, d, e, f, g, h, a, w[15], _K[31]);
 
     w[0] = w[0] + s0(w[1]) + w[9] + s1(w[14]);
     w[1] = w[1] + s0(w[2]) + w[10] + s1(w[15]);
@@ -1685,22 +1460,22 @@ void sha256PublicKeyCompressed(const unsigned int x[8], unsigned int yParity, un
     w[14] = w[14] + s0(w[15]) + w[7] + s1(w[12]);
     w[15] = w[15] + s0(w[0]) + w[8] + s1(w[13]);
 
-    round(a, b, c, d, e, f, g, h, w[0], _K[32]);
-    round(h, a, b, c, d, e, f, g, w[1], _K[33]);
-    round(g, h, a, b, c, d, e, f, w[2], _K[34]);
-    round(f, g, h, a, b, c, d, e, w[3], _K[35]);
-    round(e, f, g, h, a, b, c, d, w[4], _K[36]);
-    round(d, e, f, g, h, a, b, c, w[5], _K[37]);
-    round(c, d, e, f, g, h, a, b, w[6], _K[38]);
-    round(b, c, d, e, f, g, h, a, w[7], _K[39]);
-    round(a, b, c, d, e, f, g, h, w[8], _K[40]);
-    round(h, a, b, c, d, e, f, g, w[9], _K[41]);
-    round(g, h, a, b, c, d, e, f, w[10], _K[42]);
-    round(f, g, h, a, b, c, d, e, w[11], _K[43]);
-    round(e, f, g, h, a, b, c, d, w[12], _K[44]);
-    round(d, e, f, g, h, a, b, c, w[13], _K[45]);
-    round(c, d, e, f, g, h, a, b, w[14], _K[46]);
-    round(b, c, d, e, f, g, h, a, w[15], _K[47]);
+    roundSha(a, b, c, d, e, f, g, h, w[0], _K[32]);
+    roundSha(h, a, b, c, d, e, f, g, w[1], _K[33]);
+    roundSha(g, h, a, b, c, d, e, f, w[2], _K[34]);
+    roundSha(f, g, h, a, b, c, d, e, w[3], _K[35]);
+    roundSha(e, f, g, h, a, b, c, d, w[4], _K[36]);
+    roundSha(d, e, f, g, h, a, b, c, w[5], _K[37]);
+    roundSha(c, d, e, f, g, h, a, b, w[6], _K[38]);
+    roundSha(b, c, d, e, f, g, h, a, w[7], _K[39]);
+    roundSha(a, b, c, d, e, f, g, h, w[8], _K[40]);
+    roundSha(h, a, b, c, d, e, f, g, w[9], _K[41]);
+    roundSha(g, h, a, b, c, d, e, f, w[10], _K[42]);
+    roundSha(f, g, h, a, b, c, d, e, w[11], _K[43]);
+    roundSha(e, f, g, h, a, b, c, d, w[12], _K[44]);
+    roundSha(d, e, f, g, h, a, b, c, w[13], _K[45]);
+    roundSha(c, d, e, f, g, h, a, b, w[14], _K[46]);
+    roundSha(b, c, d, e, f, g, h, a, w[15], _K[47]);
 
 
     w[0] = w[0] + s0(w[1]) + w[9] + s1(w[14]);
@@ -1720,50 +1495,101 @@ void sha256PublicKeyCompressed(const unsigned int x[8], unsigned int yParity, un
     w[14] = w[14] + s0(w[15]) + w[7] + s1(w[12]);
     w[15] = w[15] + s0(w[0]) + w[8] + s1(w[13]);
 
-    round(a, b, c, d, e, f, g, h, w[0], _K[48]);
-    round(h, a, b, c, d, e, f, g, w[1], _K[49]);
-    round(g, h, a, b, c, d, e, f, w[2], _K[50]);
-    round(f, g, h, a, b, c, d, e, w[3], _K[51]);
-    round(e, f, g, h, a, b, c, d, w[4], _K[52]);
-    round(d, e, f, g, h, a, b, c, w[5], _K[53]);
-    round(c, d, e, f, g, h, a, b, w[6], _K[54]);
-    round(b, c, d, e, f, g, h, a, w[7], _K[55]);
-    round(a, b, c, d, e, f, g, h, w[8], _K[56]);
-    round(h, a, b, c, d, e, f, g, w[9], _K[57]);
-    round(g, h, a, b, c, d, e, f, w[10], _K[58]);
-    round(f, g, h, a, b, c, d, e, w[11], _K[59]);
-    round(e, f, g, h, a, b, c, d, w[12], _K[60]);
-    round(d, e, f, g, h, a, b, c, w[13], _K[61]);
-    round(c, d, e, f, g, h, a, b, w[14], _K[62]);
-    round(b, c, d, e, f, g, h, a, w[15], _K[63]);
+    roundSha(a, b, c, d, e, f, g, h, w[0], _K[48]);
+    roundSha(h, a, b, c, d, e, f, g, w[1], _K[49]);
+    roundSha(g, h, a, b, c, d, e, f, w[2], _K[50]);
+    roundSha(f, g, h, a, b, c, d, e, w[3], _K[51]);
+    roundSha(e, f, g, h, a, b, c, d, w[4], _K[52]);
+    roundSha(d, e, f, g, h, a, b, c, w[5], _K[53]);
+    roundSha(c, d, e, f, g, h, a, b, w[6], _K[54]);
+    roundSha(b, c, d, e, f, g, h, a, w[7], _K[55]);
+    roundSha(a, b, c, d, e, f, g, h, w[8], _K[56]);
+    roundSha(h, a, b, c, d, e, f, g, w[9], _K[57]);
+    roundSha(g, h, a, b, c, d, e, f, w[10], _K[58]);
+    roundSha(f, g, h, a, b, c, d, e, w[11], _K[59]);
+    roundSha(e, f, g, h, a, b, c, d, w[12], _K[60]);
+    roundSha(d, e, f, g, h, a, b, c, w[13], _K[61]);
+    roundSha(c, d, e, f, g, h, a, b, w[14], _K[62]);
+    roundSha(b, c, d, e, f, g, h, a, w[15], _K[63]);
 
-    a += _IV[0];
-    b += _IV[1];
-    c += _IV[2];
-    d += _IV[3];
-    e += _IV[4];
-    f += _IV[5];
-    g += _IV[6];
-    h += _IV[7];
-
-    digest[0] = a;
-    digest[1] = b;
-    digest[2] = c;
-    digest[3] = d;
-    digest[4] = e;
-    digest[5] = f;
-    digest[6] = g;
-    digest[7] = h;
+    digest[0] = a + _IV[0];
+    digest[1] = b + _IV[1];
+    digest[2] = c + _IV[2];
+    digest[3] = d + _IV[3];
+    digest[4] = e + _IV[4];
+    digest[5] = f + _IV[5];
+    digest[6] = g + _IV[6];
+    digest[7] = h + _IV[7];
 }
+#endif
+#ifndef BITCOIN_CL
+#define BITCOIN_CL
+
+#ifndef endian
+#define endian(x) ((x) << 24) | (((x) << 8) & 0x00ff0000) | (((x) >> 8) & 0x0000ff00) | ((x) >> 24)
+#endif
+
+void hashPublicKeyCompressed(const uint256_t x, const unsigned int yParity, unsigned int digest[5])
+{
+    __private unsigned int hash[8];
+
+    sha256PublicKeyCompressed(x.v, yParity, hash);
+
+    // Swap to little-endian
+    hash[0] = endian(hash[0]);
+    hash[1] = endian(hash[1]);
+    hash[2] = endian(hash[2]);
+    hash[3] = endian(hash[3]);
+    hash[4] = endian(hash[4]);
+    hash[5] = endian(hash[5]);
+    hash[6] = endian(hash[6]);
+    hash[7] = endian(hash[7]);
+
+    ripemd160sha256NoFinal(hash, digest);
+}
+
+void hashPublicKey(const uint256_t x, const uint256_t y, unsigned int digest[5])
+{
+    __private unsigned int hash[8];
+
+    sha256PublicKey(x.v, y.v, hash);
+
+    // Swap to little-endian
+    hash[0] = endian(hash[0]);
+    hash[1] = endian(hash[1]);
+    hash[2] = endian(hash[2]);
+    hash[3] = endian(hash[3]);
+    hash[4] = endian(hash[4]);
+    hash[5] = endian(hash[5]);
+    hash[6] = endian(hash[6]);
+    hash[7] = endian(hash[7]);
+
+    ripemd160sha256NoFinal(hash, digest);
+}
+
+#endif
+#ifndef BLOOMFILTER_CL
+#define BLOOMFILTER_CL
+
+bool isInBloomFilter(const unsigned int hash[5], __global unsigned int *targetList, const ulong *mask)
+{
+    unsigned int h5 = hash[0] + hash[1] + hash[2] + hash[3] + hash[4];
+
+    return (false == 
+        (
+            (targetList[(((hash[0] << 6) | (h5 & 0x3f)) & *mask) / 32] & (0x01 << ((((hash[0] << 6) | (h5 & 0x3f)) & *mask) % 32))) == 0 ||
+            (targetList[(((hash[1] << 6) | ((h5 >> 6) & 0x3f)) & *mask) / 32] & (0x01 << ((((hash[1] << 6) | ((h5 >> 6) & 0x3f)) & *mask) % 32))) == 0 ||
+            (targetList[(((hash[2] << 6) | ((h5 >> 12) & 0x3f)) & *mask) / 32] & (0x01 << ((((hash[2] << 6) | ((h5 >> 12) & 0x3f)) & *mask) % 32))) == 0 ||
+            (targetList[(((hash[3] << 6) | ((h5 >> 18) & 0x3f)) & *mask) / 32] & (0x01 << ((((hash[3] << 6) | ((h5 >> 18) & 0x3f)) & *mask) % 32))) == 0 || 
+            (targetList[ (((hash[4] << 6) | ((h5 >> 24) & 0x3f)) & *mask) / 32] & (0x01 << ( (((hash[4] << 6) | ((h5 >> 24) & 0x3f)) & *mask) % 32))) == 0
+        )
+    );
+}
+
 #endif
 #define COMPRESSED 0
 #define UNCOMPRESSED 1
 #define BOTH 2
-
-unsigned int endian(unsigned int x)
-{
-    return (x << 24) | ((x << 8) & 0x00ff0000) | ((x >> 8) & 0x0000ff00) | (x >> 24);
-}
 
 typedef struct {
     int idx;
@@ -1773,86 +1599,46 @@ typedef struct {
     unsigned int digest[5];
 }CLDeviceResult;
 
-bool isInList(unsigned int hash[5], __global unsigned int *targetList, size_t numTargets)
-{
-    bool found = false;
+void setResultFound(
+    const int idx,
+    const bool compressed,
+    const uint256_t x,
+    const uint256_t y,
+    const unsigned int digest[5],
+    __global CLDeviceResult* results,
+    __global unsigned int* numResults
+) {
+    CLDeviceResult r;
 
-    for(size_t i = 0; i < numTargets; i++) {
-        int equal = 0;
+    r.idx = idx;
+    r.compressed = compressed;
 
-        for(int j = 0; j < 5; j++) {
-            if(hash[j] == targetList[5 * i + j]) {
-                equal++;
-            }
-        }
+    r.x[0] = x.v[0];
+    r.x[1] = x.v[1];
+    r.x[2] = x.v[2];
+    r.x[3] = x.v[3];
+    r.x[4] = x.v[4];
+    r.x[5] = x.v[5];
+    r.x[6] = x.v[6];
+    r.x[7] = x.v[7];
 
-        if(equal == 5) {
-            found = true;
-        }
-    }
+    r.y[0] = y.v[0];
+    r.y[1] = y.v[1];
+    r.y[2] = y.v[2];
+    r.y[3] = y.v[3];
+    r.y[4] = y.v[4];
+    r.y[5] = y.v[5];
+    r.y[6] = y.v[6];
+    r.y[7] = y.v[7];
 
-    return found;
+    ripemd160FinalRound(digest, r.digest);
+
+    results[atomic_add(numResults, 1)] = r;
 }
 
-bool isInBloomFilter(unsigned int hash[5], __global unsigned int *targetList, ulong mask)
-{
-    bool foundMatch = true;
-
-    unsigned int h5 = 0;
-
-    for(int i = 0; i < 5; i++) {
-        h5 += hash[i];
-    }
-
-    uint64_t idx[5];
-
-    idx[0] = ((hash[0] << 6) | (h5 & 0x3f)) & mask;
-    idx[1] = ((hash[1] << 6) | ((h5 >> 6) & 0x3f)) & mask;
-    idx[2] = ((hash[2] << 6) | ((h5 >> 12) & 0x3f)) & mask;
-    idx[3] = ((hash[3] << 6) | ((h5 >> 18) & 0x3f)) & mask;
-    idx[4] = ((hash[4] << 6) | ((h5 >> 24) & 0x3f)) & mask;
-
-    for(int i = 0; i < 5; i++) {
-        unsigned int j = idx[i];
-        unsigned int f = targetList[j / 32];
-
-        if((f & (0x01 << (j % 32))) == 0) {
-            foundMatch = false;
-        }
-    }
-
-    return foundMatch;
-}
-
-bool checkHash(unsigned int hash[5], __global unsigned int *targetList, size_t numTargets, ulong mask)
-{
-    if(numTargets > 16) {
-        return isInBloomFilter(hash, targetList, mask);
-    } else {
-        return isInList(hash, targetList, numTargets);
-    }
-}
-
-
-void doRMD160FinalRound(const unsigned int hIn[5], unsigned int hOut[5])
-{
-    const unsigned int iv[5] = {
-        0x67452301,
-        0xefcdab89,
-        0x98badcfe,
-        0x10325476,
-        0xc3d2e1f0
-    };
-
-    for(int i = 0; i < 5; i++) {
-        hOut[i] = endian(hIn[i] + iv[(i + 1) % 5]);
-    }
-}
-
-
-__kernel void multiplyStepKernel(
-    int totalPoints,
-    int step,
+__kernel void _initKeysKernel(
+    const unsigned int totalPoints,
+    const unsigned int step,
     __global uint256_t* privateKeys,
     __global uint256_t* chain,
     __global uint256_t* gxPtr,
@@ -1862,51 +1648,33 @@ __kernel void multiplyStepKernel(
 {
     uint256_t gx;
     uint256_t gy;
-    int gid = get_local_size(0) * get_group_id(0) + get_local_id(0);
+    int i = get_local_size(0) * get_group_id(0) + get_local_id(0);
     int dim = get_global_size(0);
 
     gx = gxPtr[step];
     gy = gyPtr[step];
 
-    // Multiply together all (_Gx - x) and then invert
     uint256_t inverse = { {0,0,0,0,0,0,0,1} };
 
     int batchIdx = 0;
-    int i = gid;
+
     for(; i < totalPoints; i += dim) {
-
-        unsigned int p;
-        p = readWord256k(privateKeys, i, 7 - step / 32);
-
-        unsigned int bit = p & (1 << (step % 32));
-
-        uint256_t x = xPtr[i];
-
-        if(bit != 0) {
-            if(!isInfinity256k(x)) {
+        if(( (readWord256k(privateKeys, i, 7 - step / 32)) & (1 << (step % 32))) != 0) {
+            if(!isInfinity256k(xPtr[i].v)) {
                 beginBatchAddWithDouble256k(gx, gy, xPtr, chain, i, batchIdx, &inverse);
                 batchIdx++;
             }
         }
     }
 
-    //doBatchInverse(inverse);
-    inverse = doBatchInverse256k(inverse);
+    doBatchInverse256k(inverse.v);
 
+    uint256_t newX;
+    uint256_t newY;
     i -= dim;
     for(; i >= 0; i -= dim) {
-        uint256_t newX;
-        uint256_t newY;
-
-        unsigned int p;
-        p = readWord256k(privateKeys, i, 7 - step / 32);
-        unsigned int bit = p & (1 << (step % 32));
-
-        uint256_t x = xPtr[i];
-        bool infinity = isInfinity256k(x);
-
-        if(bit != 0) {
-            if(!infinity) {
+        if(((readWord256k(privateKeys, i, 7 - step / 32)) & (1 << (step % 32))) != 0) {
+            if(!isInfinity256k(xPtr[i].v)) {
                 batchIdx--;
                 completeBatchAddWithDouble256k(gx, gy, xPtr, yPtr, i, batchIdx, chain, &inverse, &newX, &newY);
             } else {
@@ -1920,75 +1688,19 @@ __kernel void multiplyStepKernel(
     }
 }
 
-
-void hashPublicKey(uint256_t x, uint256_t y, unsigned int* digestOut)
-{
-    unsigned int hash[8];
-
-    sha256PublicKey(x.v, y.v, hash);
-
-    // Swap to little-endian
-    for(int i = 0; i < 8; i++) {
-        hash[i] = endian(hash[i]);
-    }
-
-    ripemd160sha256NoFinal(hash, digestOut);
-}
-
-void hashPublicKeyCompressed(uint256_t x, unsigned int yParity, unsigned int* digestOut)
-{
-    unsigned int hash[8];
-
-    sha256PublicKeyCompressed(x.v, yParity, hash);
-
-    // Swap to little-endian
-    for(int i = 0; i < 8; i++) {
-        hash[i] = endian(hash[i]);
-    }
-
-    ripemd160sha256NoFinal(hash, digestOut);
-
-}
-
-void atomicListAdd(__global CLDeviceResult *results, __global unsigned int *numResults, CLDeviceResult *r)
-{
-    unsigned int count = atomic_add(numResults, 1);
-
-    results[count] = *r;
-}
-
-void setResultFound(int idx, bool compressed, uint256_t x, uint256_t y, unsigned int digest[5], __global CLDeviceResult* results, __global unsigned int* numResults)
-{
-    CLDeviceResult r;
-
-    r.idx = idx;
-    r.compressed = compressed;
-
-    for(int i = 0; i < 8; i++) {
-        r.x[i] = x.v[i];
-        r.y[i] = y.v[i];
-    }
-
-    doRMD160FinalRound(digest, r.digest);
-
-    atomicListAdd(results, numResults, &r);
-}
-
-void doIteration(
-    size_t totalPoints,
-    int compression,
+__kernel void _stepKernel(
+    const unsigned int totalPoints,
     __global uint256_t* chain,
     __global uint256_t* xPtr,
     __global uint256_t* yPtr,
     __global uint256_t* incXPtr,
     __global uint256_t* incYPtr,
-    __global unsigned int *targetList,
-    size_t numTargets,
-    ulong mask,
+    __global unsigned int* targetList,
+    const ulong mask,
     __global CLDeviceResult *results,
     __global unsigned int *numResults)
 {
-    int gid = get_local_size(0) * get_group_id(0) + get_local_id(0);
+    int i = get_local_size(0) * get_group_id(0) + get_local_id(0);
     int dim = get_global_size(0);
 
     uint256_t incX = *incXPtr;
@@ -1996,48 +1708,35 @@ void doIteration(
 
     // Multiply together all (_Gx - x) and then invert
     uint256_t inverse = { {0,0,0,0,0,0,0,1} };
-    int i = gid;
     int batchIdx = 0;
 
+    unsigned int digest[5];
+
     for(; i < totalPoints; i += dim) {
-        uint256_t x;
-
-        unsigned int digest[5];
-
-        x = xPtr[i];
-
-        if((compression == UNCOMPRESSED) || (compression == BOTH)) {
-            uint256_t y = yPtr[i];
-
-            hashPublicKey(x, y, digest);
-
-            if(checkHash(digest, targetList, numTargets, mask)) {
-                setResultFound(i, false, x, y, digest, results, numResults);
-            }
+       
+#if defined(COMPRESSION_UNCOMPRESSED) || defined(COMPRESSION_BOTH)
+        hashPublicKey(xPtr[i], yPtr[i], digest);
+        if(isInBloomFilter(digest, targetList, &mask)) {
+            setResultFound(i, false, xPtr[i], yPtr[i], digest, results, numResults);
         }
-
-        if((compression == COMPRESSED) || (compression == BOTH)) {
-
-            hashPublicKeyCompressed(x, readLSW256k(yPtr, i), digest);
-
-            if(checkHash(digest, targetList, numTargets, mask)) {
-                uint256_t y = yPtr[i];
-                setResultFound(i, true, x, y, digest, results, numResults);
-            }
+#endif
+#if defined(COMPRESSION_COMPRESSED) || defined(COMPRESSION_BOTH)
+        hashPublicKeyCompressed(xPtr[i], yPtr[i].v[7], digest);
+        if(isInBloomFilter(digest, targetList, &mask)) {
+            setResultFound(i, true, xPtr[i], yPtr[i], digest, results, numResults);
         }
-
-        beginBatchAdd256k(incX, x, chain, i, batchIdx, &inverse);
+#endif
+        beginBatchAdd256k(incX, xPtr[i], chain, i, batchIdx, &inverse);
         batchIdx++;
     }
 
-    inverse = doBatchInverse256k(inverse);
+    doBatchInverse256k(inverse.v);
 
     i -= dim;
-
+    uint256_t newX;
+    uint256_t newY;
     for(;  i >= 0; i -= dim) {
 
-        uint256_t newX;
-        uint256_t newY;
         batchIdx--;
         completeBatchAdd256k(incX, incY, xPtr, yPtr, i, batchIdx, chain, &inverse, &newX, &newY);
 
@@ -2046,22 +1745,19 @@ void doIteration(
     }
 }
 
-
-void doIterationWithDouble(
-    size_t totalPoints,
-    int compression,
+__kernel void _stepKernelWithDouble(
+    const unsigned int totalPoints,
     __global uint256_t* chain,
     __global uint256_t* xPtr,
     __global uint256_t* yPtr,
     __global uint256_t* incXPtr,
     __global uint256_t* incYPtr,
     __global unsigned int* targetList,
-    size_t numTargets,
-    ulong mask,
+    const ulong mask,
     __global CLDeviceResult *results,
     __global unsigned int *numResults)
 {
-    int gid = get_local_size(0) * get_group_id(0) + get_local_id(0);
+    int i = get_local_size(0) * get_group_id(0) + get_local_id(0);
     int dim = get_global_size(0);
 
     uint256_t incX = *incXPtr;
@@ -2070,89 +1766,39 @@ void doIterationWithDouble(
     // Multiply together all (_Gx - x) and then invert
     uint256_t inverse = { {0,0,0,0,0,0,0,1} };
 
-    int i = gid;
     int batchIdx = 0;
+    unsigned int digest[5];
+
     for(; i < totalPoints; i += dim) {
-        uint256_t x;
 
-        unsigned int digest[5];
-
-        x = xPtr[i];
-
-        // uncompressed
-        if((compression == UNCOMPRESSED) || (compression == BOTH)) {
-            uint256_t y = yPtr[i];
-            hashPublicKey(x, y, digest);
-
-            if(checkHash(digest, targetList, numTargets, mask)) {
-                setResultFound(i, false, x, y, digest, results, numResults);
-            }
+#if defined(COMPRESSION_UNCOMPRESSED) || defined(COMPRESSION_BOTH)
+        hashPublicKey(xPtr[i], yPtr[i], digest);
+        if(isInBloomFilter(digest, targetList, &mask)) {
+            setResultFound(i, false, xPtr[i], yPtr[i], digest, results, numResults);
         }
-
-        // compressed
-        if((compression == COMPRESSED) || (compression == BOTH)) {
-
-            hashPublicKeyCompressed(x, readLSW256k(yPtr, i), digest);
-
-            if(checkHash(digest, targetList, numTargets, mask)) {
-
-                uint256_t y = yPtr[i];
-                setResultFound(i, true, x, y, digest, results, numResults);
-            }
+#endif
+#if defined(COMPRESSION_COMPRESSED) || defined(COMPRESSION_BOTH)
+        hashPublicKeyCompressed(xPtr[i], yPtr[i].v[7], digest);
+        if(isInBloomFilter(digest, targetList, &mask)) {
+            setResultFound(i, true, xPtr[i], yPtr[i], digest, results, numResults);
         }
+#endif
 
         beginBatchAddWithDouble256k(incX, incY, xPtr, chain, i, batchIdx, &inverse);
         batchIdx++;
     }
 
-    inverse = doBatchInverse256k(inverse);
+    doBatchInverse256k(inverse.v);
 
     i -= dim;
 
+    uint256_t newX;
+    uint256_t newY;
     for(; i >= 0; i -= dim) {
-        uint256_t newX;
-        uint256_t newY;
         batchIdx--;
         completeBatchAddWithDouble256k(incX, incY, xPtr, yPtr, i, batchIdx, chain, &inverse, &newX, &newY);
 
         xPtr[i] = newX;
         yPtr[i] = newY;
     }
-}
-
-/**
-* Performs a single iteration
-*/
-__kernel void keyFinderKernel(
-    unsigned int totalPoints,
-    int compression,
-    __global uint256_t* chain,
-    __global uint256_t* xPtr,
-    __global uint256_t* yPtr,
-    __global uint256_t* incXPtr,
-    __global uint256_t* incYPtr,
-    __global unsigned int* targetList,
-    ulong numTargets,
-    ulong mask,
-    __global CLDeviceResult *results,
-    __global unsigned int *numResults)
-{
-    doIteration(totalPoints, compression, chain, xPtr, yPtr, incXPtr, incYPtr, targetList, numTargets, mask, results, numResults);
-}
-
-__kernel void keyFinderKernelWithDouble(
-    unsigned int totalPoints,
-    int compression,
-    __global uint256_t* chain,
-    __global uint256_t* xPtr,
-    __global uint256_t* yPtr,
-    __global uint256_t* incXPtr,
-    __global uint256_t* incYPtr,
-    __global unsigned int* targetList,
-    ulong numTargets,
-    ulong mask,
-    __global CLDeviceResult *results,
-    __global unsigned int *numResults)
-{
-    doIterationWithDouble(totalPoints, compression, chain, xPtr, yPtr, incXPtr, incYPtr, targetList, numTargets, mask, results, numResults);
 }

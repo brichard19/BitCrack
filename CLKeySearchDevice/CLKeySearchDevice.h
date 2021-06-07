@@ -1,5 +1,5 @@
-#ifndef _CL_KEYSEARCH_DEVICE_H
-#define _CL_KEYSEARCH_DEVICE_H
+#ifndef CL_KEYSEARCH_DEVICE_H
+#define CL_KEYSEARCH_DEVICE_H
 
 #include "KeySearchDevice.h"
 #include "clContext.h"
@@ -18,10 +18,10 @@ private:
     cl::CLProgram *_clProgram = NULL;
     cl::CLKernel *_initKeysKernel = NULL;
     cl::CLKernel *_stepKernel = NULL;
-    cl::CLKernel *_stepKernelWithDouble = NULL;
 
     uint64_t _globalMemSize = 0;
     uint64_t _pointsMemSize = 0;
+    uint64_t _bufferMemSize = 0;
     uint64_t _targetMemSize = 0;
 
     CLTargetList _deviceTargetList;
@@ -81,13 +81,8 @@ private:
 
     void initializeBasePoints();
 
-    int getIndex(int block, int thread, int idx);
-
-    void splatBigInt(unsigned int *dest, int block, int thread, int idx, const secp256k1::uint256 &i);
     void splatBigInt(unsigned int *dest, int idx, secp256k1::uint256 &k);
     secp256k1::uint256 readBigInt(unsigned int *src, int idx);
-
-    void selfTest();
 
     bool _useBloomFilter = false;
 
@@ -101,15 +96,13 @@ private:
 
     void removeTargetFromList(const unsigned int hash[5]);
 
-    uint32_t getPrivateKeyOffset(int thread, int block, int idx);
-
     void initializeBloomFilter(const std::vector<struct hash160> &targets, uint64_t mask);
 
     uint64_t getOptimalBloomFilterMask(double p, size_t n);
 
 public:
 
-    CLKeySearchDevice(uint64_t device, int threads, int pointsPerThread, int blocks = 0);
+    CLKeySearchDevice(uint64_t device, int threads, int pointsPerThread, int blocks = 0, int compressionMode = PointCompressionType::COMPRESSED);
     ~CLKeySearchDevice();
 
 
@@ -138,4 +131,3 @@ public:
 };
 
 #endif
-

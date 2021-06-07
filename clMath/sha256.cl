@@ -1,6 +1,5 @@
-#ifndef _SHA256_CL
-#define _SHA256_CL
-
+#ifndef SHA256_CL
+#define SHA256_CL
 
 __constant unsigned int _K[64] = {
     0x428a2f98, 0x71374491, 0xb5c0fbcf, 0xe9b5dba5, 0x3956c25b, 0x59f111f1, 0x923f82a4, 0xab1c5ed5,
@@ -26,7 +25,6 @@ __constant unsigned int _IV[8] = {
 
 #define rotr(x, n) ((x) >> (n)) ^ ((x) << (32 - (n)))
 
-
 #define MAJ(a, b, c) (((a) & (b)) ^ ((a) & (c)) ^ ((b) & (c)))
 
 #define CH(e, f, g) (((e) & (f)) ^ (~(e) & (g)))
@@ -35,17 +33,25 @@ __constant unsigned int _IV[8] = {
 
 #define s1(x) (rotr((x), 17) ^ rotr((x), 19) ^ ((x) >> 10))
 
-#define round(a, b, c, d, e, f, g, h, m, k)\
+#define roundSha(a, b, c, d, e, f, g, h, m, k)\
     t = CH((e), (f), (g)) + (rotr((e), 6) ^ rotr((e), 11) ^ rotr((e), 25)) + (k) + (m);\
     (d) += (t) + (h);\
     (h) += (t) + MAJ((a), (b), (c)) + (rotr((a), 2) ^ rotr((a), 13) ^ rotr((a), 22))
 
-
 void sha256PublicKey(const unsigned int x[8], const unsigned int y[8], unsigned int digest[8])
 {
-    unsigned int a, b, c, d, e, f, g, h;
-    unsigned int w[16];
-    unsigned int t;
+    __private unsigned int a, b, c, d, e, f, g, h;
+    __private unsigned int w[16];
+    __private unsigned int t;
+
+    a = _IV[0];
+    b = _IV[1];
+    c = _IV[2];
+    d = _IV[3];
+    e = _IV[4];
+    f = _IV[5];
+    g = _IV[6];
+    h = _IV[7];
 
     // 0x04 || x || y
     w[0] = (x[0] >> 8) | 0x04000000;
@@ -65,31 +71,22 @@ void sha256PublicKey(const unsigned int x[8], const unsigned int y[8], unsigned 
     w[14] = (y[6] >> 8) | (y[5] << 24);
     w[15] = (y[7] >> 8) | (y[6] << 24);
 
-    a = _IV[0];
-    b = _IV[1];
-    c = _IV[2];
-    d = _IV[3];
-    e = _IV[4];
-    f = _IV[5];
-    g = _IV[6];
-    h = _IV[7];
-
-    round(a, b, c, d, e, f, g, h, w[0], _K[0]);
-    round(h, a, b, c, d, e, f, g, w[1], _K[1]);
-    round(g, h, a, b, c, d, e, f, w[2], _K[2]);
-    round(f, g, h, a, b, c, d, e, w[3], _K[3]);
-    round(e, f, g, h, a, b, c, d, w[4], _K[4]);
-    round(d, e, f, g, h, a, b, c, w[5], _K[5]);
-    round(c, d, e, f, g, h, a, b, w[6], _K[6]);
-    round(b, c, d, e, f, g, h, a, w[7], _K[7]);
-    round(a, b, c, d, e, f, g, h, w[8], _K[8]);
-    round(h, a, b, c, d, e, f, g, w[9], _K[9]);
-    round(g, h, a, b, c, d, e, f, w[10], _K[10]);
-    round(f, g, h, a, b, c, d, e, w[11], _K[11]);
-    round(e, f, g, h, a, b, c, d, w[12], _K[12]);
-    round(d, e, f, g, h, a, b, c, w[13], _K[13]);
-    round(c, d, e, f, g, h, a, b, w[14], _K[14]);
-    round(b, c, d, e, f, g, h, a, w[15], _K[15]);
+    roundSha(a, b, c, d, e, f, g, h, w[0], _K[0]);
+    roundSha(h, a, b, c, d, e, f, g, w[1], _K[1]);
+    roundSha(g, h, a, b, c, d, e, f, w[2], _K[2]);
+    roundSha(f, g, h, a, b, c, d, e, w[3], _K[3]);
+    roundSha(e, f, g, h, a, b, c, d, w[4], _K[4]);
+    roundSha(d, e, f, g, h, a, b, c, w[5], _K[5]);
+    roundSha(c, d, e, f, g, h, a, b, w[6], _K[6]);
+    roundSha(b, c, d, e, f, g, h, a, w[7], _K[7]);
+    roundSha(a, b, c, d, e, f, g, h, w[8], _K[8]);
+    roundSha(h, a, b, c, d, e, f, g, w[9], _K[9]);
+    roundSha(g, h, a, b, c, d, e, f, w[10], _K[10]);
+    roundSha(f, g, h, a, b, c, d, e, w[11], _K[11]);
+    roundSha(e, f, g, h, a, b, c, d, w[12], _K[12]);
+    roundSha(d, e, f, g, h, a, b, c, w[13], _K[13]);
+    roundSha(c, d, e, f, g, h, a, b, w[14], _K[14]);
+    roundSha(b, c, d, e, f, g, h, a, w[15], _K[15]);
 
     w[0] = w[0] + s0(w[1]) + w[9] + s1(w[14]);
     w[1] = w[1] + s0(w[2]) + w[10] + s1(w[15]);
@@ -108,22 +105,22 @@ void sha256PublicKey(const unsigned int x[8], const unsigned int y[8], unsigned 
     w[14] = w[14] + s0(w[15]) + w[7] + s1(w[12]);
     w[15] = w[15] + s0(w[0]) + w[8] + s1(w[13]);
 
-    round(a, b, c, d, e, f, g, h, w[0], _K[16]);
-    round(h, a, b, c, d, e, f, g, w[1], _K[17]);
-    round(g, h, a, b, c, d, e, f, w[2], _K[18]);
-    round(f, g, h, a, b, c, d, e, w[3], _K[19]);
-    round(e, f, g, h, a, b, c, d, w[4], _K[20]);
-    round(d, e, f, g, h, a, b, c, w[5], _K[21]);
-    round(c, d, e, f, g, h, a, b, w[6], _K[22]);
-    round(b, c, d, e, f, g, h, a, w[7], _K[23]);
-    round(a, b, c, d, e, f, g, h, w[8], _K[24]);
-    round(h, a, b, c, d, e, f, g, w[9], _K[25]);
-    round(g, h, a, b, c, d, e, f, w[10], _K[26]);
-    round(f, g, h, a, b, c, d, e, w[11], _K[27]);
-    round(e, f, g, h, a, b, c, d, w[12], _K[28]);
-    round(d, e, f, g, h, a, b, c, w[13], _K[29]);
-    round(c, d, e, f, g, h, a, b, w[14], _K[30]);
-    round(b, c, d, e, f, g, h, a, w[15], _K[31]);
+    roundSha(a, b, c, d, e, f, g, h, w[0], _K[16]);
+    roundSha(h, a, b, c, d, e, f, g, w[1], _K[17]);
+    roundSha(g, h, a, b, c, d, e, f, w[2], _K[18]);
+    roundSha(f, g, h, a, b, c, d, e, w[3], _K[19]);
+    roundSha(e, f, g, h, a, b, c, d, w[4], _K[20]);
+    roundSha(d, e, f, g, h, a, b, c, w[5], _K[21]);
+    roundSha(c, d, e, f, g, h, a, b, w[6], _K[22]);
+    roundSha(b, c, d, e, f, g, h, a, w[7], _K[23]);
+    roundSha(a, b, c, d, e, f, g, h, w[8], _K[24]);
+    roundSha(h, a, b, c, d, e, f, g, w[9], _K[25]);
+    roundSha(g, h, a, b, c, d, e, f, w[10], _K[26]);
+    roundSha(f, g, h, a, b, c, d, e, w[11], _K[27]);
+    roundSha(e, f, g, h, a, b, c, d, w[12], _K[28]);
+    roundSha(d, e, f, g, h, a, b, c, w[13], _K[29]);
+    roundSha(c, d, e, f, g, h, a, b, w[14], _K[30]);
+    roundSha(b, c, d, e, f, g, h, a, w[15], _K[31]);
 
     w[0] = w[0] + s0(w[1]) + w[9] + s1(w[14]);
     w[1] = w[1] + s0(w[2]) + w[10] + s1(w[15]);
@@ -142,22 +139,22 @@ void sha256PublicKey(const unsigned int x[8], const unsigned int y[8], unsigned 
     w[14] = w[14] + s0(w[15]) + w[7] + s1(w[12]);
     w[15] = w[15] + s0(w[0]) + w[8] + s1(w[13]);
 
-    round(a, b, c, d, e, f, g, h, w[0], _K[32]);
-    round(h, a, b, c, d, e, f, g, w[1], _K[33]);
-    round(g, h, a, b, c, d, e, f, w[2], _K[34]);
-    round(f, g, h, a, b, c, d, e, w[3], _K[35]);
-    round(e, f, g, h, a, b, c, d, w[4], _K[36]);
-    round(d, e, f, g, h, a, b, c, w[5], _K[37]);
-    round(c, d, e, f, g, h, a, b, w[6], _K[38]);
-    round(b, c, d, e, f, g, h, a, w[7], _K[39]);
-    round(a, b, c, d, e, f, g, h, w[8], _K[40]);
-    round(h, a, b, c, d, e, f, g, w[9], _K[41]);
-    round(g, h, a, b, c, d, e, f, w[10], _K[42]);
-    round(f, g, h, a, b, c, d, e, w[11], _K[43]);
-    round(e, f, g, h, a, b, c, d, w[12], _K[44]);
-    round(d, e, f, g, h, a, b, c, w[13], _K[45]);
-    round(c, d, e, f, g, h, a, b, w[14], _K[46]);
-    round(b, c, d, e, f, g, h, a, w[15], _K[47]);
+    roundSha(a, b, c, d, e, f, g, h, w[0], _K[32]);
+    roundSha(h, a, b, c, d, e, f, g, w[1], _K[33]);
+    roundSha(g, h, a, b, c, d, e, f, w[2], _K[34]);
+    roundSha(f, g, h, a, b, c, d, e, w[3], _K[35]);
+    roundSha(e, f, g, h, a, b, c, d, w[4], _K[36]);
+    roundSha(d, e, f, g, h, a, b, c, w[5], _K[37]);
+    roundSha(c, d, e, f, g, h, a, b, w[6], _K[38]);
+    roundSha(b, c, d, e, f, g, h, a, w[7], _K[39]);
+    roundSha(a, b, c, d, e, f, g, h, w[8], _K[40]);
+    roundSha(h, a, b, c, d, e, f, g, w[9], _K[41]);
+    roundSha(g, h, a, b, c, d, e, f, w[10], _K[42]);
+    roundSha(f, g, h, a, b, c, d, e, w[11], _K[43]);
+    roundSha(e, f, g, h, a, b, c, d, w[12], _K[44]);
+    roundSha(d, e, f, g, h, a, b, c, w[13], _K[45]);
+    roundSha(c, d, e, f, g, h, a, b, w[14], _K[46]);
+    roundSha(b, c, d, e, f, g, h, a, w[15], _K[47]);
 
     w[0] = w[0] + s0(w[1]) + w[9] + s1(w[14]);
     w[1] = w[1] + s0(w[2]) + w[10] + s1(w[15]);
@@ -176,22 +173,22 @@ void sha256PublicKey(const unsigned int x[8], const unsigned int y[8], unsigned 
     w[14] = w[14] + s0(w[15]) + w[7] + s1(w[12]);
     w[15] = w[15] + s0(w[0]) + w[8] + s1(w[13]);
 
-    round(a, b, c, d, e, f, g, h, w[0], _K[48]);
-    round(h, a, b, c, d, e, f, g, w[1], _K[49]);
-    round(g, h, a, b, c, d, e, f, w[2], _K[50]);
-    round(f, g, h, a, b, c, d, e, w[3], _K[51]);
-    round(e, f, g, h, a, b, c, d, w[4], _K[52]);
-    round(d, e, f, g, h, a, b, c, w[5], _K[53]);
-    round(c, d, e, f, g, h, a, b, w[6], _K[54]);
-    round(b, c, d, e, f, g, h, a, w[7], _K[55]);
-    round(a, b, c, d, e, f, g, h, w[8], _K[56]);
-    round(h, a, b, c, d, e, f, g, w[9], _K[57]);
-    round(g, h, a, b, c, d, e, f, w[10], _K[58]);
-    round(f, g, h, a, b, c, d, e, w[11], _K[59]);
-    round(e, f, g, h, a, b, c, d, w[12], _K[60]);
-    round(d, e, f, g, h, a, b, c, w[13], _K[61]);
-    round(c, d, e, f, g, h, a, b, w[14], _K[62]);
-    round(b, c, d, e, f, g, h, a, w[15], _K[63]);
+    roundSha(a, b, c, d, e, f, g, h, w[0], _K[48]);
+    roundSha(h, a, b, c, d, e, f, g, w[1], _K[49]);
+    roundSha(g, h, a, b, c, d, e, f, w[2], _K[50]);
+    roundSha(f, g, h, a, b, c, d, e, w[3], _K[51]);
+    roundSha(e, f, g, h, a, b, c, d, w[4], _K[52]);
+    roundSha(d, e, f, g, h, a, b, c, w[5], _K[53]);
+    roundSha(c, d, e, f, g, h, a, b, w[6], _K[54]);
+    roundSha(b, c, d, e, f, g, h, a, w[7], _K[55]);
+    roundSha(a, b, c, d, e, f, g, h, w[8], _K[56]);
+    roundSha(h, a, b, c, d, e, f, g, w[9], _K[57]);
+    roundSha(g, h, a, b, c, d, e, f, w[10], _K[58]);
+    roundSha(f, g, h, a, b, c, d, e, w[11], _K[59]);
+    roundSha(e, f, g, h, a, b, c, d, w[12], _K[60]);
+    roundSha(d, e, f, g, h, a, b, c, w[13], _K[61]);
+    roundSha(c, d, e, f, g, h, a, b, w[14], _K[62]);
+    roundSha(b, c, d, e, f, g, h, a, w[15], _K[63]);
 
     a += _IV[0];
     b += _IV[1];
@@ -203,35 +200,34 @@ void sha256PublicKey(const unsigned int x[8], const unsigned int y[8], unsigned 
     h += _IV[7];
 
     // store the intermediate hash value
-    unsigned int tmp[8];
-    tmp[0] = a;
-    tmp[1] = b;
-    tmp[2] = c;
-    tmp[3] = d;
-    tmp[4] = e;
-    tmp[5] = f;
-    tmp[6] = g;
-    tmp[7] = h;
+    digest[0] = a;
+    digest[1] = b;
+    digest[2] = c;
+    digest[3] = d;
+    digest[4] = e;
+    digest[5] = f;
+    digest[6] = g;
+    digest[7] = h;
 
     w[0] = (y[7] << 24) | 0x00800000;
-    w[15] = 65 * 8;
+    w[15] = 520; // 65 * 8
 
-    round(a, b, c, d, e, f, g, h, w[0], _K[0]);
-    round(h, a, b, c, d, e, f, g, 0, _K[1]);
-    round(g, h, a, b, c, d, e, f, 0, _K[2]);
-    round(f, g, h, a, b, c, d, e, 0, _K[3]);
-    round(e, f, g, h, a, b, c, d, 0, _K[4]);
-    round(d, e, f, g, h, a, b, c, 0, _K[5]);
-    round(c, d, e, f, g, h, a, b, 0, _K[6]);
-    round(b, c, d, e, f, g, h, a, 0, _K[7]);
-    round(a, b, c, d, e, f, g, h, 0, _K[8]);
-    round(h, a, b, c, d, e, f, g, 0, _K[9]);
-    round(g, h, a, b, c, d, e, f, 0, _K[10]);
-    round(f, g, h, a, b, c, d, e, 0, _K[11]);
-    round(e, f, g, h, a, b, c, d, 0, _K[12]);
-    round(d, e, f, g, h, a, b, c, 0, _K[13]);
-    round(c, d, e, f, g, h, a, b, 0, _K[14]);
-    round(b, c, d, e, f, g, h, a, w[15], _K[15]);
+    roundSha(a, b, c, d, e, f, g, h, w[0], _K[0]);
+    roundSha(h, a, b, c, d, e, f, g, 0, _K[1]);
+    roundSha(g, h, a, b, c, d, e, f, 0, _K[2]);
+    roundSha(f, g, h, a, b, c, d, e, 0, _K[3]);
+    roundSha(e, f, g, h, a, b, c, d, 0, _K[4]);
+    roundSha(d, e, f, g, h, a, b, c, 0, _K[5]);
+    roundSha(c, d, e, f, g, h, a, b, 0, _K[6]);
+    roundSha(b, c, d, e, f, g, h, a, 0, _K[7]);
+    roundSha(a, b, c, d, e, f, g, h, 0, _K[8]);
+    roundSha(h, a, b, c, d, e, f, g, 0, _K[9]);
+    roundSha(g, h, a, b, c, d, e, f, 0, _K[10]);
+    roundSha(f, g, h, a, b, c, d, e, 0, _K[11]);
+    roundSha(e, f, g, h, a, b, c, d, 0, _K[12]);
+    roundSha(d, e, f, g, h, a, b, c, 0, _K[13]);
+    roundSha(c, d, e, f, g, h, a, b, 0, _K[14]);
+    roundSha(b, c, d, e, f, g, h, a, w[15], _K[15]);
 
     w[0] = w[0] + s0(0) + 0 + s1(0);
     w[1] = 0 + s0(0) + 0 + s1(w[15]);
@@ -250,22 +246,22 @@ void sha256PublicKey(const unsigned int x[8], const unsigned int y[8], unsigned 
     w[14] = 0 + s0(w[15]) + w[7] + s1(w[12]);
     w[15] = w[15] + s0(w[0]) + w[8] + s1(w[13]);
 
-    round(a, b, c, d, e, f, g, h, w[0], _K[16]);
-    round(h, a, b, c, d, e, f, g, w[1], _K[17]);
-    round(g, h, a, b, c, d, e, f, w[2], _K[18]);
-    round(f, g, h, a, b, c, d, e, w[3], _K[19]);
-    round(e, f, g, h, a, b, c, d, w[4], _K[20]);
-    round(d, e, f, g, h, a, b, c, w[5], _K[21]);
-    round(c, d, e, f, g, h, a, b, w[6], _K[22]);
-    round(b, c, d, e, f, g, h, a, w[7], _K[23]);
-    round(a, b, c, d, e, f, g, h, w[8], _K[24]);
-    round(h, a, b, c, d, e, f, g, w[9], _K[25]);
-    round(g, h, a, b, c, d, e, f, w[10], _K[26]);
-    round(f, g, h, a, b, c, d, e, w[11], _K[27]);
-    round(e, f, g, h, a, b, c, d, w[12], _K[28]);
-    round(d, e, f, g, h, a, b, c, w[13], _K[29]);
-    round(c, d, e, f, g, h, a, b, w[14], _K[30]);
-    round(b, c, d, e, f, g, h, a, w[15], _K[31]);
+    roundSha(a, b, c, d, e, f, g, h, w[0], _K[16]);
+    roundSha(h, a, b, c, d, e, f, g, w[1], _K[17]);
+    roundSha(g, h, a, b, c, d, e, f, w[2], _K[18]);
+    roundSha(f, g, h, a, b, c, d, e, w[3], _K[19]);
+    roundSha(e, f, g, h, a, b, c, d, w[4], _K[20]);
+    roundSha(d, e, f, g, h, a, b, c, w[5], _K[21]);
+    roundSha(c, d, e, f, g, h, a, b, w[6], _K[22]);
+    roundSha(b, c, d, e, f, g, h, a, w[7], _K[23]);
+    roundSha(a, b, c, d, e, f, g, h, w[8], _K[24]);
+    roundSha(h, a, b, c, d, e, f, g, w[9], _K[25]);
+    roundSha(g, h, a, b, c, d, e, f, w[10], _K[26]);
+    roundSha(f, g, h, a, b, c, d, e, w[11], _K[27]);
+    roundSha(e, f, g, h, a, b, c, d, w[12], _K[28]);
+    roundSha(d, e, f, g, h, a, b, c, w[13], _K[29]);
+    roundSha(c, d, e, f, g, h, a, b, w[14], _K[30]);
+    roundSha(b, c, d, e, f, g, h, a, w[15], _K[31]);
 
     w[0] = w[0] + s0(w[1]) + w[9] + s1(w[14]);
     w[1] = w[1] + s0(w[2]) + w[10] + s1(w[15]);
@@ -284,22 +280,22 @@ void sha256PublicKey(const unsigned int x[8], const unsigned int y[8], unsigned 
     w[14] = w[14] + s0(w[15]) + w[7] + s1(w[12]);
     w[15] = w[15] + s0(w[0]) + w[8] + s1(w[13]);
 
-    round(a, b, c, d, e, f, g, h, w[0], _K[32]);
-    round(h, a, b, c, d, e, f, g, w[1], _K[33]);
-    round(g, h, a, b, c, d, e, f, w[2], _K[34]);
-    round(f, g, h, a, b, c, d, e, w[3], _K[35]);
-    round(e, f, g, h, a, b, c, d, w[4], _K[36]);
-    round(d, e, f, g, h, a, b, c, w[5], _K[37]);
-    round(c, d, e, f, g, h, a, b, w[6], _K[38]);
-    round(b, c, d, e, f, g, h, a, w[7], _K[39]);
-    round(a, b, c, d, e, f, g, h, w[8], _K[40]);
-    round(h, a, b, c, d, e, f, g, w[9], _K[41]);
-    round(g, h, a, b, c, d, e, f, w[10], _K[42]);
-    round(f, g, h, a, b, c, d, e, w[11], _K[43]);
-    round(e, f, g, h, a, b, c, d, w[12], _K[44]);
-    round(d, e, f, g, h, a, b, c, w[13], _K[45]);
-    round(c, d, e, f, g, h, a, b, w[14], _K[46]);
-    round(b, c, d, e, f, g, h, a, w[15], _K[47]);
+    roundSha(a, b, c, d, e, f, g, h, w[0], _K[32]);
+    roundSha(h, a, b, c, d, e, f, g, w[1], _K[33]);
+    roundSha(g, h, a, b, c, d, e, f, w[2], _K[34]);
+    roundSha(f, g, h, a, b, c, d, e, w[3], _K[35]);
+    roundSha(e, f, g, h, a, b, c, d, w[4], _K[36]);
+    roundSha(d, e, f, g, h, a, b, c, w[5], _K[37]);
+    roundSha(c, d, e, f, g, h, a, b, w[6], _K[38]);
+    roundSha(b, c, d, e, f, g, h, a, w[7], _K[39]);
+    roundSha(a, b, c, d, e, f, g, h, w[8], _K[40]);
+    roundSha(h, a, b, c, d, e, f, g, w[9], _K[41]);
+    roundSha(g, h, a, b, c, d, e, f, w[10], _K[42]);
+    roundSha(f, g, h, a, b, c, d, e, w[11], _K[43]);
+    roundSha(e, f, g, h, a, b, c, d, w[12], _K[44]);
+    roundSha(d, e, f, g, h, a, b, c, w[13], _K[45]);
+    roundSha(c, d, e, f, g, h, a, b, w[14], _K[46]);
+    roundSha(b, c, d, e, f, g, h, a, w[15], _K[47]);
 
     w[0] = w[0] + s0(w[1]) + w[9] + s1(w[14]);
     w[1] = w[1] + s0(w[2]) + w[10] + s1(w[15]);
@@ -318,38 +314,38 @@ void sha256PublicKey(const unsigned int x[8], const unsigned int y[8], unsigned 
     w[14] = w[14] + s0(w[15]) + w[7] + s1(w[12]);
     w[15] = w[15] + s0(w[0]) + w[8] + s1(w[13]);
 
-    round(a, b, c, d, e, f, g, h, w[0], _K[48]);
-    round(h, a, b, c, d, e, f, g, w[1], _K[49]);
-    round(g, h, a, b, c, d, e, f, w[2], _K[50]);
-    round(f, g, h, a, b, c, d, e, w[3], _K[51]);
-    round(e, f, g, h, a, b, c, d, w[4], _K[52]);
-    round(d, e, f, g, h, a, b, c, w[5], _K[53]);
-    round(c, d, e, f, g, h, a, b, w[6], _K[54]);
-    round(b, c, d, e, f, g, h, a, w[7], _K[55]);
-    round(a, b, c, d, e, f, g, h, w[8], _K[56]);
-    round(h, a, b, c, d, e, f, g, w[9], _K[57]);
-    round(g, h, a, b, c, d, e, f, w[10], _K[58]);
-    round(f, g, h, a, b, c, d, e, w[11], _K[59]);
-    round(e, f, g, h, a, b, c, d, w[12], _K[60]);
-    round(d, e, f, g, h, a, b, c, w[13], _K[61]);
-    round(c, d, e, f, g, h, a, b, w[14], _K[62]);
-    round(b, c, d, e, f, g, h, a, w[15], _K[63]);
+    roundSha(a, b, c, d, e, f, g, h, w[0], _K[48]);
+    roundSha(h, a, b, c, d, e, f, g, w[1], _K[49]);
+    roundSha(g, h, a, b, c, d, e, f, w[2], _K[50]);
+    roundSha(f, g, h, a, b, c, d, e, w[3], _K[51]);
+    roundSha(e, f, g, h, a, b, c, d, w[4], _K[52]);
+    roundSha(d, e, f, g, h, a, b, c, w[5], _K[53]);
+    roundSha(c, d, e, f, g, h, a, b, w[6], _K[54]);
+    roundSha(b, c, d, e, f, g, h, a, w[7], _K[55]);
+    roundSha(a, b, c, d, e, f, g, h, w[8], _K[56]);
+    roundSha(h, a, b, c, d, e, f, g, w[9], _K[57]);
+    roundSha(g, h, a, b, c, d, e, f, w[10], _K[58]);
+    roundSha(f, g, h, a, b, c, d, e, w[11], _K[59]);
+    roundSha(e, f, g, h, a, b, c, d, w[12], _K[60]);
+    roundSha(d, e, f, g, h, a, b, c, w[13], _K[61]);
+    roundSha(c, d, e, f, g, h, a, b, w[14], _K[62]);
+    roundSha(b, c, d, e, f, g, h, a, w[15], _K[63]);
 
-    digest[0] = tmp[0] + a;
-    digest[1] = tmp[1] + b;
-    digest[2] = tmp[2] + c;
-    digest[3] = tmp[3] + d;
-    digest[4] = tmp[4] + e;
-    digest[5] = tmp[5] + f;
-    digest[6] = tmp[6] + g;
-    digest[7] = tmp[7] + h;
+    digest[0] += a;
+    digest[1] += b;
+    digest[2] += c;
+    digest[3] += d;
+    digest[4] += e;
+    digest[5] += f;
+    digest[6] += g;
+    digest[7] += h;
 }
 
 void sha256PublicKeyCompressed(const unsigned int x[8], unsigned int yParity, unsigned int digest[8])
 {
-    unsigned int a, b, c, d, e, f, g, h;
-    unsigned int w[16];
-    unsigned int t;
+    __private unsigned int a, b, c, d, e, f, g, h;
+    __private unsigned int w[16];
+    __private unsigned int t;
 
     // 0x03 || x  or  0x02 || x
     w[0] = 0x02000000 | ((yParity & 1) << 24) | (x[0] >> 8);
@@ -362,7 +358,7 @@ void sha256PublicKeyCompressed(const unsigned int x[8], unsigned int yParity, un
     w[6] = (x[6] >> 8) | (x[5] << 24);
     w[7] = (x[7] >> 8) | (x[6] << 24);
     w[8] = (x[7] << 24) | 0x00800000;
-    w[15] = 33 * 8;
+    w[15] = 264; // 33 * 8
 
     a = _IV[0];
     b = _IV[1];
@@ -373,22 +369,22 @@ void sha256PublicKeyCompressed(const unsigned int x[8], unsigned int yParity, un
     g = _IV[6];
     h = _IV[7];
 
-    round(a, b, c, d, e, f, g, h, w[0], _K[0]);
-    round(h, a, b, c, d, e, f, g, w[1], _K[1]);
-    round(g, h, a, b, c, d, e, f, w[2], _K[2]);
-    round(f, g, h, a, b, c, d, e, w[3], _K[3]);
-    round(e, f, g, h, a, b, c, d, w[4], _K[4]);
-    round(d, e, f, g, h, a, b, c, w[5], _K[5]);
-    round(c, d, e, f, g, h, a, b, w[6], _K[6]);
-    round(b, c, d, e, f, g, h, a, w[7], _K[7]);
-    round(a, b, c, d, e, f, g, h, w[8], _K[8]);
-    round(h, a, b, c, d, e, f, g, 0, _K[9]);
-    round(g, h, a, b, c, d, e, f, 0, _K[10]);
-    round(f, g, h, a, b, c, d, e, 0, _K[11]);
-    round(e, f, g, h, a, b, c, d, 0, _K[12]);
-    round(d, e, f, g, h, a, b, c, 0, _K[13]);
-    round(c, d, e, f, g, h, a, b, 0, _K[14]);
-    round(b, c, d, e, f, g, h, a, w[15], _K[15]);
+    roundSha(a, b, c, d, e, f, g, h, w[0], _K[0]);
+    roundSha(h, a, b, c, d, e, f, g, w[1], _K[1]);
+    roundSha(g, h, a, b, c, d, e, f, w[2], _K[2]);
+    roundSha(f, g, h, a, b, c, d, e, w[3], _K[3]);
+    roundSha(e, f, g, h, a, b, c, d, w[4], _K[4]);
+    roundSha(d, e, f, g, h, a, b, c, w[5], _K[5]);
+    roundSha(c, d, e, f, g, h, a, b, w[6], _K[6]);
+    roundSha(b, c, d, e, f, g, h, a, w[7], _K[7]);
+    roundSha(a, b, c, d, e, f, g, h, w[8], _K[8]);
+    roundSha(h, a, b, c, d, e, f, g, 0, _K[9]);
+    roundSha(g, h, a, b, c, d, e, f, 0, _K[10]);
+    roundSha(f, g, h, a, b, c, d, e, 0, _K[11]);
+    roundSha(e, f, g, h, a, b, c, d, 0, _K[12]);
+    roundSha(d, e, f, g, h, a, b, c, 0, _K[13]);
+    roundSha(c, d, e, f, g, h, a, b, 0, _K[14]);
+    roundSha(b, c, d, e, f, g, h, a, w[15], _K[15]);
 
     w[0] = w[0] + s0(w[1]) + 0 + s1(0);
     w[1] = w[1] + s0(w[2]) + 0 + s1(w[15]);
@@ -407,22 +403,22 @@ void sha256PublicKeyCompressed(const unsigned int x[8], unsigned int yParity, un
     w[14] = 0 + s0(w[15]) + w[7] + s1(w[12]);
     w[15] = w[15] + s0(w[0]) + w[8] + s1(w[13]);
 
-    round(a, b, c, d, e, f, g, h, w[0], _K[16]);
-    round(h, a, b, c, d, e, f, g, w[1], _K[17]);
-    round(g, h, a, b, c, d, e, f, w[2], _K[18]);
-    round(f, g, h, a, b, c, d, e, w[3], _K[19]);
-    round(e, f, g, h, a, b, c, d, w[4], _K[20]);
-    round(d, e, f, g, h, a, b, c, w[5], _K[21]);
-    round(c, d, e, f, g, h, a, b, w[6], _K[22]);
-    round(b, c, d, e, f, g, h, a, w[7], _K[23]);
-    round(a, b, c, d, e, f, g, h, w[8], _K[24]);
-    round(h, a, b, c, d, e, f, g, w[9], _K[25]);
-    round(g, h, a, b, c, d, e, f, w[10], _K[26]);
-    round(f, g, h, a, b, c, d, e, w[11], _K[27]);
-    round(e, f, g, h, a, b, c, d, w[12], _K[28]);
-    round(d, e, f, g, h, a, b, c, w[13], _K[29]);
-    round(c, d, e, f, g, h, a, b, w[14], _K[30]);
-    round(b, c, d, e, f, g, h, a, w[15], _K[31]);
+    roundSha(a, b, c, d, e, f, g, h, w[0], _K[16]);
+    roundSha(h, a, b, c, d, e, f, g, w[1], _K[17]);
+    roundSha(g, h, a, b, c, d, e, f, w[2], _K[18]);
+    roundSha(f, g, h, a, b, c, d, e, w[3], _K[19]);
+    roundSha(e, f, g, h, a, b, c, d, w[4], _K[20]);
+    roundSha(d, e, f, g, h, a, b, c, w[5], _K[21]);
+    roundSha(c, d, e, f, g, h, a, b, w[6], _K[22]);
+    roundSha(b, c, d, e, f, g, h, a, w[7], _K[23]);
+    roundSha(a, b, c, d, e, f, g, h, w[8], _K[24]);
+    roundSha(h, a, b, c, d, e, f, g, w[9], _K[25]);
+    roundSha(g, h, a, b, c, d, e, f, w[10], _K[26]);
+    roundSha(f, g, h, a, b, c, d, e, w[11], _K[27]);
+    roundSha(e, f, g, h, a, b, c, d, w[12], _K[28]);
+    roundSha(d, e, f, g, h, a, b, c, w[13], _K[29]);
+    roundSha(c, d, e, f, g, h, a, b, w[14], _K[30]);
+    roundSha(b, c, d, e, f, g, h, a, w[15], _K[31]);
 
     w[0] = w[0] + s0(w[1]) + w[9] + s1(w[14]);
     w[1] = w[1] + s0(w[2]) + w[10] + s1(w[15]);
@@ -441,22 +437,22 @@ void sha256PublicKeyCompressed(const unsigned int x[8], unsigned int yParity, un
     w[14] = w[14] + s0(w[15]) + w[7] + s1(w[12]);
     w[15] = w[15] + s0(w[0]) + w[8] + s1(w[13]);
 
-    round(a, b, c, d, e, f, g, h, w[0], _K[32]);
-    round(h, a, b, c, d, e, f, g, w[1], _K[33]);
-    round(g, h, a, b, c, d, e, f, w[2], _K[34]);
-    round(f, g, h, a, b, c, d, e, w[3], _K[35]);
-    round(e, f, g, h, a, b, c, d, w[4], _K[36]);
-    round(d, e, f, g, h, a, b, c, w[5], _K[37]);
-    round(c, d, e, f, g, h, a, b, w[6], _K[38]);
-    round(b, c, d, e, f, g, h, a, w[7], _K[39]);
-    round(a, b, c, d, e, f, g, h, w[8], _K[40]);
-    round(h, a, b, c, d, e, f, g, w[9], _K[41]);
-    round(g, h, a, b, c, d, e, f, w[10], _K[42]);
-    round(f, g, h, a, b, c, d, e, w[11], _K[43]);
-    round(e, f, g, h, a, b, c, d, w[12], _K[44]);
-    round(d, e, f, g, h, a, b, c, w[13], _K[45]);
-    round(c, d, e, f, g, h, a, b, w[14], _K[46]);
-    round(b, c, d, e, f, g, h, a, w[15], _K[47]);
+    roundSha(a, b, c, d, e, f, g, h, w[0], _K[32]);
+    roundSha(h, a, b, c, d, e, f, g, w[1], _K[33]);
+    roundSha(g, h, a, b, c, d, e, f, w[2], _K[34]);
+    roundSha(f, g, h, a, b, c, d, e, w[3], _K[35]);
+    roundSha(e, f, g, h, a, b, c, d, w[4], _K[36]);
+    roundSha(d, e, f, g, h, a, b, c, w[5], _K[37]);
+    roundSha(c, d, e, f, g, h, a, b, w[6], _K[38]);
+    roundSha(b, c, d, e, f, g, h, a, w[7], _K[39]);
+    roundSha(a, b, c, d, e, f, g, h, w[8], _K[40]);
+    roundSha(h, a, b, c, d, e, f, g, w[9], _K[41]);
+    roundSha(g, h, a, b, c, d, e, f, w[10], _K[42]);
+    roundSha(f, g, h, a, b, c, d, e, w[11], _K[43]);
+    roundSha(e, f, g, h, a, b, c, d, w[12], _K[44]);
+    roundSha(d, e, f, g, h, a, b, c, w[13], _K[45]);
+    roundSha(c, d, e, f, g, h, a, b, w[14], _K[46]);
+    roundSha(b, c, d, e, f, g, h, a, w[15], _K[47]);
 
 
     w[0] = w[0] + s0(w[1]) + w[9] + s1(w[14]);
@@ -476,39 +472,30 @@ void sha256PublicKeyCompressed(const unsigned int x[8], unsigned int yParity, un
     w[14] = w[14] + s0(w[15]) + w[7] + s1(w[12]);
     w[15] = w[15] + s0(w[0]) + w[8] + s1(w[13]);
 
-    round(a, b, c, d, e, f, g, h, w[0], _K[48]);
-    round(h, a, b, c, d, e, f, g, w[1], _K[49]);
-    round(g, h, a, b, c, d, e, f, w[2], _K[50]);
-    round(f, g, h, a, b, c, d, e, w[3], _K[51]);
-    round(e, f, g, h, a, b, c, d, w[4], _K[52]);
-    round(d, e, f, g, h, a, b, c, w[5], _K[53]);
-    round(c, d, e, f, g, h, a, b, w[6], _K[54]);
-    round(b, c, d, e, f, g, h, a, w[7], _K[55]);
-    round(a, b, c, d, e, f, g, h, w[8], _K[56]);
-    round(h, a, b, c, d, e, f, g, w[9], _K[57]);
-    round(g, h, a, b, c, d, e, f, w[10], _K[58]);
-    round(f, g, h, a, b, c, d, e, w[11], _K[59]);
-    round(e, f, g, h, a, b, c, d, w[12], _K[60]);
-    round(d, e, f, g, h, a, b, c, w[13], _K[61]);
-    round(c, d, e, f, g, h, a, b, w[14], _K[62]);
-    round(b, c, d, e, f, g, h, a, w[15], _K[63]);
+    roundSha(a, b, c, d, e, f, g, h, w[0], _K[48]);
+    roundSha(h, a, b, c, d, e, f, g, w[1], _K[49]);
+    roundSha(g, h, a, b, c, d, e, f, w[2], _K[50]);
+    roundSha(f, g, h, a, b, c, d, e, w[3], _K[51]);
+    roundSha(e, f, g, h, a, b, c, d, w[4], _K[52]);
+    roundSha(d, e, f, g, h, a, b, c, w[5], _K[53]);
+    roundSha(c, d, e, f, g, h, a, b, w[6], _K[54]);
+    roundSha(b, c, d, e, f, g, h, a, w[7], _K[55]);
+    roundSha(a, b, c, d, e, f, g, h, w[8], _K[56]);
+    roundSha(h, a, b, c, d, e, f, g, w[9], _K[57]);
+    roundSha(g, h, a, b, c, d, e, f, w[10], _K[58]);
+    roundSha(f, g, h, a, b, c, d, e, w[11], _K[59]);
+    roundSha(e, f, g, h, a, b, c, d, w[12], _K[60]);
+    roundSha(d, e, f, g, h, a, b, c, w[13], _K[61]);
+    roundSha(c, d, e, f, g, h, a, b, w[14], _K[62]);
+    roundSha(b, c, d, e, f, g, h, a, w[15], _K[63]);
 
-    a += _IV[0];
-    b += _IV[1];
-    c += _IV[2];
-    d += _IV[3];
-    e += _IV[4];
-    f += _IV[5];
-    g += _IV[6];
-    h += _IV[7];
-
-    digest[0] = a;
-    digest[1] = b;
-    digest[2] = c;
-    digest[3] = d;
-    digest[4] = e;
-    digest[5] = f;
-    digest[6] = g;
-    digest[7] = h;
+    digest[0] = a + _IV[0];
+    digest[1] = b + _IV[1];
+    digest[2] = c + _IV[2];
+    digest[3] = d + _IV[3];
+    digest[4] = e + _IV[4];
+    digest[5] = f + _IV[5];
+    digest[6] = g + _IV[6];
+    digest[7] = h + _IV[7];
 }
 #endif

@@ -7,17 +7,6 @@
 
 #include "Logger.h"
 
-
-void KeyFinder::defaultResultCallback(KeySearchResult result)
-{
-	// Do nothing
-}
-
-void KeyFinder::defaultStatusCallback(KeySearchStatus status)
-{
-	// Do nothing
-}
-
 KeyFinder::KeyFinder(const secp256k1::uint256 &startKey, const secp256k1::uint256 &endKey, int compression, KeySearchDevice* device, const secp256k1::uint256 &stride)
 {
 	_total = 0;
@@ -46,7 +35,7 @@ KeyFinder::~KeyFinder()
 void KeyFinder::setTargets(std::vector<std::string> &targets)
 {
 	if(targets.size() == 0) {
-		throw KeySearchException("Requires at least 1 target");
+		throw KeySearchException("KEYSEARCH_NO_TARGET", "Requires at least 1 target");
 	}
 
 	_targets.clear();
@@ -55,7 +44,7 @@ void KeyFinder::setTargets(std::vector<std::string> &targets)
 	for(unsigned int i = 0; i < targets.size(); i++) {
 
 		if(!Address::verifyAddress(targets[i])) {
-			throw KeySearchException("Invalid address '" + targets[i] + "'");
+			throw KeySearchException("KEYSEARCH_INVALID_ADDRESS", "Invalid address '" + targets[i] + "'");
 		}
 
 		KeySearchTarget t;
@@ -71,10 +60,11 @@ void KeyFinder::setTargets(std::vector<std::string> &targets)
 void KeyFinder::setTargets(std::string targetsFile)
 {
 	std::ifstream inFile(targetsFile.c_str());
+	unsigned int invalidAddressCount = 0;
 
 	if(!inFile.is_open()) {
 		Logger::log(LogLevel::Error, "Unable to open '" + targetsFile + "'");
-		throw KeySearchException();
+		throw KeySearchException("FILE", "Unable to open '" + targetsFile + "'");
 	}
 
 	_targets.clear();
@@ -85,10 +75,10 @@ void KeyFinder::setTargets(std::string targetsFile)
 		util::removeNewline(line);
         line = util::trim(line);
 
-		if(line.length() > 0) {
+		if(line.length() != 0) {
 			if(!Address::verifyAddress(line)) {
-				Logger::log(LogLevel::Error, "Invalid address '" + line + "'");
-				throw KeySearchException();
+				invalidAddressCount++;
+				continue;
 			}
 
 			KeySearchTarget t;
@@ -98,8 +88,9 @@ void KeyFinder::setTargets(std::string targetsFile)
 			_targets.insert(t);
 		}
 	}
-	Logger::log(LogLevel::Info, util::formatThousands(_targets.size()) + " addresses loaded ("
-		+ util::format("%.1f", (double)(sizeof(KeySearchTarget) * _targets.size()) / (double)(1024 * 1024)) + "MB)");
+	Logger::log(LogLevel::Info, util::formatThousands(_targets.size()) + " address(es) loaded ("
+		+ util::format("%.1f", (double)(sizeof(KeySearchTarget) * _targets.size()) / (double)(1024 * 1024)) + "MB)"
+		+ "\n" + util::formatThousands(invalidAddressCount) + " address(es) ignored");
 
     _device->setTargets(_targets);
 }
@@ -197,15 +188,6 @@ void KeyFinder::run()
 
 			info.totalTime = _totalTime;
 
-			uint64_t freeMem = 0;
-
-			uint64_t totalMem = 0;
-
-			_device->getMemoryInfo(freeMem, totalMem);
-
-			info.freeMemory = freeMem;
-			info.deviceMemory = totalMem;
-			info.deviceName = _device->getDeviceName();
 			info.targets = _targets.size();
             info.nextKey = getNextKey();
 

@@ -1,6 +1,8 @@
 #include <stdio.h>
 #include <fstream>
 #include <iostream>
+#include <string> 
+
 
 #include "KeyFinder.h"
 #include "AddressUtil.h"
@@ -9,18 +11,10 @@
 #include "CmdParse.h"
 #include "Logger.h"
 #include "ConfigFile.h"
-
 #include "DeviceManager.h"
-
-#ifdef BUILD_CUDA
-#include "CudaKeySearchDevice.h"
-#endif
-
-#ifdef BUILD_OPENCL
 #include "CLKeySearchDevice.h"
-#endif
 
-typedef struct {
+struct RunConfig{
     // startKey is the first key. We store it so that if the --continue
     // option is used, the correct progress is displayed. startKey and
     // nextKey are only equal at the very beginning. nextKey gets saved
@@ -38,7 +32,7 @@ typedef struct {
     unsigned int blocks = 0;
     unsigned int pointsPerThread = 0;
     
-    int compression = PointCompressionType::COMPRESSED;
+    int compressionMode = PointCompressionType::COMPRESSED;
  
     std::vector<std::string> targets;
 
@@ -55,7 +49,7 @@ typedef struct {
     secp256k1::uint256 stride = 1;
 
     bool follow = false;
-}RunConfig;
+};
 
 static RunConfig _config;
 
@@ -64,7 +58,6 @@ std::vector<DeviceManager::DeviceInfo> _devices;
 void writeCheckpoint(secp256k1::uint256 nextKey);
 
 static uint64_t _lastUpdate = 0;
-static uint64_t _runningTime = 0;
 static uint64_t _startTime = 0;
 
 /**
@@ -75,32 +68,18 @@ void resultCallback(KeySearchResult info)
 	if(_config.resultsFile.length() != 0) {
 		Logger::log(LogLevel::Info, "Found key for address '" + info.address + "'. Written to '" + _config.resultsFile + "'");
 
-		std::string s = info.address + " " + info.privateKey.toString(16) + " " + info.publicKey.toString(info.compressed);
+		std::string s = info.address + " " + info.privateKey.toString() + " " + info.publicKey.toString(info.compressed);
 		util::appendToFile(_config.resultsFile, s);
 
 		return;
 	}
 
-	std::string logStr = "Address:     " + info.address + "\n";
-	logStr += "Private key: " + info.privateKey.toString(16) + "\n";
-	logStr += "Compressed:  ";
+	std::string logStr = "\n\nAddress:     " + info.address + "\n";
+	logStr +=              "Private key: " + info.privateKey.toString() + "\n";
+    logStr +=              "Compressed:  "; logStr += (info.compressed) ? "yes\n" : "no\n";
+    logStr +=              "Public key:  "; logStr += (info.compressed) ? info.publicKey.toString(true) + "\n" : info.publicKey.x.toString() + "\n            " + info.publicKey.y.toString() + "\n";
 
-	if(info.compressed) {
-		logStr += "yes\n";
-	} else {
-		logStr += "no\n";
-	}
-
-	logStr += "Public key:  \n";
-
-	if(info.compressed) {
-		logStr += info.publicKey.toString(true) + "\n";
-	} else {
-		logStr += info.publicKey.x.toString(16) + "\n";
-		logStr += info.publicKey.y.toString(16) + "\n";
-	}
-
-	Logger::log(LogLevel::Info, logStr);
+	Logger::log(LogLevel::Notify, logStr);
 }
 
 /**
@@ -120,26 +99,18 @@ void statusCallback(KeySearchStatus info)
 
 	std::string timeStr = "[" + util::formatSeconds((unsigned int)((_config.elapsed + info.totalTime) / 1000)) + "]";
 
-	std::string usedMemStr = util::format((info.deviceMemory - info.freeMemory) /(1024 * 1024));
-
-	std::string totalMemStr = util::format(info.deviceMemory / (1024 * 1024));
-
     std::string targetStr = util::format(info.targets) + " target" + (info.targets > 1 ? "s" : "");
 
-
 	// Fit device name in 16 characters, pad with spaces if less
-	std::string devName = info.deviceName.substr(0, 16);
-	devName += std::string(16 - devName.length(), ' ');
-
     const char *formatStr = NULL;
 
     if(_config.follow) {
-        formatStr = "%s %s/%sMB | %s %s %s %s\n";
+        formatStr = "%s %s %s %s\n";
     } else {
-        formatStr = "\r%s %s / %sMB | %s %s %s %s";
+        formatStr = "\r%s %s %s %s";
     }
 
-	printf(formatStr, devName.c_str(), usedMemStr.c_str(), totalMemStr.c_str(), targetStr.c_str(), speedStr.c_str(), totalStr.c_str(), timeStr.c_str());
+	printf(formatStr, targetStr.c_str(), speedStr.c_str(), totalStr.c_str(), timeStr.c_str());
 
     if(_config.checkpointFile.length() > 0) {
         uint64_t t = util::getSystemTime();
@@ -192,29 +163,29 @@ void usage()
     printf("BitCrack OPTIONS [TARGETS]\n");
     printf("Where TARGETS is one or more addresses\n\n");
 	
-    printf("--help                  Display this message\n");
-    printf("-c, --compressed        Use compressed points\n");
-    printf("-u, --uncompressed      Use Uncompressed points\n");
-    printf("--compression  MODE     Specify compression where MODE is\n");
-    printf("                          COMPRESSED or UNCOMPRESSED or BOTH\n");
-    printf("-d, --device ID         Use device ID\n");
-    printf("-b, --blocks N          N blocks\n");
-    printf("-t, --threads N         N threads per block\n");
-    printf("-p, --points N          N points per thread\n");
-    printf("-i, --in FILE           Read addresses from FILE, one per line\n");
-    printf("-o, --out FILE          Write keys to FILE\n");
-    printf("-f, --follow            Follow text output\n");
-    printf("--list-devices          List available devices\n");
-    printf("--keyspace KEYSPACE     Specify the keyspace:\n");
-    printf("                          START:END\n");
-    printf("                          START:+COUNT\n");
-    printf("                          START\n");
-    printf("                          :END\n"); 
-    printf("                          :+COUNT\n");
-    printf("                        Where START, END, COUNT are in hex format\n");
-    printf("--stride N              Increment by N keys at a time\n");
-    printf("--share M/N             Divide the keyspace into N equal shares, process the Mth share\n");
-    printf("--continue FILE         Save/load progress from FILE\n");
+    printf("-?, -h, --help            Display this message\n");
+    printf("-c, --compressed          Use compressed points\n");
+    printf("-u, --uncompressed        Use Uncompressed points\n");
+    printf("--compression  MODE       Specify compression where MODE is\n");
+    printf("                            COMPRESSED or UNCOMPRESSED or BOTH\n");
+    printf("-d, --device ID           Use device ID\n");
+    printf("-b, --blocks N            N blocks\n");
+    printf("-t, --threads N           N threads per block\n");
+    printf("-p, --points N            N points per thread\n");
+    printf("-i, --in FILE             Read addresses from FILE, one per line\n");
+    printf("-o, --out FILE            Write keys to FILE\n");
+    printf("-f, --follow              Follow text output\n");
+    printf("--list-devices            List available devices\n");
+    printf("-k, --keyspace KEYSPACE   Specify the keyspace:\n");
+    printf("                            START:END\n");
+    printf("                            START:+COUNT\n");
+    printf("                            START\n");
+    printf("                            :END\n"); 
+    printf("                            :+COUNT\n");
+    printf("                          Where START, END, COUNT are in hex format\n");
+    printf("--stride N                Increment by N keys at a time\n");
+    printf("--share M/N               Divide the keyspace into N equal shares, process the Mth share\n");
+    printf("--continue FILE           Save/load progress from FILE\n");
 }
 
 
@@ -222,36 +193,26 @@ void usage()
  Finds default parameters depending on the device
  */
 typedef struct {
-	int threads;
-	int blocks;
-	int pointsPerThread;
+	unsigned int threads;
+	unsigned int blocks;
+	unsigned int pointsPerThread;
+    unsigned int compressionMode;
 }DeviceParameters;
 
 DeviceParameters getDefaultParameters(const DeviceManager::DeviceInfo &device)
 {
-	DeviceParameters p;
-	p.threads = 256;
-    p.blocks = 32;
-	p.pointsPerThread = 32;
+	DeviceParameters parameters;
+	parameters.threads = 256;
+    parameters.blocks = 32;
+	parameters.pointsPerThread = 32;
+    parameters.compressionMode = PointCompressionType::COMPRESSED;
 
-	return p;
+	return parameters;
 }
 
-static KeySearchDevice *getDeviceContext(DeviceManager::DeviceInfo &device, int blocks, int threads, int pointsPerThread)
+static KeySearchDevice *getDeviceContext(DeviceManager::DeviceInfo &device, int blocks, int threads, int pointsPerThread, int compressionMode)
 {
-#ifdef BUILD_CUDA
-    if(device.type == DeviceManager::DeviceType::CUDA) {
-        return new CudaKeySearchDevice((int)device.physicalId, threads, pointsPerThread, blocks);
-    }
-#endif
-
-#ifdef BUILD_OPENCL
-    if(device.type == DeviceManager::DeviceType::OpenCL) {
-        return new CLKeySearchDevice(device.physicalId, threads, pointsPerThread, blocks);
-    }
-#endif
-
-    return NULL;
+     return new CLKeySearchDevice(device.physicalId, threads, pointsPerThread, blocks, compressionMode);
 }
 
 static void printDeviceList(const std::vector<DeviceManager::DeviceInfo> &devices)
@@ -274,7 +235,7 @@ bool readAddressesFromFile(const std::string &fileName, std::vector<std::string>
     }
 }
 
-int parseCompressionString(const std::string &s)
+PointCompressionType::Value parseCompressionString(const std::string &s)
 {
     std::string comp = util::toLower(s);
 
@@ -302,26 +263,26 @@ static std::string getCompressionString(int mode)
         return "uncompressed";
     case PointCompressionType::COMPRESSED:
         return "compressed";
+    default: 
+        throw std::string("Invalid compression setting '" + util::format(mode) + "'");
     }
-
-    throw std::string("Invalid compression setting '" + util::format(mode) + "'");
 }
 
 void writeCheckpoint(secp256k1::uint256 nextKey)
 {
-    std::ofstream tmp(_config.checkpointFile, std::ios::out);
+    std::ofstream fileStream(_config.checkpointFile, std::ios::out);
 
-    tmp << "start=" << _config.startKey.toString() << std::endl;
-    tmp << "next=" << nextKey.toString() << std::endl;
-    tmp << "end=" << _config.endKey.toString() << std::endl;
-    tmp << "blocks=" << _config.blocks << std::endl;
-    tmp << "threads=" << _config.threads << std::endl;
-    tmp << "points=" << _config.pointsPerThread << std::endl;
-    tmp << "compression=" << getCompressionString(_config.compression) << std::endl;
-    tmp << "device=" << _config.device << std::endl;
-    tmp << "elapsed=" << (_config.elapsed + util::getSystemTime() - _startTime) << std::endl;
-    tmp << "stride=" << _config.stride.toString();
-    tmp.close();
+    fileStream << "start=" << _config.startKey.toString() << "\n";
+    fileStream << "next=" << nextKey.toString() << "\n";
+    fileStream << "end=" << _config.endKey.toString() << "\n";
+    fileStream << "blocks=" << _config.blocks << "\n";
+    fileStream << "threads=" << _config.threads << "\n";
+    fileStream << "points=" << _config.pointsPerThread << "\n";
+    fileStream << "compression=" << getCompressionString(_config.compressionMode) << "\n";
+    fileStream << "device=" << _config.device << "\n";
+    fileStream << "elapsed=" << (_config.elapsed + util::getSystemTime() - _startTime) << "\n";
+    fileStream << "stride=" << _config.stride.toString();
+    fileStream.close();
 }
 
 void readCheckpointFile()
@@ -354,7 +315,7 @@ void readCheckpointFile()
         _config.pointsPerThread = util::parseUInt32(entries["points"].value);
     }
     if(entries.find("compression") != entries.end()) {
-        _config.compression = parseCompressionString(entries["compression"].value);
+        _config.compressionMode = parseCompressionString(entries["compression"].value);
     }
     if(entries.find("elapsed") != entries.end()) {
         _config.elapsed = util::parseUInt32(entries["elapsed"].value);
@@ -368,15 +329,17 @@ void readCheckpointFile()
 
 int run()
 {
+    Logger::log(LogLevel::Info, "BitCrackOpenCL\n");
+
     if(_config.device < 0 || _config.device >= _devices.size()) {
         Logger::log(LogLevel::Error, "device " + util::format(_config.device) + " does not exist");
         return 1;
     }
 
-    Logger::log(LogLevel::Info, "Compression: " + getCompressionString(_config.compression));
+    Logger::log(LogLevel::Info, "Compression: " + getCompressionString(_config.compressionMode));
     Logger::log(LogLevel::Info, "Starting at: " + _config.nextKey.toString());
     Logger::log(LogLevel::Info, "Ending at:   " + _config.endKey.toString());
-    Logger::log(LogLevel::Info, "Counting by: " + _config.stride.toString());
+    Logger::log(LogLevel::Info, "Counting by: " + _config.stride.toString() + "\n");
 
     try {
 
@@ -398,28 +361,32 @@ int run()
             _config.pointsPerThread = params.pointsPerThread;
         }
 
+        Logger::log(LogLevel::Info, "Threads: " + std::to_string(_config.threads));
+        Logger::log(LogLevel::Info, "Blocks: " + std::to_string(_config.blocks));
+        Logger::log(LogLevel::Info, "Points per Thread: " + std::to_string(_config.pointsPerThread));
+            
         // Get device context
-        KeySearchDevice *d = getDeviceContext(_devices[_config.device], _config.blocks, _config.threads, _config.pointsPerThread);
+        KeySearchDevice *keySearchDevice = getDeviceContext(_devices[_config.device], _config.blocks, _config.threads, _config.pointsPerThread, _config.compressionMode);
 
-        KeyFinder f(_config.nextKey, _config.endKey, _config.compression, d, _config.stride);
+        KeyFinder keyFinder(_config.nextKey, _config.endKey, _config.compressionMode, keySearchDevice, _config.stride);
 
-        f.setResultCallback(resultCallback);
-        f.setStatusInterval(_config.statusInterval);
-        f.setStatusCallback(statusCallback);
+        keyFinder.setResultCallback(resultCallback);
+        keyFinder.setStatusInterval(_config.statusInterval);
+        keyFinder.setStatusCallback(statusCallback);
 
-        f.init();
+        keyFinder.init();
 
         if(!_config.targetsFile.empty()) {
-            f.setTargets(_config.targetsFile);
+            keyFinder.setTargets(_config.targetsFile);
         } else {
-            f.setTargets(_config.targets);
+            keyFinder.setTargets(_config.targets);
         }
 
-        f.run();
+        keyFinder.run();
 
-        delete d;
+        delete keySearchDevice;
     } catch(KeySearchException ex) {
-        Logger::log(LogLevel::Info, "Error: " + ex.msg);
+        Logger::log(LogLevel::Info, "Error: " + ex.msg + ": " + ex.description);
         return 1;
     }
 
@@ -465,16 +432,16 @@ int main(int argc, char **argv)
 	bool optUncompressed = false;
     bool listDevices = false;
     bool optShares = false;
-    bool optThreads = false;
-    bool optBlocks = false;
-    bool optPoints = false;
 
     uint32_t shareIdx = 0;
     uint32_t numShares = 0;
 
-    // Catch --help first
     for(int i = 1; i < argc; i++) {
-        if(std::string(argv[i]) == "--help") {
+        if(
+            std::string(argv[i]) == "--help" ||
+            std::string(argv[i]) == "-h" ||
+            std::string(argv[i]) == "-?"
+        ) {
             usage();
             return 0;
         }
@@ -499,7 +466,6 @@ int main(int argc, char **argv)
 		return 0;
 	}
 
-
 	CmdParse parser;
 	parser.add("-d", "--device", true);
 	parser.add("-t", "--threads", true);
@@ -513,7 +479,7 @@ int main(int argc, char **argv)
 	parser.add("-o", "--out", true);
     parser.add("-f", "--follow", false);
     parser.add("", "--list-devices", false);
-    parser.add("", "--keyspace", true);
+    parser.add("-k", "--keyspace", true);
     parser.add("", "--continue", true);
     parser.add("", "--share", true);
     parser.add("", "--stride", true);
@@ -534,13 +500,10 @@ int main(int argc, char **argv)
 		try {
 			if(optArg.equals("-t", "--threads")) {
 				_config.threads = util::parseUInt32(optArg.arg);
-                optThreads = true;
             } else if(optArg.equals("-b", "--blocks")) {
                 _config.blocks = util::parseUInt32(optArg.arg);
-                optBlocks = true;
 			} else if(optArg.equals("-p", "--points")) {
 				_config.pointsPerThread = util::parseUInt32(optArg.arg);
-                optPoints = true;
 			} else if(optArg.equals("-d", "--device")) {
 				_config.device = util::parseUInt32(optArg.arg);
 			} else if(optArg.equals("-c", "--compressed")) {
@@ -548,7 +511,7 @@ int main(int argc, char **argv)
             } else if(optArg.equals("-u", "--uncompressed")) {
                 optUncompressed = true;
             } else if(optArg.equals("", "--compression")) {
-                _config.compression = parseCompressionString(optArg.arg);
+                _config.compressionMode = parseCompressionString(optArg.arg);
 			} else if(optArg.equals("-i", "--in")) {
 				_config.targetsFile = optArg.arg;
 			} else if(optArg.equals("-o", "--out")) {
@@ -557,7 +520,7 @@ int main(int argc, char **argv)
                 listDevices = true;
             } else if(optArg.equals("", "--continue")) {
                 _config.checkpointFile = optArg.arg;
-            } else if(optArg.equals("", "--keyspace")) {
+            } else if(optArg.equals("-k", "--keyspace")) {
                 secp256k1::uint256 start;
                 secp256k1::uint256 end;
 
@@ -665,14 +628,14 @@ int main(int argc, char **argv)
 
 	// Check option for compressed, uncompressed, or both
 	if(optCompressed && optUncompressed) {
-		_config.compression = PointCompressionType::BOTH;
+		_config.compressionMode = PointCompressionType::BOTH;
 	} else if(optCompressed) {
-		_config.compression = PointCompressionType::COMPRESSED;
+		_config.compressionMode = PointCompressionType::COMPRESSED;
 	} else if(optUncompressed) {
-		_config.compression = PointCompressionType::UNCOMPRESSED;
+		_config.compressionMode = PointCompressionType::UNCOMPRESSED;
 	}
 
-    if(_config.checkpointFile.length() > 0) {
+    if(_config.checkpointFile.length() != 0) {
         readCheckpointFile();
     }
 

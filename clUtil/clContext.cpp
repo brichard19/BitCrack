@@ -15,7 +15,7 @@ cl::CLContext::CLContext(cl_device_id device)
     _ctx = clCreateContext(0, 1, &_device, NULL, NULL, &err);
     clCall(err);
 
-    _queue = clCreateCommandQueue(_ctx, _device, 0, &err);
+    _queue = clCreateCommandQueueWithProperties(_ctx, _device, NULL, &err);
     clCall(err);
 }
 
@@ -94,7 +94,7 @@ cl::CLProgram::CLProgram(cl::CLContext &ctx, std::string srcFile, std::string op
     cl_int err;
 
     if(util::toLower(_ctx.getDeviceVendor()).find("intel") != std::string::npos) {
-        options += "-DDEVICE_VENDOR_INTEL";
+        options += " -DDEVICE_VENDOR_INTEL";
     }
 
     _prog = clCreateProgramWithSource(ctx.getContext(), 1, &ptr, &len, &err);

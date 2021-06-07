@@ -30,6 +30,7 @@ CLUnitTests/test.cl
 [Dd]ebug/
 [Dd]ebugPublic/
 [Rr]elease/
+[Pp]erformance Release/
 [Rr]eleases/
 x64/
 x86/
