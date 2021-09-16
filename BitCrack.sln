@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 15
-VisualStudioVersion = 15.0.27703.2018
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.31702.278
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "secp256k1lib", "secp256k1lib\secp256k1lib.vcxproj", "{BFF4B5FE-C2C5-4384-8941-CD6CB29E78C6}"
 EndProject
@@ -14,7 +14,7 @@ EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "cuKeyFinder", "KeyFinder\KeyFinder.vcxproj", "{D77642A9-365C-420C-A726-469649D2927E}"
 	ProjectSection(ProjectDependencies) = postProject
 		{53EE0C03-4419-4767-A91B-7FC7D4B3D2AA} = {53EE0C03-4419-4767-A91B-7FC7D4B3D2AA}
-		{CCA3D02C-5E5A-4A24-B34B-5961DFA93946} = {CCA3D02C-5E5A-4A24-B34B-5961DFA93946}
+		{29B2FE33-ED2A-49BF-A967-143E9A507173} = {29B2FE33-ED2A-49BF-A967-143E9A507173}
 	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "AddrGen", "AddrGen\AddrGen.vcxproj", "{7AE5E38D-5731-404E-A4F3-229ADF981EFC}"
@@ -46,10 +46,6 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "cudaInfo", "cudaInfo\cudaIn
 		{EADAAA54-E304-4656-8263-E5E688FF323D} = {EADAAA54-E304-4656-8263-E5E688FF323D}
 	EndProjectSection
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "cudaMath", "cudaMath\cudaMath.vcxproj", "{E1BDB205-8994-4E49-8B35-172A84E7118C}"
-EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "CudaKeySearchDevice", "CudaKeySearchDevice\CudaKeySearchDevice.vcxproj", "{CCA3D02C-5E5A-4A24-B34B-5961DFA93946}"
-EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "clUtil", "clUtil\clUtil.vcxproj", "{D9A5823D-C472-40AC-B23A-21B1586CEEB0}"
 	ProjectSection(ProjectDependencies) = postProject
 		{93B89BF6-32B9-4EBA-AA44-BCFEC4836B76} = {93B89BF6-32B9-4EBA-AA44-BCFEC4836B76}
@@ -78,6 +74,10 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "CLUnitTests", "CLUnitTests\
 	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "clMath", "clMath\clMath.vcxproj", "{83327841-C283-4D46-A873-97AC674C68AC}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "CudaKeySearchDevice", "CudaKeySearchDevice\CudaKeySearchDevice.vcxproj", "{29B2FE33-ED2A-49BF-A967-143E9A507173}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "cudaMath", "cudaMath\cudaMath.vcxproj", "{782E95EF-E7CB-475E-A67B-1BE144C0D413}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -171,18 +171,6 @@ Global
 		{9E8ECC85-AF9F-4F17-9397-633CA2FEE94E}.Release|x64.ActiveCfg = Release|x64
 		{9E8ECC85-AF9F-4F17-9397-633CA2FEE94E}.Release|x64.Build.0 = Release|x64
 		{9E8ECC85-AF9F-4F17-9397-633CA2FEE94E}.Release|x86.ActiveCfg = Release|x64
-		{E1BDB205-8994-4E49-8B35-172A84E7118C}.Debug|x64.ActiveCfg = Debug|x64
-		{E1BDB205-8994-4E49-8B35-172A84E7118C}.Debug|x64.Build.0 = Debug|x64
-		{E1BDB205-8994-4E49-8B35-172A84E7118C}.Debug|x86.ActiveCfg = Debug|x64
-		{E1BDB205-8994-4E49-8B35-172A84E7118C}.Release|x64.ActiveCfg = Release|x64
-		{E1BDB205-8994-4E49-8B35-172A84E7118C}.Release|x64.Build.0 = Release|x64
-		{E1BDB205-8994-4E49-8B35-172A84E7118C}.Release|x86.ActiveCfg = Release|x64
-		{CCA3D02C-5E5A-4A24-B34B-5961DFA93946}.Debug|x64.ActiveCfg = Debug|x64
-		{CCA3D02C-5E5A-4A24-B34B-5961DFA93946}.Debug|x64.Build.0 = Debug|x64
-		{CCA3D02C-5E5A-4A24-B34B-5961DFA93946}.Debug|x86.ActiveCfg = Debug|x64
-		{CCA3D02C-5E5A-4A24-B34B-5961DFA93946}.Release|x64.ActiveCfg = Release|x64
-		{CCA3D02C-5E5A-4A24-B34B-5961DFA93946}.Release|x64.Build.0 = Release|x64
-		{CCA3D02C-5E5A-4A24-B34B-5961DFA93946}.Release|x86.ActiveCfg = Release|x64
 		{D9A5823D-C472-40AC-B23A-21B1586CEEB0}.Debug|x64.ActiveCfg = Debug|x64
 		{D9A5823D-C472-40AC-B23A-21B1586CEEB0}.Debug|x64.Build.0 = Debug|x64
 		{D9A5823D-C472-40AC-B23A-21B1586CEEB0}.Debug|x86.ActiveCfg = Debug|Win32
@@ -231,6 +219,18 @@ Global
 		{83327841-C283-4D46-A873-97AC674C68AC}.Release|x64.Build.0 = Release|x64
 		{83327841-C283-4D46-A873-97AC674C68AC}.Release|x86.ActiveCfg = Release|Win32
 		{83327841-C283-4D46-A873-97AC674C68AC}.Release|x86.Build.0 = Release|Win32
+		{29B2FE33-ED2A-49BF-A967-143E9A507173}.Debug|x64.ActiveCfg = Debug|x64
+		{29B2FE33-ED2A-49BF-A967-143E9A507173}.Debug|x64.Build.0 = Debug|x64
+		{29B2FE33-ED2A-49BF-A967-143E9A507173}.Debug|x86.ActiveCfg = Debug|x64
+		{29B2FE33-ED2A-49BF-A967-143E9A507173}.Release|x64.ActiveCfg = Release|x64
+		{29B2FE33-ED2A-49BF-A967-143E9A507173}.Release|x64.Build.0 = Release|x64
+		{29B2FE33-ED2A-49BF-A967-143E9A507173}.Release|x86.ActiveCfg = Release|x64
+		{782E95EF-E7CB-475E-A67B-1BE144C0D413}.Debug|x64.ActiveCfg = Debug|x64
+		{782E95EF-E7CB-475E-A67B-1BE144C0D413}.Debug|x64.Build.0 = Debug|x64
+		{782E95EF-E7CB-475E-A67B-1BE144C0D413}.Debug|x86.ActiveCfg = Debug|x64
+		{782E95EF-E7CB-475E-A67B-1BE144C0D413}.Release|x64.ActiveCfg = Release|x64
+		{782E95EF-E7CB-475E-A67B-1BE144C0D413}.Release|x64.Build.0 = Release|x64
+		{782E95EF-E7CB-475E-A67B-1BE144C0D413}.Release|x86.ActiveCfg = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
