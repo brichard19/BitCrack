@@ -2,11 +2,9 @@
 
 A tool for brute-forcing Bitcoin private keys. The main purpose of this project is to contribute to the effort of solving the [Bitcoin puzzle transaction](https://blockchain.info/tx/08389f34c98c606322740c0be6a7125d9860bb8d5cb182c02f98461e5fa6cd15): A transaction with 32 addresses that become increasingly difficult to crack.
 
-
 ### Using BitCrack
 
 #### Usage
-
 
 Use `cuBitCrack.exe` for CUDA devices and `clBitCrack.exe` for OpenCL devices.
 
@@ -15,7 +13,6 @@ Use `cuBitCrack.exe` for CUDA devices and `clBitCrack.exe` for OpenCL devices.
 **Note for Intel users:**
 
 There is bug in Intel's OpenCL implementation which affects BitCrack. Details here: https://github.com/brichard19/BitCrack/issues/123
-
 
 ```
 xxBitCrack.exe [OPTIONS] [TARGETS]
@@ -75,11 +72,13 @@ Options:
 #### Examples
 
 The simplest usage, the keyspace will begin at 0, and the CUDA parameters will be chosen automatically
+
 ```
 xxBitCrack.exe 1FshYsUh3mqgsG29XpZ23eLjWV8Ur3VwH
 ```
 
 Multiple keys can be searched at once with minimal impact to performance. Provide the keys on the command line, or in a file with one address per line
+
 ```
 xxBitCrack.exe 1FshYsUh3mqgsG29XpZ23eLjWV8Ur3VwH 15JhYXn6Mx3oF4Y7PcTAv2wVVAuCFFQNiP 19EEC52krRUK1RkUAEZmQdjTyHT7Gp1TYT
 ```
@@ -109,8 +108,8 @@ xxBitCrack.exe --keyspace 80000000:ffffffff 1FshYsUh3mqgsG29XpZ23eLjWV8Ur3VwH
 GeForce GT 640   224/1024MB | 1 target 10.33 MKey/s (1,357,905,920 total) [00:02:12]
 ```
 
-
 Use the `-b,` `-t` and `-p` options to specify the number of blocks, threads per block, and keys per thread.
+
 ```
 xxBitCrack.exe -b 32 -t 256 -p 16 1FshYsUh3mqgsG29XpZ23eLjWV8Ur3VwH
 ```
@@ -121,7 +120,6 @@ GPUs have many cores. Work for the cores is divided into blocks. Each block cont
 
 There are 3 parameters that affect performance: blocks, threads per block, and keys per thread.
 
-
 `blocks:` Should be a multiple of the number of compute units on the device. The default is 32.
 
 `threads:` The number of threads in a block. This must be a multiple of 32. The default is 256.
@@ -130,7 +128,6 @@ There are 3 parameters that affect performance: blocks, threads per block, and k
 increases asymptotically with this value. The default is256. Increasing this value will cause the
 kernel to run longer, but more keys will be processed.
 
-
 ### Build dependencies
 
 Visual Studio 2019 (if on Windows)
@@ -138,7 +135,6 @@ Visual Studio 2019 (if on Windows)
 For CUDA: CUDA Toolkit 10.1
 
 For OpenCL: An OpenCL SDK (The CUDA toolkit contains an OpenCL SDK).
-
 
 ### Building in Windows
 
@@ -155,17 +151,20 @@ OpenCL in the `BitCrack.props` property sheet.
 
 Using `make`:
 
-Build CUDA:
 ```
 make BUILD_CUDA=1
 ```
 
 Build OpenCL:
-```
-make BUILD_OPENCL=1
+
 ```
 
+```
+
+make BUILD_OPENCL=1
+
 Or build both:
+
 ```
 make BUILD_CUDA=1 BUILD_OPENCL=1
 ```
