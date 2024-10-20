@@ -12,8 +12,26 @@ LIBS+=-L$(LIBDIR)
 CXX=g++
 CXXFLAGS=-O2 -std=c++11
 
+# Detects the compute capability of the first GPU
+COMPUTE_CAP := $(shell ./compute_cap.sh)
+
+# Checks if the COMPUTE_CAP variable is empty, and if so, produces a fatal error
+ifeq ($(COMPUTE_CAP),)
+$(error Could not detect a GPU. Please ensure a GPU is available and that nvidia-smi is installed.)
+endif
+
+# Displays the detected compute capability
+$(info Detected Compute Capability: $(COMPUTE_CAP))
+
+# Checks if the COMPUTE_CAP variable is empty, and if so, produces a fatal error
+ifeq ($(COMPUTE_CAP),)
+$(error Could not detect a GPU. Please ensure a GPU is available and that nvidia-smi is installed.)
+endif
+
+# Displays the detected compute capability
+$(info Detected Compute Capability: $(COMPUTE_CAP))
+
 # CUDA variables
-COMPUTE_CAP=30
 NVCC=nvcc
 NVCCFLAGS=-std=c++11 -gencode=arch=compute_${COMPUTE_CAP},code=\"sm_${COMPUTE_CAP}\" -Xptxas="-v" -Xcompiler "${CXXFLAGS}"
 CUDA_HOME=/usr/local/cuda
