@@ -24,7 +24,7 @@ int runTest(cl_device_id deviceId)
     bool pass = true;
 
     cl::CLContext ctx(deviceId);
-    cl::CLProgram prog(ctx, _secp256k1_test_cl);
+    cl::CLProgram prog(ctx, "_secp256k1_test_cl");
     cl::CLKernel k(prog, "secp256k1_test");
 
     cl_mem devNumErrors = ctx.malloc(sizeof(unsigned int));
