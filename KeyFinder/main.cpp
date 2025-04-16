@@ -144,7 +144,7 @@ void statusCallback(KeySearchStatus info)
     if(_config.checkpointFile.length() > 0) {
         uint64_t t = util::getSystemTime();
         if(t - _lastUpdate >= _config.checkpointInterval) {
-            Logger::log(LogLevel::Info, "Checkpoint");
+            Logger::lflog(LogLevel::Info, "Checkpoint");
             writeCheckpoint(info.nextKey);
             _lastUpdate = t;
         }

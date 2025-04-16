@@ -79,6 +79,13 @@ void Logger::log(int logLevel, std::string msg)
 	fprintf(stderr, "%s\n", str.c_str());
 }
 
+void Logger::lflog(int logLevel, std::string msg)
+{
+	std::string str = formatLog(logLevel, msg);
+
+	fprintf(stderr, "\n%s\n", str.c_str());
+}
+
 void Logger::setLogFile(std::string path)
 {
 

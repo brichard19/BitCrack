@@ -34,6 +34,7 @@ public:
 	}
 
 	static void log(int logLevel, std::string msg);
+	static void lflog(int logLevel, std::string msg);
 
 	static void setLogFile(std::string path);
 };
