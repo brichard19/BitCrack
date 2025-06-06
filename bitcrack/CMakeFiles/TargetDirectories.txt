@@ -1,0 +1,4 @@
+/app/bitcrack/CMakeFiles/bitcrackcore.dir
+/app/bitcrack/CMakeFiles/bitcrack_cli.dir
+/app/bitcrack/CMakeFiles/edit_cache.dir
+/app/bitcrack/CMakeFiles/rebuild_cache.dir
