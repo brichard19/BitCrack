@@ -1,0 +1,118 @@
+{
+  "test_wallets": {
+    "description": "Тестовые кошельки с известными приватными ключами для проверки работы алгоритмов",
+    "warning": "⚠️ НЕ ИСПОЛЬЗУЙТЕ ЭТИ КЛЮЧИ ДЛЯ РЕАЛЬНЫХ СРЕДСТВ! Они публичны и известны.",
+    
+    "bitcoin_test_keys": [
+      {
+        "private_key": "0000000000000000000000000000000000000000000000000000000000000001",
+        "wif": "KwDiBf89QgGbjEhKnhXJuH7LrciVrZi3qYjgd9M7rFU73sVHnoWn",
+        "public_key_compressed": "0279be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798",
+        "address_compressed": "1BgGZ9tcN4rm9KBzDn7KprQz87SZ26SAMH",
+        "address_uncompressed": "1EHNa6Q4Jz2uvNExL497mE43ikXhwF6kZm",
+        "note": "Ключ #1 - самый простой"
+      },
+      {
+        "private_key": "0000000000000000000000000000000000000000000000000000000000000002",
+        "public_key_compressed": "02c6047f9441ed7d6d3045406e95c07cd85c778e4b8cef3ca7abac09b95c709ee5",
+        "address_compressed": "1cMh228HTCiwS8ZsaakH8A8wze1JR5ZsP",
+        "note": "Ключ #2"
+      },
+      {
+        "private_key": "fffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd0364140",
+        "address_compressed": "1JBiB9q4H1ZbckVa7E9yNhT7u9qYq2QFGo", 
+        "note": "Максимальный валидный ключ"
+      }
+    ],
+    
+    "puzzle_addresses": [
+      {
+        "puzzle": 1,
+        "private_key": "0000000000000000000000000000000000000000000000000000000000000001",
+        "address": "1BgGZ9tcN4rm9KBzDn7KprQz87SZ26SAMH",
+        "status": "solved"
+      },
+      {
+        "puzzle": 2,
+        "private_key": "0000000000000000000000000000000000000000000000000000000000000003",
+        "address": "1CUTxxqjWCu5GNrWAeJCvNjGVYZAb4APNV",
+        "status": "solved"
+      },
+      {
+        "puzzle": 71,
+        "private_key": "unknown",
+        "address": "1By8GQbnueYofwSuFAT3USAhGjPrkxDdW9",
+        "reward": "7.1 BTC",
+        "range_start": "0x40000000000000000",
+        "range_end": "0x7FFFFFFFFFFFFFFFFF",
+        "status": "unsolved"
+      },
+      {
+        "puzzle": 72,
+        "private_key": "unknown", 
+        "address": "1MVDYgVaSN6iKKEsbzRUAYFrYJadLYZvvZ",
+        "reward": "7.2 BTC",
+        "range_start": "0x80000000000000000",
+        "range_end": "0xFFFFFFFFFFFFFFFFF",
+        "status": "unsolved"
+      }
+    ],
+    
+    "ethereum_test_addresses": [
+      {
+        "private_key": "0000000000000000000000000000000000000000000000000000000000000001",
+        "address": "0x7E5F4552091A69125d5DfCb7b8C2659029395Bdf",
+        "note": "ETH адрес для того же ключа #1"
+      },
+      {
+        "address": "0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045",
+        "note": "Vitalik Buterin's address (создатель Ethereum)"
+      }
+    ],
+    
+    "mnemonic_examples": [
+      {
+        "mnemonic": "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about",
+        "seed": "c55257c360c07c72029aebc1b53c05ed0362ada38ead3e3e9efa3708e53495531f09a6987599d18264c1e1c92f2cf141630c7a3c4ab7c81b2f001698e7463b04",
+        "bitcoin_address": "1BvBMSEYstWetqTFn5Au4m4GFg7xJaNVN2",
+        "ethereum_address": "0x9858EfFD232B4033E47d90003D41EC34EcaEda94",
+        "note": "Стандартная тестовая мнемоника"
+      }
+    ],
+    
+    "known_rich_addresses": [
+      {
+        "address": "34xp4vRoCGJym3xR7yCVPFHoCNxv4Twseo",
+        "note": "Binance Cold Wallet (один из самых богатых)",
+        "network": "bitcoin"
+      },
+      {
+        "address": "bc1qgdjqv0av3q56jvd82tkdjpy7gdp9ut8tlqmgrpmv24sq90ecnvqqjvxlu0",
+        "note": "Binance Cold Wallet #2",
+        "network": "bitcoin"
+      },
+      {
+        "address": "0xBE0eB53F46cd790Cd13851d5EFf43D12404d33E8",
+        "note": "Binance Hot Wallet",
+        "network": "ethereum"
+      }
+    ]
+  },
+  
+  "testing_instructions": {
+    "1_key_generation": "Используйте тестовые приватные ключи чтобы проверить что ваш алгоритм правильно генерирует соответствующие адреса",
+    "2_address_validation": "Проверьте что валидатор правильно определяет типы адресов и их валидность",
+    "3_balance_checking": "Проверьте балансы известных адресов (но не слишком часто, чтобы не превысить лимиты API)",
+    "4_mnemonic_testing": "Используйте тестовую мнемонику чтобы проверить правильность деривации ключей"
+  },
+  
+  "security_notes": {
+    "warning": "🚨 НИКОГДА НЕ ИСПОЛЬЗУЙТЕ ТЕСТОВЫЕ КЛЮЧИ ДЛЯ РЕАЛЬНЫХ СРЕДСТВ!",
+    "recommendations": [
+      "Все тестовые ключи публично известны",
+      "Любые средства отправленные на тестовые адреса будут украдены",
+      "Используйте только для проверки алгоритмов",
+      "Для реальной работы генерируйте новые случайные ключи"
+    ]
+  }
+}
