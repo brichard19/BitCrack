@@ -1,0 +1,30 @@
+# Python виртуальная среда
+puzzle_env/
+__pycache__/
+*.pyc
+*.pyo
+
+# Результаты поиска
+found_wallets.json
+high_performance_results.json
+solver_progress.json
+hp_progress.json
+
+# Логи
+*.log
+logs/
+
+# Временные файлы
+.DS_Store
+Thumbs.db
+*.tmp
+*.temp
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Системные файлы
+.cache/
