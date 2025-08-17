@@ -1,0 +1,13 @@
+ecdsa==0.19.1
+mnemonic==0.21
+bitcoin==1.1.42
+eth-account==0.13.7
+base58==2.1.1
+pycryptodome==3.23.0
+requests==2.32.4
+psutil==7.0.0
+rich==14.1.0
+colorama==0.4.6
+click==8.2.1
+tqdm==4.67.1
+numpy==2.3.2

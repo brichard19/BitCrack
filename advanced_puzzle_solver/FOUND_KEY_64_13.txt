@@ -1,0 +1,4 @@
+Worker: 13
+Puzzle: 64
+Private Key: 0xab0b9dee953aa385
+Address: 16jY7qLJnxb7CHZyqBP8qca9d51gAjyXQN

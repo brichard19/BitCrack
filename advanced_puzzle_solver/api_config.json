@@ -1,0 +1,38 @@
+{
+  "api_keys": {
+    "ethereum": {
+      "etherscan": "YourEtherscanAPIKey",
+      "infura": "YourInfuraAPIKey",
+      "alchemy": "YourAlchemyAPIKey"
+    },
+    "bitcoin": {
+      "blockstream": null,
+      "blockcypher": "YourBlockCypherAPIKey",
+      "blockchain_info": null
+    }
+  },
+  "network_settings": {
+    "request_timeout": 10,
+    "retry_count": 3,
+    "rate_limit_delay": 1,
+    "batch_size": 20
+  },
+  "solver_settings": {
+    "puzzle_71": {
+      "target_address": "1By8GQbnueYofwSuFAT3USAhGjPrkxDdW9",
+      "start_range": "0x40000000000000000",
+      "end_range": "0x7FFFFFFFFFFFFFFFFF",
+      "reward_btc": 7.1
+    },
+    "puzzle_72": {
+      "target_address": "1MVDYgVaSN6iKKEsbzRUAYFrYJadLYZvvZ",
+      "start_range": "0x80000000000000000",
+      "end_range": "0xFFFFFFFFFFFFFFFFF",
+      "reward_btc": 7.2
+    }
+  },
+  "known_addresses": [
+    "1By8GQbnueYofwSuFAT3USAhGjPrkxDdW9",
+    "1MVDYgVaSN6iKKEsbzRUAYFrYJadLYZvvZ"
+  ]
+}

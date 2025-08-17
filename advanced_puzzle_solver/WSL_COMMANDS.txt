@@ -1,0 +1,26 @@
+
+📋 КОМАНДЫ ДЛЯ ТЕСТИРОВАНИЯ В WSL:
+
+1️⃣  MEGA FAST Solver (Рекомендуется):
+    cd /home/roman/src/BitCrack/advanced_puzzle_solver
+    source puzzle_env/bin/activate  
+    python3 mega_fast.py
+
+2️⃣  Turbo Solver:
+    cd /home/roman/src/BitCrack/advanced_puzzle_solver
+    source puzzle_env/bin/activate
+    python3 turbo_solver.py
+
+3️⃣  Быстрый тест с ограничением времени:
+    cd /home/roman/src/BitCrack/advanced_puzzle_solver
+    source puzzle_env/bin/activate
+    timeout 300s python3 mega_fast.py
+
+4️⃣  Запуск с помощью скрипта:
+    cd /home/roman/src/BitCrack/advanced_puzzle_solver
+    ./final_wsl_test.sh
+
+🚀 Лучший результат: MEGA FAST показал 1,140,970 ключей/сек!
+💻 Использует все 20 CPU cores с 60 потоками
+🔥 Компьютер будет работать на максимуме
+

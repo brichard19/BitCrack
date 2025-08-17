@@ -1,0 +1,141 @@
+{
+  "ultimate_config": {
+    "name": "Ultimate Bitcoin Puzzle Solver v3.0",
+    "version": "3.0.0",
+    "description": "Максимально производительный решатель с профилированием"
+  },
+  
+  "performance_settings": {
+    "max_threads": 40,
+    "cpu_utilization_target": 95,
+    "memory_limit_gb": 6,
+    "batch_size": 1000,
+    "report_interval_seconds": 30,
+    "enable_profiling": true,
+    "enable_caching": true,
+    "cache_size_limit": 50000
+  },
+  
+  "search_strategies": {
+    "sequential_aggressive": {
+      "enabled": true,
+      "thread_percentage": 60,
+      "description": "Агрессивный последовательный поиск",
+      "batch_size": 1000,
+      "step_multiplier": 10000
+    },
+    "random_blast": {
+      "enabled": true,
+      "thread_percentage": 25,
+      "description": "Случайный взрывной поиск",
+      "batch_size": 1000,
+      "entropy_source": "secrets"
+    },
+    "smart_pattern": {
+      "enabled": true,
+      "thread_percentage": 15,
+      "description": "Умный поиск по паттернам",
+      "patterns": [
+        "base_key",
+        "base_key | 0xFFFF",
+        "base_key & ~0xFFFF", 
+        "base_key ^ 0xAAAAAAAAAAAAAAAA",
+        "base_key + 1",
+        "base_key - 1",
+        "base_key * 2",
+        "base_key >> 1"
+      ]
+    }
+  },
+  
+  "puzzle_targets": {
+    "puzzle_60": {
+      "address": "1BgGZ9tcN4rm9KBzDn7KprQz87SZ26SAMH",
+      "range_start": "0x800000000000000",
+      "range_end": "0xffffffffffffff",
+      "bits": 60
+    },
+    "puzzle_61": {
+      "address": "1CUhaTe2wecqRuqPiqueXstmK6P4Lkoz3J", 
+      "range_start": "0x1000000000000000",
+      "range_end": "0x1ffffffffffffff",
+      "bits": 61
+    },
+    "puzzle_62": {
+      "address": "1Pie8JkxBT6MGPz9Nvi3fsPkr2D8q3GBc1",
+      "range_start": "0x2000000000000000", 
+      "range_end": "0x3ffffffffffffff",
+      "bits": 62
+    },
+    "puzzle_63": {
+      "address": "1ErZWg5cFCe4Vw5BzgfzB74VNLaXEiEkhk",
+      "range_start": "0x4000000000000000",
+      "range_end": "0x7ffffffffffffff", 
+      "bits": 63
+    },
+    "puzzle_64": {
+      "address": "1QFqqMUD55ZV3PJEJZtaKCsQmjLT6JkjvJ",
+      "range_start": "0x8000000000000000",
+      "range_end": "0xffffffffffffffffffffff",
+      "bits": 64
+    },
+    "puzzle_66": {
+      "address": "1BDyrQ6WoF8VN3g9SAS1iKZcPzFfnDVieY",
+      "range_start": "0x20000000000000000",
+      "range_end": "0x3ffffffffffffffff",
+      "bits": 66
+    }
+  },
+  
+  "api_settings": {
+    "balance_check_frequency": 50000,
+    "api_timeout": 3,
+    "retry_attempts": 2,
+    "rate_limiting": true,
+    "endpoints": [
+      {
+        "name": "BlockCypher",
+        "url": "https://api.blockcypher.com/v1/btc/main/addrs/{}/balance",
+        "rate_limit": 0.1,
+        "priority": 1
+      },
+      {
+        "name": "BlockStream", 
+        "url": "https://blockstream.info/api/address/{}",
+        "rate_limit": 0.2,
+        "priority": 2
+      },
+      {
+        "name": "Chain.so",
+        "url": "https://chain.so/api/v2/get_address_balance/BTC/{}",
+        "rate_limit": 0.15,
+        "priority": 3
+      }
+    ]
+  },
+  
+  "validation_settings": {
+    "enable_address_cache": true,
+    "enable_point_cache": true,
+    "validate_both_formats": true,
+    "strict_validation": true,
+    "batch_validation": true
+  },
+  
+  "logging_settings": {
+    "log_level": "INFO",
+    "log_file": "ultimate_solver.log",
+    "performance_log": "performance_profile.txt",
+    "found_keys_log": "all_found_keys.txt",
+    "report_file": "ultimate_solver_report.json",
+    "enable_console_output": true,
+    "verbose_performance": true
+  },
+  
+  "security_settings": {
+    "secure_random": true,
+    "memory_protection": true,
+    "auto_save_results": true,
+    "encrypt_found_keys": false
+  }
+}
