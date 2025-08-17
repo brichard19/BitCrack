@@ -1,14 +1,44 @@
 #!/usr/bin/env python3
 """
-Продвинутый валидатор адресов криптовалют
-Поддерживает Bitcoin, Ethereum и другие сети
+🛡️ BITCOIN ADDRESS VALIDATOR - Профессиональный валидатор адресов
+Красивый, быстрый и надежный инструмент для проверки Bitcoin адресов
+
+Поддерживает все типы Bitcoin адресов:
+- Legacy (P2PKH): начинаются с '1'
+- Script Hash (P2SH): начинаются с '3' 
+- SegWit v0 (Bech32): начинаются с 'bc1q'
+- SegWit v1 Taproot (Bech32m): начинаются с 'bc1p'
 """
 
-import hashlib
-import base58
+import sys
 import re
-from typing import Optional, Tuple, Dict
-import logging
+import hashlib
+import json
+from typing import Dict, List, Optional, Tuple
+from dataclasses import dataclass
+from datetime import datetime
+
+try:
+    import base58
+    from rich.console import Console
+    from rich.panel import Panel
+    from rich.table import Table
+    from rich.progress import Progress, SpinnerColumn, TextColumn
+    from rich.prompt import Prompt
+    from rich.syntax import Syntax
+    from rich.layout import Layout
+    from rich.live import Live
+    import requests
+except ImportError as e:
+    print(f"Устанавливаю зависимости: {e.name}")
+    import os
+    os.system("pip install base58 rich requests")
+    import base58
+    from rich.console import Console
+    from rich.panel import Panel
+    from rich.table import Table
+
+console = Console()
 
 class AdvancedAddressValidator:
     """Продвинутый валидатор адресов"""
