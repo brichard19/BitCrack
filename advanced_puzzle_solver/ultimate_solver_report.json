@@ -1,0 +1,12 @@
+{
+  "timestamp": 1755401465.2764413,
+  "total_keys_checked": 323776,
+  "keys_found": 0,
+  "runtime_hours": 0.03352984488010406,
+  "performance_stats": {
+    "keys_per_second": 716943.6721359295,
+    "cpu_usage": 7.0,
+    "memory_usage": 64.5,
+    "api_success_rate": 0.0
+  }
+}

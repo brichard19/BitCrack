@@ -1,0 +1,28 @@
+         59668906 function calls (58505994 primitive calls) in 120.665 seconds
+
+   Ordered by: cumulative time
+   List reduced from 635 to 20 due to restriction <20>
+
+   ncalls  tottime  percall  cumtime  percall filename:lineno(function)
+   149/34    0.329    0.002   99.795    2.935 /home/roman/src/BitCrack/advanced_puzzle_solver/ultimate_solver.py:94(update_stats)
+322937/299272    0.623    0.000   60.335    0.000 /home/roman/src/BitCrack/advanced_puzzle_solver/ultimate_solver.py:149(private_key_to_point)
+645850/576620    4.465    0.000   58.869    0.000 /home/roman/src/BitCrack/advanced_puzzle_solver/ultimate_solver.py:163(point_to_address)
+322936/299301    0.608    0.000   52.108    0.000 /home/roman/src/BitCrack/advanced_puzzle_solver/puzzle_env/lib/python3.12/site-packages/ecdsa/ellipticcurve.py:949(__mul__)
+322936/299301    9.235    0.000   51.207    0.000 /home/roman/src/BitCrack/advanced_puzzle_solver/puzzle_env/lib/python3.12/site-packages/ecdsa/ellipticcurve.py:930(_mul_precompute)
+7028141/6936296    3.588    0.000   45.239    0.000 /home/roman/src/BitCrack/advanced_puzzle_solver/puzzle_env/lib/python3.12/site-packages/ecdsa/ellipticcurve.py:889(_add)
+6382270/6365795   40.615    0.000   40.468    0.000 /home/roman/src/BitCrack/advanced_puzzle_solver/puzzle_env/lib/python3.12/site-packages/ecdsa/ellipticcurve.py:843(_add_with_z2_1)
+   148/69    0.033    0.000   38.710    0.561 /home/roman/src/BitCrack/advanced_puzzle_solver/puzzle_env/lib/python3.12/site-packages/psutil/__init__.py:1757(cpu_percent)
+318742/30363    1.000    0.000   34.738    0.001 /usr/lib/python3.12/random.py:889(getrandbits)
+   164/71    0.203    0.001   33.681    0.474 /home/roman/src/BitCrack/advanced_puzzle_solver/puzzle_env/lib/python3.12/site-packages/psutil/__init__.py:1658(cpu_times)
+  1614892   29.577    0.000   29.577    0.000 {built-in method builtins.pow}
+1614892/1472087    0.595    0.000   27.311    0.000 /home/roman/src/BitCrack/advanced_puzzle_solver/puzzle_env/lib/python3.12/site-packages/ecdsa/numbertheory.py:271(inverse_mod)
+   149/80    0.091    0.001   27.273    0.341 /home/roman/src/BitCrack/advanced_puzzle_solver/puzzle_env/lib/python3.12/site-packages/psutil/__init__.py:1964(virtual_memory)
+969046/902565    2.415    0.000   19.191    0.000 /home/roman/src/BitCrack/advanced_puzzle_solver/puzzle_env/lib/python3.12/site-packages/ecdsa/ellipticcurve.py:688(y)
+646109/608380    1.454    0.000   13.313    0.000 /home/roman/src/BitCrack/advanced_puzzle_solver/puzzle_env/lib/python3.12/site-packages/ecdsa/ellipticcurve.py:672(x)
+645850/605825    1.592    0.000   10.435    0.000 /home/roman/src/BitCrack/advanced_puzzle_solver/puzzle_env/lib/python3.12/site-packages/base58/__init__.py:51(b58encode)
+645850/615143    5.602    0.000    8.103    0.000 /home/roman/src/BitCrack/advanced_puzzle_solver/puzzle_env/lib/python3.12/site-packages/base58/__init__.py:35(b58encode_int)
+   149/80    0.051    0.000    6.121    0.077 /home/roman/src/BitCrack/advanced_puzzle_solver/puzzle_env/lib/python3.12/site-packages/psutil/_pslinux.py:352(virtual_memory)
+   164/71    0.057    0.000    5.805    0.082 /home/roman/src/BitCrack/advanced_puzzle_solver/puzzle_env/lib/python3.12/site-packages/psutil/_pslinux.py:545(cpu_times)
+     24/2    0.000    0.000    5.715    2.857 /usr/lib/python3/dist-packages/urllib3/response.py:604(drain_conn)
+
+

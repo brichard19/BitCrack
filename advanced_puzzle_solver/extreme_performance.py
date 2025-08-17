@@ -141,7 +141,7 @@ class ExtremeOptimizedSolver:
                 full = versioned + checksum
                 
                 # Упрощенная проверка против известных паттернов
-                if len(full) >= 4 and full[1] in [0xBD, 0x1C, 0x1P, 0x1E, 0x1Q]:
+                if len(full) >= 4 and full[1] in [0xBD, 0x1C, 0x1F, 0x1E, 0x1A]:
                     # Найден потенциальный матч - нужна полная проверка
                     return "POTENTIAL_MATCH_NEEDS_FULL_CHECK"
             

@@ -9,8 +9,8 @@ import sys
 import time
 import random
 import hashlib
-import multiprocessing as mp
-from concurrent.futures import ProcessPoolExecutor, ThreadPoolExecutor
+import threading
+from concurrent.futures import ThreadPoolExecutor
 import secrets
 
 class UltraFastSolver:
@@ -24,8 +24,8 @@ class UltraFastSolver:
         }
         
         # Статистика
-        self.stats_lock = mp.Lock()
-        self.total_keys = mp.Value('Q', 0)
+        self.stats_lock = threading.Lock()
+        self.total_keys = 0
         self.start_time = time.time()
         
         print(f"🚀 Ultra Fast Solver - WSL Edition")
@@ -92,7 +92,7 @@ class UltraFastSolver:
             # Быстрая статистика каждые 50000 итераций
             if local_count % 50000 == 0:
                 with self.stats_lock:
-                    self.total_keys.value += 50000
+                    self.total_keys += 50000
                 
                 elapsed = time.time() - self.start_time
                 rate = local_count / elapsed
@@ -128,7 +128,7 @@ class UltraFastSolver:
         print("-" * 60)
         
         # Запускаем воркеры
-        with ProcessPoolExecutor(max_workers=workers) as executor:
+        with ThreadPoolExecutor(max_workers=workers) as executor:
             futures = []
             for i in range(workers):
                 worker_start = start + i * chunk_size
@@ -155,7 +155,7 @@ class UltraFastSolver:
                     # Статистика каждые 30 секунд
                     if time.time() - start_monitor > 30:
                         elapsed = time.time() - self.start_time
-                        total = self.total_keys.value
+                        total = self.total_keys
                         rate = total / elapsed if elapsed > 0 else 0
                         print(f"📈 Total: {total:,} keys, {rate:.0f} keys/sec, {elapsed:.0f}s")
                         start_monitor = time.time()

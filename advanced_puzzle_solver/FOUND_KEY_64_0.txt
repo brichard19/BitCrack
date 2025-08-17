@@ -1,0 +1,4 @@
+Worker: 0
+Puzzle: 64
+Private Key: 0x8069505ee021fadb
+Address: 16jY7qLJnxb7CHZyqBP8qca9d51gAjyXQN
