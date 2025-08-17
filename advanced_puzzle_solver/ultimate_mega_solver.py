@@ -36,6 +36,10 @@ class UltimateMegaSolver:
         self.total_checked = 0
         self.start_time = time.time()
         self.lock = threading.Lock()
+        self.shutdown_flag = threading.Event()
+        
+        # 🧹 Очистка кэша при инициализации
+        self._clear_cache()
         
         # 🎯 Целевые адреса puzzle (взято из лучших скриптов)
         self.target_addresses = {
@@ -64,13 +68,43 @@ class UltimateMegaSolver:
         self.cpu_cores = os.cpu_count() or 4
         self.optimal_threads = min(self.cpu_cores * 3, 100)  # Оптимальное количество потоков
         
-        print(f"🚀 ULTIMATE MEGA SOLVER v1.0")
-        print(f"================================================")
+        print("🚀 ULTIMATE MEGA SOLVER v1.0")
+        print("================================================")
         print(f"💻 CPU Cores: {self.cpu_cores}")
         print(f"🧵 Optimal Threads: {self.optimal_threads}")
         print(f"🎯 Target puzzles: {list(self.puzzle_ranges.keys())}")
-        print(f"🔥 MEGA POWER MODE ACTIVATED!")
-        print(f"================================================")
+        print("🔥 MEGA POWER MODE ACTIVATED!")
+        print("================================================")
+
+    def _clear_cache(self):
+        """🧹 Очистка кэша и ресурсов для предотвращения зависания"""
+        import gc
+        gc.collect()  # Принудительная сборка мусора
+        
+        # Очистка переменных окружения
+        if hasattr(self, 'found_keys'):
+            self.found_keys.clear()
+        
+        # Сброс счетчиков
+        self.total_checked = 0
+        
+        print("🧹 Кэш и ресурсы очищены")
+
+    def _cleanup_on_exit(self):
+        """🧹 Финальная очистка при выходе"""
+        if hasattr(self, 'shutdown_flag'):
+            self.shutdown_flag.set()
+        
+        # Ждем завершения потоков
+        for thread in threading.enumerate():
+            if thread != threading.current_thread() and thread.name.startswith('Thread'):
+                thread.join(timeout=1.0)
+        
+        # Финальная сборка мусора
+        import gc
+        gc.collect()
+        
+        print("🧹 Финальная очистка завершена")
 
     def secp256k1_point_multiply(self, private_key_int):
         """
@@ -154,18 +188,27 @@ class UltimateMegaSolver:
         local_start_time = time.time()
         
         # 🧠 Интеллектуальные паттерны поиска
+        self.PATTERN_CONST_1 = 0x123456789ABCDEF0
+        self.PATTERN_CONST_2 = 0xFEDCBA9876543210
+        self.PATTERN_CONST_3 = 0x1111111111111111
+        self.PATTERN_CONST_4 = 0xAAAAAAAAAAAAAAAA
+        
         smart_patterns = [
-            lambda x: x + 0x123456789ABCDEF0,  # Паттерн 1
-            lambda x: x + 0xFEDCBA9876543210,  # Паттерн 2
-            lambda x: x | 0x1111111111111111,  # Паттерн 3
-            lambda x: x ^ 0xAAAAAAAAAAAAAAAA,  # Паттерн 4
+            self._pattern_add_offset,
+            self._pattern_subtract_offset,
+            self._pattern_bitwise_or,
+            self._pattern_bitwise_xor,
         ]
         
         try:
             current = start_range
-            while current < end_range:
+            while current < end_range and not self.shutdown_flag.is_set():
                 # 🚀 ТУРБО-режим: проверяем несколько ключей за раз
                 for pattern in smart_patterns:
+                    # Проверяем флаг остановки
+                    if self.shutdown_flag.is_set():
+                        return False
+                        
                     test_key = pattern(current) % (end_range - start_range) + start_range
                     
                     # Вычисляем адрес
@@ -202,6 +245,23 @@ class UltimateMegaSolver:
         
         return False
 
+    # --- Smart Pattern Functions ---
+    def _pattern_add_offset(self, key):
+        """Паттерн 1: Добавляет предопределенный офсет."""
+        return key + self.PATTERN_CONST_1
+
+    def _pattern_subtract_offset(self, key):
+        """Паттерн 2: Вычитает предопределенный офсет (через сложение с дополнением)."""
+        return key + self.PATTERN_CONST_2
+
+    def _pattern_bitwise_or(self, key):
+        """Паттерн 3: Применяет побитовое ИЛИ."""
+        return key | self.PATTERN_CONST_3
+
+    def _pattern_bitwise_xor(self, key):
+        """Паттерн 4: Применяет побитовое исключающее ИЛИ."""
+        return key ^ self.PATTERN_CONST_4
+    
     def found_key(self, worker_id, private_key, address, puzzle_level):
         """🎉 НАЙДЕН КЛЮЧ! Супер-обработчик находки"""
         with self.lock:
@@ -322,23 +382,33 @@ def main():
     print("💡 Оригинальная архитектура + оптимизации")
     print("🚀 Готов к максимальной производительности!")
     
-    solver = UltimateMegaSolver()
+    solver = None
     
     try:
-        # Запускаем на 5 минут для теста
-        solver.run_ultimate_mega_mode(target_puzzle=64, duration_minutes=5)
+        solver = UltimateMegaSolver()
+        
+        # Запускаем на 2 минуты для теста (чтобы избежать зависания)
+        solver.run_ultimate_mega_mode(target_puzzle=64, duration_minutes=2)
         
     except KeyboardInterrupt:
         print("\n🛑 ОСТАНОВЛЕНО ПОЛЬЗОВАТЕЛЕМ")
-        total_time = time.time() - solver.start_time
-        speed = solver.total_checked / total_time if total_time > 0 else 0
-        print(f"📊 Финальная статистика:")
-        print(f"   ⏰ Время: {total_time:.1f}с")
-        print(f"   🔢 Проверено: {solver.total_checked:,}")
-        print(f"   ⚡ Скорость: {speed:.0f} keys/sec")
+        if solver:
+            total_time = time.time() - solver.start_time
+            speed = solver.total_checked / total_time if total_time > 0 else 0
+            print("📊 Финальная статистика:")
+            print(f"   ⏰ Время: {total_time:.1f}с")
+            print(f"   🔢 Проверено: {solver.total_checked:,}")
+            print(f"   ⚡ Скорость: {speed:.0f} keys/sec")
         
     except Exception as e:
         logging.error(f"❌ Критическая ошибка: {e}")
+        
+    finally:
+        # 🧹 ОБЯЗАТЕЛЬНАЯ ОЧИСТКА ПРИ ВЫХОДЕ
+        if solver:
+            solver._cleanup_on_exit()
+        
+        print("🧹 Программа завершена с полной очисткой ресурсов")
 
 if __name__ == "__main__":
     main()
