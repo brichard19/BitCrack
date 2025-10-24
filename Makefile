@@ -13,9 +13,14 @@ CXX=g++
 CXXFLAGS=-O2 -std=c++11
 
 # CUDA variables
-COMPUTE_CAP=30
 NVCC=nvcc
-NVCCFLAGS=-std=c++11 -gencode=arch=compute_${COMPUTE_CAP},code=\"sm_${COMPUTE_CAP}\" -Xptxas="-v" -Xcompiler "${CXXFLAGS}"
+
+# List of CUDA compute capabilities to target when building device code.
+# Additional architectures can be provided via `CUDA_ARCH_LIST="90" make`.
+CUDA_ARCH_LIST ?= 52 61 75 86 89 90 100 120
+NVCC_ARCH_FLAGS := $(foreach arch,$(CUDA_ARCH_LIST),-gencode=arch=compute_$(arch),code=sm_$(arch) -gencode=arch=compute_$(arch),code=compute_$(arch))
+NVCCFLAGS=-std=c++11 $(NVCC_ARCH_FLAGS) -Xptxas="-v" -Xcompiler "${CXXFLAGS}"
+
 CUDA_HOME=/usr/local/cuda
 CUDA_LIB=${CUDA_HOME}/lib64
 CUDA_INCLUDE=${CUDA_HOME}/include
