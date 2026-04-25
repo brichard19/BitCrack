@@ -4,6 +4,7 @@
 #include<vector>
 #include<set>
 #include<algorithm>
+#include<cinttypes>
 
 #include"util.h"
 
@@ -57,7 +58,7 @@ namespace util {
 	{
 		char buf[32] = "";
 
-		sprintf(buf, "%lld", x);
+		sprintf(buf, "%" PRIu64, x);
 
 		std::string s(buf);
 
@@ -95,22 +96,26 @@ namespace util {
 		uint64_t val = 0;
 		bool isHex = false;
 
-		if(s[0] == '0' && s[1] == 'x') {
+		if(s.length() > 2 && s[0] == '0' && s[1] == 'x') {
 			isHex = true;
 			s = s.substr(2);
 		}
 		
-		if(s[s.length() - 1] == 'h') {
+		if(s.length() > 0 && s[s.length() - 1] == 'h') {
 			isHex = true;
 			s = s.substr(0, s.length() - 1);
 		}
 
+		if(s.length() == 0) {
+			throw std::string("Expected an integer");
+		}
+
 		if(isHex) {
-			if(sscanf(s.c_str(), "%llx", &val) != 1) {
+			if(sscanf(s.c_str(), "%" SCNx64, &val) != 1) {
 				throw std::string("Expected an integer");
 			}
 		} else {
-			if(sscanf(s.c_str(), "%lld", &val) != 1) {
+			if(sscanf(s.c_str(), "%" SCNu64, &val) != 1) {
 				throw std::string("Expected an integer");
 			}
 		}
@@ -120,7 +125,7 @@ namespace util {
 
 	bool isHex(const std::string &s)
 	{
-		int len = 0;
+		int len = (int)s.length();
 
 		for(int i = 0; i < len; i++) {
 			char c = s[i];
@@ -235,11 +240,11 @@ namespace util {
 		return std::string(buf);
 	}
 
-    std::string format(uint64_t value)
+	    std::string format(uint64_t value)
 	{
 		char buf[100] = { 0 };
 
-		sprintf(buf, "%lld", (uint64_t)value);
+		sprintf(buf, "%" PRIu64, value);
 
 		return std::string(buf);
 	}

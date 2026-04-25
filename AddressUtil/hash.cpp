@@ -13,7 +13,7 @@ bool Address::verifyAddress(std::string address)
 {
 	// Check length
 	if(address.length() > 34) {
-		false;
+		return false;
 	}
 
 	// Check encoding
