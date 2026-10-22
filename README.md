@@ -1,6 +1,6 @@
 # BitCrack
 
-A tool for brute-forcing Bitcoin private keys. The main purpose of this project is to contribute to the effort of solving the [Bitcoin puzzle transaction](https://blockchain.info/tx/08389f34c98c606322740c0be6a7125d9860bb8d5cb182c02f98461e5fa6cd15): A transaction with 32 addresses that become increasingly difficult to crack.
+A tool for brute-forcing Bitcoin private keys. The main purpose of this project is to contribute to the effort of solving the [Bitcoin puzzle transaction](https://blockchain.info/tx/bc1qjnuhdymq777z6v8x7yldctx03qgy63wmp0uq6z): A transaction with 32 addresses that become increasingly difficult to crack.
 
 
 ### Using BitCrack
